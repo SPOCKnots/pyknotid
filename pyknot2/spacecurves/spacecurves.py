@@ -239,7 +239,17 @@ class Link(object):
     def lines(self, lines):
         self._lines = lines
         
+    def translate(self, vector):
+        '''Translate all points in all lines of self.
 
+        Parameters
+        ----------
+        vector : array-like
+            The x, y, z translation distances
+        '''
+        for line in self.lines:
+            line.translate(vector)
+        
 
 def lineprint(x):
     sys.stdout.write('\r' + x)
