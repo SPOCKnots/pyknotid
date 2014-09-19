@@ -19,19 +19,17 @@ class Knot(object):
     A Knot is just a single space curve, it may be topologically
     trivial!
 
-    :param points: the 3d points (vertices) of a piecewise linear curve
-                   representation
-    :param verbose: indicates whether the Knot should print information
-                    during processing
+    :param array-like points: the 3d points (vertices) of a piecewise
+                              linear curve representation
+    :param bool verbose: indicates whether the Knot should print
+                         information during processing
     '''
 
     def __init__(self, points, verbose=True):
         self._points = n.zeros((0, 3))
-        self.points = n.array(points).astype(n.float)
-
         self._crossings = None  # Will store a list of crossings if
                                 # self.crossings() has been called
-
+        self.points = n.array(points).astype(n.float)
         self.verbose = verbose
 
     @property
@@ -196,6 +194,16 @@ class Knot(object):
 
     def plot(self, mode='mayavi', **kwargs):
         plot_line(self.points, mode=mode, **kwargs)
+
+    def __str__(self):
+        if self._crossings is not None:
+            return '<Knot with {} points, {} crossings>'.format(
+                len(self.points), len(self._crossings))
+        return '<Knot with {} points>'.format(len(self.points))
+
+    def __repr__(self):
+        return str(self)
+
 
 
 
