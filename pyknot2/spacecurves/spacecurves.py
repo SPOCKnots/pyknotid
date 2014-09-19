@@ -26,12 +26,22 @@ class Knot(object):
     '''
 
     def __init__(self, points, verbose=True):
+        self._points = n.zeros((0, 3))
         self.points = n.array(points).astype(n.float)
 
         self._crossings = None  # Will store a list of crossings if
                                 # self.crossings() has been called
 
         self.verbose = verbose
+
+    @property
+    def points(self):
+        return self._points
+
+    @points.setter
+    def points(self, points):
+        self._points = points
+        self._crossings = None
 
     def _vprint(self, s, newline=True):
         '''Prints s, with optional newline. Intended for internal use
@@ -128,11 +138,9 @@ class Knot(object):
         Applies the given matrix to all of self.points.
         '''
         self.points = n.apply_along_axis(mat.dot, self.points)
-        self.crossings = None  # Any matrix operation may change this
-
 
     def crossings(self, include_closure=True):
-        '''Returns the crossings in the diagram of a projection of the
+        '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
         The crossings will be calculated the first time this function
