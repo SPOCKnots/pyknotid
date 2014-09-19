@@ -14,7 +14,7 @@ from ..visualise import plot_line
 class Knot(object):
     '''
     Class for holding the vertices of a single line, providing helper
-    methods for convenient manipulation.
+    methods for convenient manipulation and analysis.
 
     A Knot is just a single space curve, it may be topologically
     trivial!
@@ -26,6 +26,8 @@ class Knot(object):
     '''
 
     def __init__(self, points, verbose=True):
+        if isinstance(points, Knot):
+            points = points.points.copy()
         self._points = n.zeros((0, 3))
         self._crossings = None  # Will store a list of crossings if
                                 # self.crossings() has been called
@@ -205,6 +207,38 @@ class Knot(object):
         return str(self)
 
 
+class Link(object):
+    '''
+    Class for holding the vertices of multiple lines, providing helper
+    methods for convenient manipulation and analysis.
+
+    The data is stored
+    internally as multiple Knots.
+
+    Parameters
+    ----------
+    lines : list of nx3 array-like or Knots
+        List with the points of each line.
+    verbose : bool
+        Whether to print information during processing. Defaults
+        to True.
+    '''
+
+    def __init__(self, lines, verbose=True):
+        self._lines = []
+        self.verbose = verbose
+
+        lines = [Knot(line) for line in lines]
+        self.lines = lines
+
+    @property
+    def lines(self):
+        return self._lines
+
+    @lines.setter
+    def lines(self, lines):
+        self._lines = lines
+        
 
 
 def lineprint(x):
