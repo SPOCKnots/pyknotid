@@ -52,7 +52,7 @@ class Knot(object):
                 sys.stdout.write('\n')
             sys.stdout.flush()
 
-    def unwrap_periodicity(self, shape):
+    def _unwrap_periodicity(self, shape):
         '''Walks along the points of self, assuming that a periodic boundary on a
 
         lattice bounded by :param:`shape` has been crossed whenever one
@@ -94,17 +94,20 @@ class Knot(object):
         :param array-like shape: The x, y, z distances of the periodic boundary
         '''
         knot = cls(line)
-        knot.unwrap_periodicity(shape)
+        knot._unwrap_periodicity(shape)
 
     @classmethod
     def from_lattice_data(cls, line):
         '''returns a :class:`Knot` instance in which the line has been
         slightly translated and rotated, in order to (practically) ensure
         no self intersections in closure or coincident points in
-        projection.'''
+        projection.
+
+        :rtype: :class:`Knot`
+        '''
         knot = cls(line)
-        knot.rotate()
         knot.translate(n.array([0.00123, 0.00231, 0.00321]))
+        knot.rotate(n.random.random(3) * 0.012)
         return knot
 
     def translate(self, vector):
@@ -199,7 +202,11 @@ class Knot(object):
 
         return crossings
 
-    def plot(self, mode='mayavi', **kwargs):
+    def plot(self, mode='mayavi', clf=True, **kwargs):
+        '''
+        Plots the line. See :func:`pyknot2.visualise.plot_line` for
+        full documentation.
+        '''
         plot_line(self.points, mode=mode, **kwargs)
 
     def __str__(self):
@@ -270,6 +277,16 @@ class Link(object):
             angles = n.random.random(3)
         for line in self.lines:
             line.rotate(angles)
+
+    def plot(self, mode='mayavi', clf=True, **kwargs):
+        '''
+        Plots all the lines. See :func:`pyknot2.visualise.plot_line` for
+        full documentation.
+        '''
+        lines = self.lines
+        lines[0].plot(mode=mode, clf=clf, **kwargs)
+        for line in lines[1:]:
+            line.plot(mode=mode, clf=clf, **kwargs)
         
 
 def lineprint(x):
