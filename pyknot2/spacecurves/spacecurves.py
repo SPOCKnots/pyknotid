@@ -128,6 +128,8 @@ class Knot(object):
         Applies the given matrix to all of self.points.
         '''
         self.points = n.apply_along_axis(mat.dot, self.points)
+        self.crossings = None  # Any matrix operation may change this
+
 
     def crossings(self, include_closure=True):
         '''Returns the crossings in the diagram of a projection of the
