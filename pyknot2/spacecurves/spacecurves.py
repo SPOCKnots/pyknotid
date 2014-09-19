@@ -114,14 +114,19 @@ class Knot(object):
         '''
         self.points = self.points + n.array(vector)
 
-    def rotate(self, phi, theta, psi):
+    def rotate(self, angles=None):
         '''
         Rotates all the points of self by the given angles in each axis.
 
-        :param float phi: angle about z
-        :param float theta: angle about y
-        :param float psi: angle about x
+        Parameters
+        ----------
+        angles : array-like
+            The rotation angles about x, y and z. If None, random
+            angles are used. Defaults to None.
         '''
+        if angles is None:
+            angles = n.random.random(3)
+        phi, theta, psi = angles
         rotmat = n.array([
                 [cos(theta)*cos(psi),
                  -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
@@ -249,6 +254,22 @@ class Link(object):
         '''
         for line in self.lines:
             line.translate(vector)
+
+    def rotate(self, angles=None):
+        '''
+        Rotates all the points of each line of self by the given angle
+        in each axis.
+
+        Parameters
+        ----------
+        angles : array-like
+            Rotation angles about x, y and z axes. If None, random angles
+            are used. Defaults to None.
+        '''
+        if angles is None:
+            angles = n.random.random(3)
+        for line in self.lines:
+            line.rotate(angles)
         
 
 def lineprint(x):
