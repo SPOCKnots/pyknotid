@@ -53,6 +53,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
     cdef double intersect_i, intersect_j
     cdef double crossing_sign
     cdef double crossing_direction
+    cdef long jumps
+    cdef long num_jumps
 
     while i < len(points) - 1:
         point = points[i]
@@ -95,7 +97,7 @@ cpdef find_crossings(double [:] v, double [:] dv,
             if num_jumps < 1:
                 num_jumps = 1
             i += num_jumps
-        else:
+        else:  # Catch all other jump modes
             distance_travelled = 0.
             jumps = 0
             while distance_travelled < distance and i < len(points):
@@ -111,8 +113,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
 
 
 
-cpdef do_vectors_intersect(double px, double py, double dpx, double dpy,
-                           double qx, double qy, double dqx, double dqy):
+cdef do_vectors_intersect(double px, double py, double dpx, double dpy,
+                          double qx, double qy, double dqx, double dqy):
     """Takes four vectors p, dp and q, dq, then tests whether they cross in
     the dp/dq region. Returns this boolean, and the (fractional) point where
     the crossing actually occurs.
