@@ -5,7 +5,7 @@ from Cython.Distutils import build_ext
 import numpy
 
 ext_modules = [
-        Extension("chelpers",["chelpers.pyx"], libraries=["m"]),
+        Extension("chelpers", ["chelpers.pyx"], libraries=["m"]),
         ]
 
 setup(
