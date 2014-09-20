@@ -158,7 +158,8 @@ class Knot(object):
         '''
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
-    def crossings(self, include_closure=True):
+    def crossings(self, mode='count_every_jump', include_closure=True,
+                  recalculate=False):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -166,14 +167,31 @@ class Knot(object):
         is called, then cached until an operation that would change
         the list (e.g. rotation, or changing ``self.points``).
 
-        :param bool include_closure: Whether to include crossings with the
-                                     line joining the start and end points
+        Multiple modes are available (see parameters) - you should be
+        aware of this because different modes may be vastly slower or
+        faster depending on the type of line.
+
+        Parameters
+        ----------
+        mode : str
+            One of 'count_every_jump' and 'use_max_jump'. In the former
+            case,
+            walking along the line uses information about the length of
+            every step. In the latter, it guesses that all steps have the
+            same length as the maximum step length. The optimal choice
+            depends on the data.
+        include_closure : bool
+            Whether to include crossings with the
+            line joining the start and end points. Defaults to True.
+        recalculate : bool
+            Whether to force a recalculation of the crossing positions.
+            Defaults to False.
 
         :rtype: :class:`pyknot.representations.gausscode.GaussCode`
                 ^^ TODO
         '''
 
-        if self._crossings is not None:
+        if not recalculate and self._crossings is not None:
             return self._crossings
 
         self._vprint('Finding crossings')
@@ -186,6 +204,8 @@ class Knot(object):
         numtries = len(points) - 3
         
         crossings = []
+
+        jump_mode = {'count_every_jump': 1, 'use_max_jump': 2}[mode]
         
         for i in range(len(points)-3):
             if self.verbose:
@@ -202,7 +222,8 @@ class Knot(object):
             crossings.extend(chelpers.find_crossings(
                 v0, dv, s, segment_lengths[compnum:],
                 vnum, compnum,
-                max_segment_length
+                max_segment_length,
+                jump_mode
                 ))
 
         if include_closure:

@@ -7,7 +7,7 @@ cimport numpy as n
 
 cimport cython
 
-from libc.math cimport abs, pow, sqrt as csqrt
+from libc.math cimport abs, pow, sqrt as csqrt, floor
 
 cpdef find_crossings(double [:] v, double [:] dv,
                      double [:, :] points,
@@ -15,6 +15,7 @@ cpdef find_crossings(double [:] v, double [:] dv,
                      long current_index,
                      long comparison_index,
                      double max_segment_length,
+                     long jump_mode=1
                      ):
     '''
     Searches for crossings between the given vector and any other vector in the
@@ -29,6 +30,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
                             next
     :param current_index: the index of the point currently being tested
     :param comparison_index: the index of the first comparison point
+    :param int jump_mode: 1 to check every jump distance, 2 to jump based on
+                          the maximum one
     '''
 
     cdef list crossings = []
@@ -54,7 +57,7 @@ cpdef find_crossings(double [:] v, double [:] dv,
     while i < len(points) - 1:
         point = points[i]
         distance = csqrt(pow(vx - point[0], 2) + pow(vy - point[1], 2))
-        if distance < 2*max_segment_length:
+        if distance < max_segment_length:
             # TODO: replace ^^ with simply next segment length
             next_point = points[i+1]
             jump_x = next_point[0] - point[0]
@@ -76,15 +79,22 @@ cpdef find_crossings(double [:] v, double [:] dv,
                     dvx, dvy, jump_x, jump_y))
 
                 crossings.append([<double>current_index + intersect_i,
-                                  <double>comparison_index + intersect_j + <double>i,
+                                  (<double>comparison_index + intersect_j +
+                                   <double>i),
                                   crossing_sign,
                                   crossing_sign * crossing_direction])
-                crossings.append([<double>comparison_index + intersect_j + <double>i,
+                crossings.append([(<double>comparison_index + intersect_j +
+                                   <double>i),
                                   <double>current_index + intersect_i,
                                   -1. * crossing_sign,
                                   crossing_sign * crossing_direction])
             i += 1
 
+        elif jump_mode == 2:
+            num_jumps = <long>(floor(distance / max_segment_length))
+            if num_jumps < 1:
+                num_jumps = 1
+            i += num_jumps
         else:
             distance_travelled = 0.
             jumps = 0
