@@ -117,6 +117,14 @@ class Knot(object):
         '''
         self.points = self.points + n.array(vector)
 
+    def zero_centroid(self):
+        '''
+        Translate such that the centroid (average position of vertices)
+        is at (0, 0, 0).
+        '''
+        centroid = n.average(self.points, axis=0)
+        self.translate(-1*centroid)
+
     def rotate(self, angles=None):
         '''
         Rotates all the points of self by the given angles in each axis.
@@ -167,8 +175,7 @@ class Knot(object):
         if self._crossings is not None:
             return self._crossings
 
-        if self.verbose:
-            print 'Finding crossings'
+        self._vprint('Finding crossings')
         
         points = self.points
         segment_lengths = n.roll(points, -1, axis=0) - points
@@ -208,8 +215,6 @@ class Knot(object):
                 vnum, compnum,
                 max_segment_length))
 
-        print 'final crossings are', crossings
-            
         self._vprint('\n{} crossings found\n'.format(len(crossings)))
         crossings.sort(key=lambda s: s[0])
         crossings = n.array(crossings)
@@ -292,7 +297,7 @@ class Link(object):
         '''
         for line in self.lines:
             line.translate(vector)
-
+        
     def rotate(self, angles=None):
         '''
         Rotates all the points of each line of self by the given angle
