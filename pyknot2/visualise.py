@@ -45,8 +45,9 @@ def plot_projection(points, crossings=None):
     ----------
     points : array-like
         The nxm array of points in the line, with m >= 2.
-    crossings : array-like
-        The nx2 array of crossing positions.
+    crossings : array-like or None
+        The nx2 array of crossing positions. If None, crossings
+        are not plotted. Defaults to None.
     '''
     import matplotlib.pyplot as plt
 
