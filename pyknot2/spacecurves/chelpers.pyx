@@ -20,6 +20,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
     Searches for crossings between the given vector and any other vector in the
     list of points, returning all of them as a list.
                      
+    Parameters
+    ----------
     :param v0: the current point
     :param dv: the vector connecting the current point to the next one
     :param points: the array or (x, y) values of all the other points
@@ -52,8 +54,7 @@ cpdef find_crossings(double [:] v, double [:] dv,
     while i < len(points) - 1:
         point = points[i]
         distance = csqrt(pow(vx - point[0], 2) + pow(vy - point[1], 2))
-        print 'comparing {} with {}'.format(current_index, comparison_index+i)
-        if distance < max_segment_length:
+        if True: #distance < max_segment_length:
             # TODO: replace ^^ with simply next segment length
             next_point = points[i+1]
             jump_x = next_point[0] - point[0]
@@ -61,9 +62,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
             jump_z = next_point[2] - point[2]
 
             intersect, intersect_i, intersect_j = do_vectors_intersect(
-                vx, vy, dvx, dvy, next_point[0], next_point[1],
+                vx, vy, dvx, dvy, point[0], point[1],
                 jump_x, jump_y)
-
 
             if intersect:
                 pz = point[2]
@@ -100,8 +100,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
 
 
 
-cdef do_vectors_intersect(double px, double py, double dpx, double dpy,
-                          double qx, double qy, double dqx, double dqy):
+cpdef do_vectors_intersect(double px, double py, double dpx, double dpy,
+                           double qx, double qy, double dqx, double dqy):
     """Takes four vectors p, dp and q, dq, then tests whether they cross in
     the dp/dq region. Returns this boolean, and the (fractional) point where
     the crossing actually occurs.
@@ -109,13 +109,16 @@ cdef do_vectors_intersect(double px, double py, double dpx, double dpy,
     cdef double t, u
 
     if abs(cross_product(dpx, dpy, dqx, dqy)) < 0.00001:
+        print 'cross product bad, returning'
         return (0, 0., 0.)
 
-    t = cross_product(qx - px, qy - py, dpx, dpy) / cross_product(dpx, dpy,
+    t = cross_product(qx - px, qy - py, dqx, dqy) / cross_product(dpx, dpy,
                                                                   dqx, dqy)
+    print 't is', t
     if t < 1.0 and t > 0.0:
-        u = cross_product(qx - px, qy - py, dqx, dqy) / cross_product(dpx, dpy,
+        u = cross_product(qx - px, qy - py, dpx, dpy) / cross_product(dpx, dpy,
                                                                       dqx, dqy)
+        print 'u is', u
         if u < 1.0 and u > 0.0:
             return (1, t, u)
     return (0, -1., -1.)

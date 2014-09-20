@@ -8,7 +8,7 @@ import sys
 
 import chelpers
 
-from ..visualise import plot_line
+from ..visualise import plot_line, plot_projection
 
 
 class Knot(object):
@@ -130,6 +130,8 @@ class Knot(object):
         if angles is None:
             angles = n.random.random(3)
         phi, theta, psi = angles
+        sin = n.sin
+        cos = n.cos
         rotmat = n.array([
                 [cos(theta)*cos(psi),
                  -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
@@ -145,7 +147,7 @@ class Knot(object):
         '''
         Applies the given matrix to all of self.points.
         '''
-        self.points = n.apply_along_axis(mat.dot, self.points)
+        self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
     def crossings(self, include_closure=True):
         '''Returns the crossings in the diagram of the projection of the
@@ -177,7 +179,7 @@ class Knot(object):
         
         crossings = []
         
-        for i in range(len(points)):
+        for i in range(len(points)-3):
             if self.verbose:
                 if i % 100 == 0:
                     self._vprint('\ri = {} / {}'.format(i, numtries),
@@ -194,6 +196,17 @@ class Knot(object):
                 vnum, compnum,
                 max_segment_length
                 ))
+
+        if include_closure:
+            v0 = points[-1]
+            dv = points[0] - v0
+            s = points[1:-1]
+            vnum = len(points)
+            compnum = 1
+            crossings.extend(chelpers.find_crossings(
+                v0, dv, s, segment_lengths[compnum:],
+                vnum, compnum,
+                max_segment_length))
             
         self._vprint('\n{} crossings found\n'.format(len(crossings)))
         crossings.sort(key=lambda s: s[0])
@@ -207,7 +220,23 @@ class Knot(object):
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
         '''
-        plot_line(self.points, mode=mode, **kwargs)
+        plot_line(self.points, mode=mode, clf=clf, **kwargs)
+
+    def plot_projection(self, with_crossings=True):
+        points = self.points
+        crossings = None
+        plot_crossings = []
+        if with_crossings:
+            crossings = self.crossings()
+            plot_crossings = []
+            for crossing in crossings:
+                x, y, over, orientation = crossing
+                xint = int(x)
+                yint = int(y)
+                r = points[xint]
+                dr = points[(xint+1) % len(points)] - r
+                plot_crossings.append(r + (x-xint) * dr)
+        plot_projection(points, crossings=n.array(plot_crossings))
 
     def __str__(self):
         if self._crossings is not None:
@@ -286,7 +315,7 @@ class Link(object):
         lines = self.lines
         lines[0].plot(mode=mode, clf=clf, **kwargs)
         for line in lines[1:]:
-            line.plot(mode=mode, clf=clf, **kwargs)
+            line.plot(mode=mode, clf=False, **kwargs)
         
 
 def lineprint(x):
