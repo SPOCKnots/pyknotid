@@ -22,29 +22,24 @@ class GaussCode(object):
     ----------
     crossings : array-like or string
         One of:
-        - a list of lists of crossings, with one list for each knot,
-          each of the form [[identifier, +-1, +- 1], ...], where
-          the +- 1 mean and over or under crossing, and clockwise or
-          anticlockwise, respectively. The identifier must be hashable.
-        - a single list of crossings for a single knot
+        - a raw_crossings array from a :class:`~pyknot2.spacecurves.Knot`
+          or :class:`~pyknot2.spacecurves.Link`.
         - a string representation of the form (e.g.)
           ``1+c,2-c,3+c,1-c,2+c,3-c``, with commas between entries,
           and with multiple link components separated by spaces and/or
           newlines.
     '''
 
-    def __init__(self, crossings=[]):
+    def __init__(self, crossings=''):
 
         if isinstance(crossings, str):
             self._init_from_string(crossings)
         else:
-            crossings = n.array(crossings)
-            shape = crossings.shape
-            if len(shape) == 2:  # If there's only one link
-                crossings = n.array([crossings])
-            self._init_from_array(crossings)
+            if isinstance(crossings, n.ndarray):
+                crossings = [crossings]
+            self._init_from_raw_crossings_array(crossings)
 
-    def _init_from_array(self, crossings):
+    def _init_from_raw_crossings_array(self, crossings):
         '''
         Takes a list of crossings in (optionally multiple) lines,
         and converts to internal Gauss code representation.
@@ -54,18 +49,18 @@ class GaussCode(object):
         current_index = 1
         for line in crossings:
             line_gauss_code = []
-            for identifier, over, clockwise in line:
-                if identifier not in assigned_indices:
-                    assigned_indices[identifier] = current_index
+            for ident, other_ident, over, clockwise in line:
+                if ident not in assigned_indices:
+                    assigned_indices[other_ident] = current_index
+                    index = current_index
                     current_index += 1
-                index = assigned_indices[identifier]
-                line_gauss_code.append([identifier, int(over),
+                else:
+                    index = assigned_indices.pop(ident)
+                line_gauss_code.append([index, int(over),
                                         int(clockwise)])
             gauss_code.append(line_gauss_code)
 
         self._gauss_code = gauss_code
-
-            
 
     def _init_from_string(self, crossings):
         '''
@@ -79,15 +74,12 @@ class GaussCode(object):
         signs = {'c': 1, 'a': -1}
         
         for line in lines:
-            if (len(line) % 3) != 0:
-                raise Exception('GaussCode received invalid string (not'
-                                'three characters per crossing')
             line_gauss_code = []
             line_crossings = line.split(',')
             for line_crossing in line_crossings:
-                line_gauss_code.append([int(line_crossing[0]),
-                                        over_under(line_crossing[1]),
-                                        signs(line_crossing[2])])
+                line_gauss_code.append([int(line_crossing[:-2]),
+                                        over_under(line_crossing[-2]),
+                                        signs(line_crossing[-1])])
             gauss_code.append(n.array(line_gauss_code))
 
         self._gauss_code = gauss_code

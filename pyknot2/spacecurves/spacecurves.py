@@ -158,8 +158,8 @@ class Knot(object):
         '''
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
-    def crossings(self, mode='count_every_jump', include_closure=True,
-                  recalculate=False):
+    def raw_crossings(self, mode='count_every_jump', include_closure=True,
+                      recalculate=False):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -187,8 +187,12 @@ class Knot(object):
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
 
-        :rtype: :class:`pyknot.representations.gausscode.GaussCode`
-                ^^ TODO
+        :rtype: The raw array of floats representing crossings, of the
+                form [[line_index, other_index, +-1, +-1], ...], where the
+                line_index and other_index are in arclength parameterised
+                by integers for each vertex and linearly interpolated,
+                and the +-1 represent over/under and clockwise/anticlockwise
+                respectively.
         '''
 
         if not recalculate and self._crossings is not None:
@@ -244,6 +248,19 @@ class Knot(object):
 
         return crossings
 
+    def gauss_code(self, **kwargs):
+        '''
+        Returns a :class:`~pyknot2.representations.gausscode.GaussCode`
+        instance representing the crossings of the knot.
+
+        This method passes kwargs directly to :meth:`raw_crossings`,
+        see the documentation of that function for all options.
+        '''
+
+        from ..representations.gausscode import GaussCode
+        crossings = self.raw_crossings(**kwargs)
+        return GaussCode(crossings)
+
     def plot(self, mode='mayavi', clf=True, **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
@@ -256,7 +273,7 @@ class Knot(object):
         crossings = None
         plot_crossings = []
         if with_crossings:
-            crossings = self.crossings()
+            crossings = self.raw_crossings()
             plot_crossings = []
             for crossing in crossings:
                 x, y, over, orientation = crossing
