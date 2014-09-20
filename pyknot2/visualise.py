@@ -22,16 +22,48 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     TODO: remove mode, replace with auto toolkit selection
     '''
     if mode == 'mayavi':
-        plot_line_mayavi(points, **kwargs)
+        plot_line_mayavi(points, clf=clf, **kwargs)
     else:
         raise Exception('invalid toolkit/mode')
 
 
 def plot_line_mayavi(points, clf=True, **kwargs):
+    import mayavi.mlab as may
     if clf:
         may.clf()
-    import mayavi.mlab as may
     mus = n.linspace(0, 1, len(points))
     may.plot3d(points[:, 0], points[:, 1], points[:, 2], mus,
                colormap='hsv', **kwargs)
     
+
+def plot_projection(points, crossings=None):
+    '''
+    Plot the 2d projection of the given points, with optional
+    markers for where the crossings are.
+
+    Parameters
+    ----------
+    points : array-like
+        The nxm array of points in the line, with m >= 2.
+    crossings : array-like
+        The nx2 array of crossing positions.
+    '''
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots()
+    ax.plot(points[:, 0], points[:, 1])
+    ax.set_xticks([])
+    ax.set_yticks([])
+
+    xmin, ymin = n.min(points[:, :2], axis=0)
+    xmax, ymax = n.max(points[:, :2], axis=0)
+    dx = (xmax - xmin) / 10.
+    dy = (ymax - ymin) / 10.
+
+    ax.set_xlim(xmin - dx, xmax + dx)
+    ax.set_ylim(ymin - dy, ymax + dy)
+    
+    if crossings is not None and len(crossings):
+        crossings = n.array(crossings)
+        ax.plot(crossings[:, 0], crossings[:, 1], 'ro', alpha=0.5)
+    fig.show()
