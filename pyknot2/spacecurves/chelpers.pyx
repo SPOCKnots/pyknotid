@@ -54,7 +54,7 @@ cpdef find_crossings(double [:] v, double [:] dv,
     while i < len(points) - 1:
         point = points[i]
         distance = csqrt(pow(vx - point[0], 2) + pow(vy - point[1], 2))
-        if True: #distance < max_segment_length:
+        if distance < 2*max_segment_length:
             # TODO: replace ^^ with simply next segment length
             next_point = points[i+1]
             jump_x = next_point[0] - point[0]
@@ -86,12 +86,13 @@ cpdef find_crossings(double [:] v, double [:] dv,
             i += 1
 
         else:
-            i += 1
-            # distance_travelled = 0.
-            # while distance_travelled < distance:
-            #     distance_travelled += segment_lengths[i]
-            #     i += 1
-            # i -= 1
+            distance_travelled = 0.
+            jumps = 0
+            while distance_travelled < distance and i < len(points):
+                jumps += 1
+                distance_travelled += segment_lengths[i]
+                i += 1
+            i -= 1
             # This keeps jumping until we might be close enough to intersect,
             # without doing vector arithmetic at every step
                                   
@@ -109,16 +110,13 @@ cpdef do_vectors_intersect(double px, double py, double dpx, double dpy,
     cdef double t, u
 
     if abs(cross_product(dpx, dpy, dqx, dqy)) < 0.00001:
-        print 'cross product bad, returning'
         return (0, 0., 0.)
 
     t = cross_product(qx - px, qy - py, dqx, dqy) / cross_product(dpx, dpy,
                                                                   dqx, dqy)
-    print 't is', t
     if t < 1.0 and t > 0.0:
         u = cross_product(qx - px, qy - py, dpx, dpy) / cross_product(dpx, dpy,
                                                                       dqx, dqy)
-        print 'u is', u
         if u < 1.0 and u > 0.0:
             return (1, t, u)
     return (0, -1., -1.)

@@ -201,12 +201,14 @@ class Knot(object):
             v0 = points[-1]
             dv = points[0] - v0
             s = points[1:-1]
-            vnum = len(points)
+            vnum = len(points) - 1
             compnum = 1
             crossings.extend(chelpers.find_crossings(
                 v0, dv, s, segment_lengths[compnum:],
                 vnum, compnum,
                 max_segment_length))
+
+        print 'final crossings are', crossings
             
         self._vprint('\n{} crossings found\n'.format(len(crossings)))
         crossings.sort(key=lambda s: s[0])
