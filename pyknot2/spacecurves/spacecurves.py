@@ -95,6 +95,7 @@ class Knot(object):
         '''
         knot = cls(line)
         knot._unwrap_periodicity(shape)
+        return knot
 
     @classmethod
     def from_lattice_data(cls, line):
