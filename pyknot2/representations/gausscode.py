@@ -5,8 +5,10 @@ of curves.
 See class documentation for more details.
 '''
 
+from __future__ import print_function
 import numpy as n
 import re
+import sys
 import planardiagram
 
 class GaussCode(object):
@@ -35,6 +37,8 @@ class GaussCode(object):
 
         if isinstance(crossings, str):
             self._init_from_string(crossings)
+        elif isinstance(crossings, GaussCode):
+            self._gauss_code = [row.copy() for row in crossings._gauss_code]
         elif isinstance(crossings, planardiagram.PlanarDiagram):
             raise NotImplementedError(
                 'planar diagram -> gauss code not implemented')
@@ -42,6 +46,8 @@ class GaussCode(object):
             if isinstance(crossings, n.ndarray):
                 crossings = [crossings]
             self._init_from_raw_crossings_array(crossings)
+
+        self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
 
     def _init_from_raw_crossings_array(self, crossings):
         '''
@@ -117,4 +123,105 @@ class GaussCode(object):
                 
     def __str__(self):
         return repr(self)
+
+    def _do_reidemeister_moves(self, one=True, two=True, two_extended=False):
+        '''
+        Performs the given Reidemeister moves a single time, iterating
+        over all the crossings of self.
+        '''
+        if two_extended:
+            raise NotImplementedError('can\'t do extended moves yet')
+
+        code = self._gauss_code
+        crossing_numbers = self.crossing_numbers
+
+        rm2_store = {}
+
+        # These lists keep track of which crossings have been removed, to
+        # avoid modifying the arrays every time an RM is performed
+        keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
+
+        for line_index, line in enumerate(code):
+            keep = keeps[line_index]
+
+            for row_index, row in enumerate(line):
+                next_index = (row_index + 1) % len(line)
+                next_row = line[next_index]
+
+                if (one and (row[0] == next_row[0]) and keep[row_index] and
+                    keep[next_index]):
+                    number = row[0]
+                    crossing_numbers.remove(number)
+                    keep[row_index] = False
+                    keep[next_index] = False
+
+                if (two and keep[row_index] and keep[next_index] and
+                    (row[1] == next_row[1])):  # both over or under
+                    numbers = tuple(sorted([row[0], next_row[0]]))
+                    if numbers not in rm2_store:
+                        rm2_store[numbers] = (line_index, row_index, next_index)
+                    else:
+                        other_indices = rm2_store.pop(numbers)
+                        crossing_numbers.remove(row[0])
+                        crossing_numbers.remove(next_row[0])
+                        keep[row_index] = False
+                        keep[next_index] = False
+                        keeps[other_indices[0]][other_indices[1]] = False
+                        keeps[other_indices[0]][other_indices[2]] = False
+
+        # Get rid of all crossings that have been removed by RMs
+        self._gauss_code = [line[keep] for (line, keep) in zip(code, keeps)]
+        self.crossing_numbers = crossing_numbers
+                        
         
+    def simplify(self, one=True, two=True, verbose=True):
+        '''
+        Simplifies the GaussCode, performing the given Reidemeister moves
+        everywhere possible, as many times as possible, until the
+        GaussCode is no longer changing.
+
+        This modifies the GaussCode - (non-topological) information may
+        be lost!
+
+        Parameters
+        ----------
+        one : bool
+            Whether to use Reidemeister 1
+        two : bool
+            Whether to use Reidemeister 2
+        '''
+
+        if verbose:
+            print('Simplifying: initially {} crossings'.format(
+                n.sum(map(len, self._gauss_code))))
+
+        number_of_runs = 0
+        while True:
+            original_gc = self._gauss_code
+            original_len = n.sum(map(len, original_gc))
+            self._do_reidemeister_moves(one, two)
+            new_gc = self._gauss_code
+            new_len = n.sum(map(len, new_gc))
+            number_of_runs += 1
+            if verbose:
+                sys.stdout.write('\r-> {} crossings after {} runs'.format(
+                    n.sum(map(len, new_gc)), number_of_runs))
+                sys.stdout.flush()
+            if new_len == original_len:
+                break
+
+        if verbose:
+            print()
+            
+        
+def _get_crossing_numbers(gc):
+    '''
+    Given GaussCode internal data, returns a list of all
+    the crossing numbers within
+    '''
+    crossing_vals = set()
+    for line in gc:
+        for entry in line:
+            crossing_vals.add(entry[0])
+    return list(crossing_vals)
+    
