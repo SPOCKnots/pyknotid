@@ -7,6 +7,7 @@ See class documentation for more details.
 
 import numpy as n
 import re
+import planardiagram
 
 class GaussCode(object):
     '''
@@ -20,7 +21,7 @@ class GaussCode(object):
 
     Parameters
     ----------
-    crossings : array-like or string
+    crossings : array-like or string or PlanarDiagram
         One of:
         - a raw_crossings array from a :class:`~pyknot2.spacecurves.Knot`
           or :class:`~pyknot2.spacecurves.Link`.
@@ -34,6 +35,9 @@ class GaussCode(object):
 
         if isinstance(crossings, str):
             self._init_from_string(crossings)
+        elif isinstance(crossings, planardiagram.PlanarDiagram):
+            raise NotImplementedError(
+                'planar diagram -> gauss code not implemented')
         else:
             if isinstance(crossings, n.ndarray):
                 crossings = [crossings]
@@ -58,7 +62,7 @@ class GaussCode(object):
                     index = assigned_indices.pop(ident)
                 line_gauss_code.append([index, int(over),
                                         int(clockwise)])
-            gauss_code.append(line_gauss_code)
+            gauss_code.append(n.array(line_gauss_code))
 
         self._gauss_code = gauss_code
 

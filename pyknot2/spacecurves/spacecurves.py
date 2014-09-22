@@ -212,7 +212,8 @@ class Knot(object):
         
         crossings = []
 
-        jump_mode = {'count_every_jump': 1, 'use_max_jump': 2}[mode]
+        jump_mode = {'count_every_jump': 1, 'use_max_jump': 2,
+                     'naive': 3}[mode]
         
         for i in range(len(points)-2):
             if self.verbose:
@@ -264,6 +265,19 @@ class Knot(object):
         from ..representations.gausscode import GaussCode
         crossings = self.raw_crossings(**kwargs)
         return GaussCode(crossings)
+
+    def planar_diagram(self, **kwargs):
+        '''
+        Returns a
+        :class:`~pyknot2.representations.planardiagram.PlanarDiagram`
+        instance representing the crossings of the knot.
+
+        This method passes kwargs directly to :meth:`raw_crossings`,
+        see the documentation of that function for all options.
+        '''
+        from ..representations.planardiagram import PlanarDiagram
+        crossings = self.raw_crossings(**kwargs)
+        return PlanarDiagram(crossings)
 
     def plot(self, mode='mayavi', clf=True, **kwargs):
         '''
