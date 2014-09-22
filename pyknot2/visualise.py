@@ -36,7 +36,7 @@ def plot_line_mayavi(points, clf=True, tube_radius=1., **kwargs):
                colormap='hsv', tube_radius=tube_radius, **kwargs)
     
 
-def plot_projection(points, crossings=None):
+def plot_projection(points, crossings=None, mark_start=False):
     '''
     Plot the 2d projection of the given points, with optional
     markers for where the crossings are.
@@ -63,8 +63,14 @@ def plot_projection(points, crossings=None):
 
     ax.set_xlim(xmin - dx, xmax + dx)
     ax.set_ylim(ymin - dy, ymax + dy)
+
+    if mark_start:
+        ax.plot([points[0, 0]], [points[0, 1]], color='blue',
+                marker='o')
     
     if crossings is not None and len(crossings):
         crossings = n.array(crossings)
         ax.plot(crossings[:, 0], crossings[:, 1], 'ro', alpha=0.5)
     fig.show()
+
+    return fig, ax
