@@ -1,3 +1,13 @@
+'''
+Planar diagrams
+===============
+
+Classes for working with planar diagram notation of knot diagrams.
+
+See individual class documentation for more details.
+'''
+
+
 import numpy as n
 import sys
 import gausscode

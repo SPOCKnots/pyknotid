@@ -16,8 +16,8 @@ class Knot(object):
     Class for holding the vertices of a single line, providing helper
     methods for convenient manipulation and analysis.
 
-    A Knot is just a single space curve, it may be topologically
-    trivial!
+    A :class:`Knot` just represents a single space curve, it may be
+    topologically trivial!
 
     :param array-like points: the 3d points (vertices) of a piecewise
                               linear curve representation
@@ -158,7 +158,7 @@ class Knot(object):
         '''
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
-    def raw_crossings(self, mode='count_every_jump', include_closure=True,
+    def raw_crossings(self, mode='use_max_jump', include_closure=True,
                       recalculate=False):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
