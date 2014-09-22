@@ -279,6 +279,16 @@ class Knot(object):
         crossings = self.raw_crossings(**kwargs)
         return PlanarDiagram(crossings)
 
+    def alexander_polynomial(self, variable=-1, quadrant='lr'):
+        '''
+        Returns the Alexander polynomial at the given point,
+        as calculated by :func:`pyknot2.invariants.alexander`.
+        '''
+        from ..invariants import alexander
+        gc = self.gauss_code()
+        gc.simplify()
+        return alexander(gc, simplify=False)
+
     def plot(self, mode='mayavi', clf=True, **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
