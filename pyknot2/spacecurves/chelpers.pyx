@@ -18,7 +18,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
                      long jump_mode=1
                      ):
     '''
-    Searches for crossings between the given vector and any other vector in the
+    Searches for crossings between the given vector and any other
+    vector in the
     list of points, returning all of them as a list.
                      
     Parameters
@@ -121,8 +122,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
 
 
 
-cdef do_vectors_intersect(double px, double py, double dpx, double dpy,
-                          double qx, double qy, double dqx, double dqy):
+cdef tuple do_vectors_intersect(double px, double py, double dpx, double dpy,
+                                double qx, double qy, double dqx, double dqy):
     """Takes four vectors p, dp and q, dq, then tests whether they cross in
     the dp/dq region. Returns this boolean, and the (fractional) point where
     the crossing actually occurs.
@@ -141,13 +142,13 @@ cdef do_vectors_intersect(double px, double py, double dpx, double dpy,
             return (1, t, u)
     return (0, -1., -1.)
         
-cdef cross_product(double px, double py, double qx, double qy):
+cdef double cross_product(double px, double py, double qx, double qy):
     '''Simple cython cross product for 2D vectors.'''
     return px * qy - py * qx
 
-cdef sign(double a):
+cdef double sign(double a):
     return (1. if a > 0. else (-1. if a < 0. else 0.))
 
-cpdef mag_difference(double [:] a, double [:] b):
+cpdef double mag_difference(double [:] a, double [:] b):
     '''The magnitude of the vector joining a and b'''
     return csqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
