@@ -201,17 +201,20 @@ class Knot(object):
         self._vprint('Finding crossings')
         
         points = self.points
-        segment_lengths = n.roll(points, -1, axis=0) - points
+        segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
         segment_lengths = n.sqrt(n.sum(segment_lengths * segment_lengths,
                                        axis=1))
-        max_segment_length = n.max(segment_lengths)
+        if include_closure:
+            max_segment_length = n.max(segment_lengths)
+        else:
+            max_segment_length = n.max(segment_lengths[:-1])
         numtries = len(points) - 3
         
         crossings = []
 
         jump_mode = {'count_every_jump': 1, 'use_max_jump': 2}[mode]
         
-        for i in range(len(points)-3):
+        for i in range(len(points)-2):
             if self.verbose:
                 if i % 100 == 0:
                     self._vprint('\ri = {} / {}'.format(i, numtries),
@@ -239,7 +242,8 @@ class Knot(object):
             crossings.extend(chelpers.find_crossings(
                 v0, dv, s, segment_lengths[compnum:],
                 vnum, compnum,
-                max_segment_length))
+                max_segment_length,
+                jump_mode))
 
         self._vprint('\n{} crossings found\n'.format(len(crossings)))
         crossings.sort(key=lambda s: s[0])
@@ -268,7 +272,7 @@ class Knot(object):
         '''
         plot_line(self.points, mode=mode, clf=clf, **kwargs)
 
-    def plot_projection(self, with_crossings=True):
+    def plot_projection(self, with_crossings=True, mark_start=False):
         points = self.points
         crossings = None
         plot_crossings = []
@@ -282,7 +286,10 @@ class Knot(object):
                 r = points[xint]
                 dr = points[(xint+1) % len(points)] - r
                 plot_crossings.append(r + (x-xint) * dr)
-        plot_projection(points, crossings=n.array(plot_crossings))
+        fig, ax = plot_projection(points,
+                                  crossings=n.array(plot_crossings),
+                                  mark_start=mark_start)
+        return fig, ax
 
     def __str__(self):
         if self._crossings is not None:
@@ -368,3 +375,6 @@ def lineprint(x):
     sys.stdout.write('\r' + x)
     sys.stdout.flush()
     return 1
+
+def mag(v):
+    return n.sqrt(v.dot(v))

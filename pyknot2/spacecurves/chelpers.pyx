@@ -42,6 +42,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
     cdef double dvy = dv[1]
     cdef double dvz = dv[2]
 
+    cdef double twice_max_segment_length = 2*max_segment_length
+
     cdef int i = 0
     cdef double distance, distance_travelled
     cdef double [:] point
@@ -55,16 +57,18 @@ cpdef find_crossings(double [:] v, double [:] dv,
     cdef double crossing_direction
     cdef long jumps
     cdef long num_jumps
+    cdef int already_jumped = 0
 
     while i < len(points) - 1:
         point = points[i]
         distance = csqrt(pow(vx - point[0], 2) + pow(vy - point[1], 2))
-        if distance < max_segment_length:
-            # TODO: replace ^^ with simply next segment length
+        if distance < twice_max_segment_length or already_jumped:
+            already_jumped = 0
             next_point = points[i+1]
             jump_x = next_point[0] - point[0]
             jump_y = next_point[1] - point[1]
             jump_z = next_point[2] - point[2]
+
 
             intersect, intersect_i, intersect_j = do_vectors_intersect(
                 vx, vy, dvx, dvy, point[0], point[1],
@@ -93,18 +97,22 @@ cpdef find_crossings(double [:] v, double [:] dv,
             i += 1
 
         elif jump_mode == 2:
-            num_jumps = <long>(floor(distance / max_segment_length))
+            num_jumps = <long>(floor(distance / max_segment_length)) - 1
             if num_jumps < 1:
                 num_jumps = 1
             i += num_jumps
+            already_jumped = 1
         else:  # Catch all other jump modes
             distance_travelled = 0.
             jumps = 0
-            while distance_travelled < distance and i < len(points):
+            while (distance_travelled < (distance - max_segment_length) and
+                   i < len(points)):
                 jumps += 1
                 distance_travelled += segment_lengths[i]
                 i += 1
-            i -= 1
+            if jumps > 1:
+                i -= 2
+            already_jumped = 1
             # This keeps jumping until we might be close enough to intersect,
             # without doing vector arithmetic at every step
                                   
@@ -139,3 +147,7 @@ cdef cross_product(double px, double py, double qx, double qy):
 
 cdef sign(double a):
     return (1. if a > 0. else (-1. if a < 0. else 0.))
+
+cpdef mag_difference(double [:] a, double [:] b):
+    '''The magnitude of the vector joining a and b'''
+    return csqrt((b[0] - a[0])**2 + (b[1] - a[1])**2)
