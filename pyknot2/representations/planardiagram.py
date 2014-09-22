@@ -37,6 +37,15 @@ class PlanarDiagram(list):
 
     def __repr__(self):
         return self.__str__()
+
+    def as_mathematica(self):
+        '''
+        Returns a mathematica code representation of self, usable in the
+        mathematica knot tools.
+        '''
+        s = 'PD['
+        s = s + ', '.join(crossing.as_mathematica() for crossing in self)
+        return s + ']'
         
 
 class Crossing(list):
