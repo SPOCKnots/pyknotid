@@ -49,7 +49,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
         representation = GaussCode(representation)
 
     if simplify:
-        representation.simplify()
+        representation.simplify(one=True, two=True, one_extended=True)
 
     code_list = representation._gauss_code
     if len(code_list) == 0:

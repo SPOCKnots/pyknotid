@@ -127,13 +127,11 @@ class GaussCode(object):
     def __str__(self):
         return repr(self)
 
-    def _do_reidemeister_moves(self, one=True, two=True, two_extended=False):
+    def _do_reidemeister_moves(self, one=True, two=True, one_extended=True):
         '''
         Performs the given Reidemeister moves a single time, iterating
         over all the crossings of self.
         '''
-        if two_extended:
-            raise NotImplementedError('can\'t do extended moves yet')
 
         code = self._gauss_code
         crossing_numbers = self.crossing_numbers
@@ -157,6 +155,7 @@ class GaussCode(object):
                     crossing_numbers.remove(number)
                     keep[row_index] = False
                     keep[next_index] = False
+                    print('rm1 on {} {}'.format(row, next_row))
 
                 if (two and keep[row_index] and keep[next_index] and
                     (row[1] == next_row[1])):  # both over or under
@@ -171,13 +170,115 @@ class GaussCode(object):
                         keep[next_index] = False
                         keeps[other_indices[0]][other_indices[1]] = False
                         keeps[other_indices[0]][other_indices[2]] = False
+                        print('rm2 on {} {} and {} {}'.format(
+                            row, next_row,
+                            code[other_indices[0]][other_indices[1]],
+                            code[other_indices[0]][other_indices[2]]))
+
+
+        if one_extended:
+            # Do extended RM1 as a separate step
+            code = [line[keep] for (line, keep) in zip(code, keeps)]
+            keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
+
+            self._gauss_code = code
+            print('ready to do extended')
+            print(self)
+
+            crossing_indices = {}
+            for line_index, line in enumerate(code):
+                for row_index, row in enumerate(line):
+                    identifier, over, crossings = row
+                    if identifier not in crossing_indices:
+                        crossing_indices[identifier] = []
+                    crossing_indices[identifier].append((line_index, row_index))
+
+            print('crossing indices are', crossing_indices)
+
+            for number in list(crossing_numbers):
+
+                print('---')
+
+                if number not in crossing_numbers:
+                    continue  # The crossing has already been removed
+                locations = crossing_indices[number]
+
+                print(locations)
+                print('initial code is')
+                print(code[0][keeps[0]])
+
+                if locations[0][0] != locations[1][0]:  # not on same line
+                    continue
+                line_index = locations[0][0]
+                first_index = locations[0][1]
+                second_index = locations[1][1]
+                first_index, second_index = sorted(
+                    [first_index, second_index])
+
+                print('number {} at indices {} and {}'.format(number, first_index,
+                                                              second_index))
+
+                # First, check crossings in the middle of the list
+                in_between = code[line_index][first_index+1:second_index]
+                in_between_keeps = keeps[line_index][first_index+1:second_index]
+                in_between = in_between[in_between_keeps]
+
+                print('in between', in_between)
+
+                if n.abs(n.sum(in_between[:, 1])) == len(in_between):
+                    # all crossings over or under
+                    print('can remove! crossing numbers from', crossing_numbers)
+                    keeps[line_index][first_index] = False
+                    keeps[line_index][second_index] = False
+                    for entry in in_between:
+                        identifier = entry[0]
+                        if identifier in crossing_numbers:
+                            crossing_numbers.remove(identifier)
+                        indices = crossing_indices[identifier]
+                        keeps[indices[0][0]][indices[0][1]] = False
+                        keeps[indices[1][0]][indices[1][1]] = False
+                    crossing_numbers.remove(number)
+                    print('to', crossing_numbers)
+                    print('and gc is')
+                    print(code[0][keeps[0]])
+
+                # Second, wrap around the list if a big rm1 wasn't performed
+                if number not in crossing_numbers:
+                    continue
+                in_between = n.vstack((code[line_index][second_index+1:],
+                                       code[line_index][:first_index]))
+                in_between_keeps = n.hstack((keeps[line_index][second_index+1:],
+                                             keeps[line_index][:first_index]))
+                in_between = in_between[in_between_keeps]
+
+                print('wrapped in between', in_between)
+
+                if n.abs(n.sum(in_between[:, 1])) == len(in_between):
+                    print('can remove! crossing numbers from', crossing_numbers)
+                    keeps[line_index][first_index] = False
+                    keeps[line_index][second_index] = False
+                    for entry in in_between:
+                        identifier = entry[0]
+                        if identifier in crossing_numbers:
+                            crossing_numbers.remove(identifier)
+                        indices = crossing_indices[identifier]
+                        keeps[indices[0][0]][indices[0][1]] = False
+                        keeps[indices[1][0]][indices[1][1]] = False
+                    crossing_numbers.remove(number)
+                    print('to', crossing_numbers)
+                    print('and gc is')
+                    print(code[0][keeps[0]])
+
 
         # Get rid of all crossings that have been removed by RMs
         self._gauss_code = [line[keep] for (line, keep) in zip(code, keeps)]
         self.crossing_numbers = crossing_numbers
+
+        print('did extended')
+        print(self)
                         
         
-    def simplify(self, one=True, two=True, verbose=True):
+    def simplify(self, one=True, two=True, one_extended=True, verbose=True):
         '''
         Simplifies the GaussCode, performing the given Reidemeister moves
         everywhere possible, as many times as possible, until the
@@ -215,7 +316,26 @@ class GaussCode(object):
 
         if verbose:
             print()
-            
+
+    # def validate(self):
+    #     '''
+    #     Returns True if the code is valid, False otherwise.
+    #     '''
+    #     code = self._gauss_code
+    #     crossing_numbers = self.crossing_numbers
+
+    #     # Check that all identifiers are known properly
+    #     from collections import Counter
+    #     real_crossing_numbers = Counter()
+    #     for line in code:
+    #         for crossing
+
+    #     cache = {}
+    #     for line in code:
+    #         for identifier, over, clockwise in line:
+    #             if identifier in cache:
+    #                 comparator = cache.pop(identifier)
+                    
         
 def _get_crossing_numbers(gc):
     '''
@@ -226,5 +346,5 @@ def _get_crossing_numbers(gc):
     for line in gc:
         for entry in line:
             crossing_vals.add(entry[0])
-    return list(crossing_vals)
+    return crossing_vals
     

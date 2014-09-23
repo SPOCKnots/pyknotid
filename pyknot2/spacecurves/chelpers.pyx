@@ -97,6 +97,9 @@ cpdef find_crossings(double [:] v, double [:] dv,
                                   crossing_sign * crossing_direction])
             i += 1
 
+        elif jump_mode == 3:
+            i += 1  # naive mode - check everything
+            already_jumped = 1
         elif jump_mode == 2:
             num_jumps = <long>(floor(distance / max_segment_length)) - 1
             if num_jumps < 1:
