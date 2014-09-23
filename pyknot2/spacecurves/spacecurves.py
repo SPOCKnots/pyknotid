@@ -35,6 +35,8 @@ class Knot(object):
         self.points = n.array(points).astype(n.float)
         self.verbose = verbose
 
+        self._recent_octree = None 
+
     @property
     def points(self):
         return self._points
@@ -152,16 +154,8 @@ class Knot(object):
         phi, theta, psi = angles
         sin = n.sin
         cos = n.cos
-        rotmat = n.array([
-                [cos(theta)*cos(psi),
-                 -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
-                 sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi)],
-                [cos(theta)*sin(psi),
-                 cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi),
-                 -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
-                [-1*sin(theta), sin(phi)*cos(theta),
-                 cos(phi)*cos(theta)]])
-        self._apply_matrix(rotmat)
+        rot_mat = get_rotation_matrix(angles)
+        self._apply_matrix(rot_mat)
 
     def _apply_matrix(self, mat):
         '''
@@ -355,6 +349,53 @@ class Knot(object):
         points = from_json_file(filen)
         return cls(points)
 
+    def octree_simplify(self, runs=1, plot=False, rotate=True,
+                        obey_knotting=True, **kwargs):
+        '''
+        Simplifies the curve via the octree reduction of
+        :module:`pyknot2.simplify.octree`.
+
+        Parameters
+        ----------
+        runs : int
+            The number of times to run the octree simplification.
+            Defaults to 1.
+        plot : bool
+            Whether to plot the curve after each run. Defaults to False.
+        rotate : bool
+            Whether to rotate the space curve before each run. Defaults
+            to True as this can make things much faster.
+        obey_knotting : bool
+            Whether to not let the line pass through itself. Defaults to
+            True as this is always what you want for a closed curve.
+
+        kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`
+        constructor.
+        '''
+        from ..simplify.octree import OctreeCell, remove_nearby_points
+        self.points = remove_nearby_points(self.points)
+        for i in range(runs):
+            if len(self.points) > 30:
+                self._vprint('\rRun {} of {}, {} points remain'.format(
+                    i, runs, len(self.points)))
+
+            if rotate:
+                rot_mat = get_rotation_matrix(n.random.random(3))
+                self._apply_matrix(rot_mat)
+
+            oc = OctreeCell.from_single_line(self.points, **kwargs)
+            oc.simplify(obey_knotting)
+            self._recent_octree = oc
+            self.points = oc.get_single_line()
+
+            if rotate:
+                self._apply_matrix(rot_mat.T)
+
+            if plot:
+                self.plot()
+
+        self._vprint('\nReduced to {} points'.format(len(self.points)))
+
 
 class Link(object):
     '''
@@ -436,3 +477,17 @@ def lineprint(x):
 
 def mag(v):
     return n.sqrt(v.dot(v))
+
+def get_rotation_matrix(angles):
+    phi, theta, psi = angles
+    sin = n.sin
+    cos = n.cos
+    rotmat = n.array([
+            [cos(theta)*cos(psi),
+             -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
+             sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi)],
+            [cos(theta)*sin(psi),
+             cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi),
+             -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
+            [-1*sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)]])
+    return rotmat
