@@ -3,9 +3,12 @@ Invariants
 ==========
 
 Functions for retrieving invariants of knots and links.
+
+.. warning:: This module may be broken into multiple components at
+             some point.
 '''
 
-def alexander(representation, variable=-1, quadrant='lr'):
+def alexander(representation, variable=-1, quadrant='lr', simplify=True):
     '''
     Calculates the Alexander polynomial of the given knot. The
     representation *must* have just one knot component, or the calculation
@@ -13,6 +16,12 @@ def alexander(representation, variable=-1, quadrant='lr'):
 
     The result is returned with whatever numerical precision the
     algorithm produces, it is not rounded.
+
+    The given representation *must* be simplified (RM1 performed if
+    possible) for this to work, otherwise the matric has overlapping
+    elements. This is so important that this function automatically
+    calls :meth:`pyknot2.representations.gausscode.GaussCode.simplify`,
+    you must disable this manually if you don't want to do it.
 
     Parameters
     ----------
@@ -31,12 +40,16 @@ def alexander(representation, variable=-1, quadrant='lr'):
         used in the calculation; all choices *should* give the same answer.
         Must be 'lr', 'ur', 'ul' or 'll' for lower-right, upper-right,
         upper-left or lower-left respectively.
-            
+    simplify : bool
+        Whether to call the GaussCode simplify method, defaults to True.
     '''
 
     from .representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
+
+    if simplify:
+        representation.simplify()
 
     code_list = representation._gauss_code
     if len(code_list) == 0:
@@ -99,7 +112,7 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
         poly_val = n.linalg.det(matrix[:-1:, :-1])
     elif quadrant == 'll':
         poly_val = n.linalg.det(matrix[1:, :-1])
-    return poly_val
+    return n.abs(poly_val)
 
 def _alexander_sympy(crossings, t=None, quadrant='lr'):
     '''
