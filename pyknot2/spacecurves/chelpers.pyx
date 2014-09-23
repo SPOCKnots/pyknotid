@@ -79,8 +79,8 @@ cpdef find_crossings(double [:] v, double [:] dv,
                 pz = point[2]
                 dpz = jump_z
 
-                crossing_sign = sign(vz + intersect_i * dvz -
-                                     pz + intersect_j * dpz)
+                crossing_sign = sign((vz + intersect_i * dvz) -
+                                     (pz + intersect_j * dpz))
 
                 crossing_direction = sign(cross_product(
                     dvx, dvy, jump_x, jump_y))
@@ -142,11 +142,11 @@ cdef tuple do_vectors_intersect(double px, double py, double dpx, double dpy,
             return (1, t, u)
     return (0, -1., -1.)
         
-cdef double cross_product(double px, double py, double qx, double qy):
+cpdef double cross_product(double px, double py, double qx, double qy):
     '''Simple cython cross product for 2D vectors.'''
     return px * qy - py * qx
 
-cdef double sign(double a):
+cpdef double sign(double a):
     return (1. if a > 0. else (-1. if a < 0. else 0.))
 
 cpdef double mag_difference(double [:] a, double [:] b):
