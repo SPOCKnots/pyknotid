@@ -1,4 +1,7 @@
 '''
+Space curves
+============
+
 Classes for dealing with knots (a single line, which may be
 topologically trivial) and links (multiple Knot classes).
 '''
@@ -10,6 +13,7 @@ import chelpers
 
 from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
+from ..utils import vprint
 
 
 class Knot(object):
@@ -396,6 +400,9 @@ class Knot(object):
 
         self._vprint('\nReduced to {} points'.format(len(self.points)))
 
+    def __len__(self):
+        return len(self.points)
+
 
 class Link(object):
     '''
@@ -403,7 +410,7 @@ class Link(object):
     methods for convenient manipulation and analysis.
 
     The data is stored
-    internally as multiple Knots.
+    internally as multiple :class:`Knots`.
 
     Parameters
     ----------
@@ -421,6 +428,8 @@ class Link(object):
         lines = [Knot(line) for line in lines]
         self.lines = lines
 
+        self._recent_octree = None
+
     @property
     def lines(self):
         return self._lines
@@ -428,6 +437,29 @@ class Link(object):
     @lines.setter
     def lines(self, lines):
         self._lines = lines
+
+    @classmethod
+    def from_periodic_lines(cls, lines, shape, perturb=True):
+        '''Returns a :class:`Link` instance in which the lines have
+        been unwrapped through the periodic boundaries.
+
+        Parameters
+        ----------
+        line : list
+            A list of the Nx3 vectors of points in the lines
+        shape : array-like
+            The x, y, z distances of the periodic boundary
+        perturb : bool
+            If True, translates and rotates the knot to avoid any lattice
+            problems.
+        '''
+        lines = [Knot.from_periodic_line(line, shape, False)
+                 for line in lines]
+        link = cls(lines)
+        if perturb:
+            link.translate(n.array([0.00123, 0.00231, 0.00321]))
+            link.rotate()
+        return link
         
     def translate(self, vector):
         '''Translate all points in all lines of self.
@@ -465,6 +497,61 @@ class Link(object):
         lines[0].plot(mode=mode, clf=clf, **kwargs)
         for line in lines[1:]:
             line.plot(mode=mode, clf=False, **kwargs)
+
+    def octree_simplify(self, runs=1, plot=False, rotate=True,
+                        obey_knotting=False, **kwargs):
+        '''
+        Simplifies the curves via the octree reduction of
+        :module:`pyknot2.simplify.octree`.
+
+        Parameters
+        ----------
+        runs : int
+            The number of times to run the octree simplification.
+            Defaults to 1.
+        plot : bool
+            Whether to plot the curve after each run. Defaults to False.
+        rotate : bool
+            Whether to rotate the space curve before each run. Defaults
+            to True as this can make things much faster.
+        obey_knotting : bool
+            Whether to not let the line pass through itself. Defaults to
+            False - knotting of individual components will be ignored!
+            This is *much* faster than the alternative.
+
+        kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`
+        constructor.
+        '''
+        from ..simplify.octree import OctreeCell, remove_nearby_points
+        for line in self.lines:
+            line.points = remove_nearby_points(line.points)
+        for i in range(runs):
+            if n.sum([len(knot.points) for knot in self.lines]) > 30:
+                vprint('\rRun {} of {}, {} points remain'.format(
+                    i, runs, len(self)), False, self.verbose)
+
+            if rotate:
+                rot_mat = get_rotation_matrix(n.random.random(3))
+                for line in self.lines:
+                    line._apply_matrix(rot_mat)
+
+            oc = OctreeCell.from_lines([line.points for line in self.lines],
+                                       **kwargs)
+            oc.simplify(obey_knotting)
+            self._recent_octree = oc
+            self.lines = [Knot(line) for line in oc.get_lines()]
+
+            if rotate:
+                for line in self.lines:
+                    line._apply_matrix(rot_mat.T)
+
+            if plot:
+                self.plot()
+
+        vprint('\nReduced to {} points'.format(len(self)))
+
+    def __len__(self):
+        return n.sum(map(len, self.lines))
 
 
         

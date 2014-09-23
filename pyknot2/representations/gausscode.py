@@ -155,7 +155,6 @@ class GaussCode(object):
                     crossing_numbers.remove(number)
                     keep[row_index] = False
                     keep[next_index] = False
-                    print('rm1 on {} {}'.format(row, next_row))
 
                 if (two and keep[row_index] and keep[next_index] and
                     (row[1] == next_row[1])):  # both over or under
@@ -170,20 +169,12 @@ class GaussCode(object):
                         keep[next_index] = False
                         keeps[other_indices[0]][other_indices[1]] = False
                         keeps[other_indices[0]][other_indices[2]] = False
-                        print('rm2 on {} {} and {} {}'.format(
-                            row, next_row,
-                            code[other_indices[0]][other_indices[1]],
-                            code[other_indices[0]][other_indices[2]]))
 
 
         if one_extended:
             # Do extended RM1 as a separate step
             code = [line[keep] for (line, keep) in zip(code, keeps)]
             keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
-
-            self._gauss_code = code
-            print('ready to do extended')
-            print(self)
 
             crossing_indices = {}
             for line_index, line in enumerate(code):
@@ -192,20 +183,10 @@ class GaussCode(object):
                     if identifier not in crossing_indices:
                         crossing_indices[identifier] = []
                     crossing_indices[identifier].append((line_index, row_index))
-
-            print('crossing indices are', crossing_indices)
-
             for number in list(crossing_numbers):
-
-                print('---')
-
                 if number not in crossing_numbers:
                     continue  # The crossing has already been removed
                 locations = crossing_indices[number]
-
-                print(locations)
-                print('initial code is')
-                print(code[0][keeps[0]])
 
                 if locations[0][0] != locations[1][0]:  # not on same line
                     continue
@@ -215,19 +196,13 @@ class GaussCode(object):
                 first_index, second_index = sorted(
                     [first_index, second_index])
 
-                print('number {} at indices {} and {}'.format(number, first_index,
-                                                              second_index))
-
                 # First, check crossings in the middle of the list
                 in_between = code[line_index][first_index+1:second_index]
                 in_between_keeps = keeps[line_index][first_index+1:second_index]
                 in_between = in_between[in_between_keeps]
 
-                print('in between', in_between)
-
                 if n.abs(n.sum(in_between[:, 1])) == len(in_between):
                     # all crossings over or under
-                    print('can remove! crossing numbers from', crossing_numbers)
                     keeps[line_index][first_index] = False
                     keeps[line_index][second_index] = False
                     for entry in in_between:
@@ -238,9 +213,6 @@ class GaussCode(object):
                         keeps[indices[0][0]][indices[0][1]] = False
                         keeps[indices[1][0]][indices[1][1]] = False
                     crossing_numbers.remove(number)
-                    print('to', crossing_numbers)
-                    print('and gc is')
-                    print(code[0][keeps[0]])
 
                 # Second, wrap around the list if a big rm1 wasn't performed
                 if number not in crossing_numbers:
@@ -251,10 +223,7 @@ class GaussCode(object):
                                              keeps[line_index][:first_index]))
                 in_between = in_between[in_between_keeps]
 
-                print('wrapped in between', in_between)
-
                 if n.abs(n.sum(in_between[:, 1])) == len(in_between):
-                    print('can remove! crossing numbers from', crossing_numbers)
                     keeps[line_index][first_index] = False
                     keeps[line_index][second_index] = False
                     for entry in in_between:
@@ -265,18 +234,12 @@ class GaussCode(object):
                         keeps[indices[0][0]][indices[0][1]] = False
                         keeps[indices[1][0]][indices[1][1]] = False
                     crossing_numbers.remove(number)
-                    print('to', crossing_numbers)
-                    print('and gc is')
-                    print(code[0][keeps[0]])
 
 
         # Get rid of all crossings that have been removed by RMs
         self._gauss_code = [line[keep] for (line, keep) in zip(code, keeps)]
         self.crossing_numbers = crossing_numbers
 
-        print('did extended')
-        print(self)
-                        
         
     def simplify(self, one=True, two=True, one_extended=True, verbose=True):
         '''
