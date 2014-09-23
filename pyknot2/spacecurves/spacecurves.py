@@ -86,16 +86,26 @@ class Knot(object):
         self.points = points
 
     @classmethod
-    def from_periodic_line(cls, line, shape):
+    def from_periodic_line(cls, line, shape, perturb=True):
         '''Returns a :class:`Knot` instance in which the line has been
         unwrapped through
         the periodic boundaries.
 
-        :param array-like line: The Nx3 vector of points in the line
-        :param array-like shape: The x, y, z distances of the periodic boundary
+        Parameters
+        ----------
+        line : array-like
+            The Nx3 vector of points in the line
+        shape : array-like
+            The x, y, z distances of the periodic boundary
+        perturb : bool
+            If True, translates and rotates the knot to avoid any lattice
+            problems.
         '''
         knot = cls(line)
         knot._unwrap_periodicity(shape)
+        if perturb:
+            knot.translate(n.array([0.00123, 0.00231, 0.00321]))
+            knot.rotate()
         return knot
 
     @classmethod
@@ -280,13 +290,15 @@ class Knot(object):
         crossings = self.raw_crossings(**kwargs)
         return PlanarDiagram(crossings)
 
-    def alexander_polynomial(self, variable=-1, quadrant='lr'):
+    def alexander_polynomial(self, variable=-1, quadrant='lr', **kwargs):
         '''
         Returns the Alexander polynomial at the given point,
         as calculated by :func:`pyknot2.invariants.alexander`.
+
+        kwargs are passed to the gauss code calculation.
         '''
         from ..invariants import alexander
-        gc = self.gauss_code()
+        gc = self.gauss_code(**kwargs)
         gc.simplify()
         return alexander(gc, simplify=False)
 
