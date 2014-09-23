@@ -17,9 +17,9 @@ def to_json_file(points, filen):
     Parameters
     ----------
     points : array-like
-        
+        nx3 array of points to save
     filen : str
-        The (relative) filename to save.
+        The (relative) filename to save in
     '''
     points = n.array(points).tolist()
     with open(filen, 'w') as fileh:
@@ -33,7 +33,7 @@ def from_json_file(filen):
     Parameters
     ----------
     filen : str
-        The (relative) filename to load from.
+        The (relative) filename to load from
     '''
     with open(filen, 'r') as fileh:
         points = json.load(fileh)
