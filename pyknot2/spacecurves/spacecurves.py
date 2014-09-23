@@ -9,6 +9,7 @@ import sys
 import chelpers
 
 from ..visualise import plot_line, plot_projection
+from ..io import to_json_file, from_json_file
 
 
 class Knot(object):
@@ -324,6 +325,24 @@ class Knot(object):
     def __repr__(self):
         return str(self)
 
+    def to_json(self, filen):
+        '''
+        Writes the knot points to the given filename, in a json format
+        that can be read later by :meth:`Knot.from_json`. Uses
+        :func:`pyknot2.io.to_json_file` internally.
+        '''
+        to_json_file(self.points, filen)
+
+    @classmethod
+    def from_json(cls, filen):
+        '''
+        Loads knot points from the given filename, assuming json format,
+        and returns a :class:`Knot` with those points.
+        ''' 
+
+        points = from_json_file(filen)
+        return cls(points)
+
 
 class Link(object):
     '''
@@ -393,6 +412,9 @@ class Link(object):
         lines[0].plot(mode=mode, clf=clf, **kwargs)
         for line in lines[1:]:
             line.plot(mode=mode, clf=False, **kwargs)
+
+
+        
         
 
 def lineprint(x):
