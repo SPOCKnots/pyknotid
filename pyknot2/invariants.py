@@ -136,6 +136,8 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     Sympy implementation of the Alexander polynomial, evaluated
     with the variable replaced by some sympy expression.
     '''
+    # This is almost the same as the numpy implementation...they should
+    # probably be merged.
     import sympy as sym
     if variable is None:
         variable = sym.var('t')
