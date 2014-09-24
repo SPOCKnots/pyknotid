@@ -27,8 +27,10 @@ class GaussCode(object):
     Parameters
     ----------
     crossings : array-like or string or PlanarDiagram
-        A raw_crossings array from a :class:`~pyknot2.spacecurves.Knot`
-        or :class:`~pyknot2.spacecurves.Link`, or a string representation of the form (e.g.)
+        A raw_crossings array from a
+        :class:`~pyknot2.spacecurves.spacecurves.Knot`
+        or :class:`~pyknot2.spacecurves.spacecurves.Link`, or a string
+        representation of the form (e.g.)
         ``1+c,2-c,3+c,1-c,2+c,3-c``, with commas between entries,
         and with multiple link components separated by spaces and/or
         newlines.
