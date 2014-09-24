@@ -376,8 +376,6 @@ class Knot(object):
         kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`
         constructor.
         '''
-        from ..simplify.octree import OctreeCell, remove_nearby_points
-        self.points = remove_nearby_points(self.points)
         for i in range(runs):
             if len(self.points) > 30:
                 self._vprint('\rRun {} of {}, {} points remain'.format(
