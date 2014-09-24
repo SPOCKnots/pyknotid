@@ -293,6 +293,11 @@ class Knot(object):
         Returns the Alexander polynomial at the given point,
         as calculated by :func:`pyknot2.invariants.alexander`.
 
+        This function only uses pyknot2's build in Alexander
+        polynomial functions, not those that would call
+        Mathematica. If you want to use these, call them
+        directly.
+
         kwargs are passed to the gauss code calculation.
         '''
         from ..invariants import alexander
