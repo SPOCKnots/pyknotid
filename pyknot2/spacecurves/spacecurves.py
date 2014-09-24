@@ -298,7 +298,8 @@ class Knot(object):
         from ..invariants import alexander
         gc = self.gauss_code(**kwargs)
         gc.simplify()
-        return alexander(gc, simplify=False)
+        return alexander(gc, variable=variable, quadrant=quadrant,
+                         simplify=False)
 
     def plot(self, mode='mayavi', clf=True, **kwargs):
         '''

@@ -4,6 +4,11 @@ Invariants
 
 Functions for retrieving invariants of knots and links.
 
+Functions whose name ends with ``_mathematica`` try to create an
+external Mathematica process to calculate the answer. They may hang
+or have other problems if Mathematica isn't available in your
+``$PATH``.
+
 .. warning:: This module may be broken into multiple components at
              some point.
 '''
@@ -85,6 +90,14 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
+    
+    over_clock = 1. - 1. / variable
+    under_clock_before = -1.
+    under_clock_after = 1. / variable
+    over_aclock = 1 - variable
+    under_aclock_before = -1.
+    under_aclock_after = variable
+
     for i in range(len(crossings)):
         identifier, over, clockwise = crossings[i]
         if identifier in crossing_dict:
@@ -97,13 +110,14 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
         crossing_exists = False
 
         if over > 0.99999:
-            matrix_element = 2
-            matrix[crossing_num, line_num % num_crossings] = matrix_element
+            mat_elt = over_clock if clockwise > 0.999 else over_aclock
+            matrix[crossing_num, line_num % num_crossings] = mat_elt
         else:
-            new_matrix_element = -1
+            new_mat_elt = (under_clock_after if clockwise > 0.999 else
+                           under_aclock_after)
             matrix[crossing_num, line_num % num_crossings] = -1
             line_num += 1
-            matrix[crossing_num, line_num % num_crossings] = new_matrix_element
+            matrix[crossing_num, line_num % num_crossings] = new_mat_elt
     if quadrant == 'lr':
         poly_val = n.linalg.det(matrix[1:, 1:])
     elif quadrant == 'ur':
@@ -112,7 +126,9 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
         poly_val = n.linalg.det(matrix[:-1:, :-1])
     elif quadrant == 'll':
         poly_val = n.linalg.det(matrix[1:, :-1])
-    return n.abs(poly_val)
+    if not isinstance(poly_val, n.complex):
+        poly_val = n.abs(poly_val)
+    return poly_val
 
 def _alexander_sympy(crossings, t=None, quadrant='lr'):
     '''
