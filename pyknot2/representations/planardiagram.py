@@ -56,6 +56,26 @@ class PlanarDiagram(list):
         s = 'PD['
         s = s + ', '.join(crossing.as_mathematica() for crossing in self)
         return s + ']'
+
+    def as_spherogram(self):
+        '''
+        Get a planar diagram class from the Spherogram module, which
+        can be used to access SnapPy's manifold tools.
+        '''
+        from spherogram import Crossing, Link
+        scs = [Crossing() for crossing in self]
+
+        indices = {}
+        for i in range(len(self)):
+            c = self[i]
+            for j in range(len(c)):
+                number = c[j]
+                if number in indices:
+                    otheri, otherj = indices.pop(number)
+                    scs[i][j] = scs[otheri][otherj]
+                else:
+                    indices[number] = (i, j)
+        return Link(scs)
         
 
 class Crossing(list):

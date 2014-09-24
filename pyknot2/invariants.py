@@ -387,3 +387,30 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
     outstr = outstr[:-2]
     outstr += ' }]'
     return outstr
+
+
+def hyperbolic_volume(representation):
+    '''
+    The hyperbolic volume, calculated by the SnapPy library for
+    studying the topology and geometry of 3-manifolds. This function
+    depends on the Spherogram module, distributed with SnapPy or
+    available separately.
+
+    Parameters
+    ----------
+    representation : A PlanarDiagram, or anything convertible to a
+                     :class:`~pyknot2.representations.gausscode.GaussCode`
+        A pyknot2 representation class for the knot, or anything that
+        can automatically be converted into a GaussCode (i.e. by writing
+        :code:`GaussCode(your_object)`), or a PlanarDiagram.
+
+    '''
+    from .representations.gausscode import GaussCode
+    from .representations.planardiagram import PlanarDiagram
+    if not isinstance(representation, (GaussCode, PlanarDiagram)):
+        representation = GaussCode(representation)
+    if isinstance(representation, GaussCode):
+        representation = PlanarDiagram(representation)
+
+    volume = representation.as_spherogram().exterior().volume()
+    return volume
