@@ -7,7 +7,7 @@ Functions for retrieving invariants of knots and links.
 Functions whose name ends with ``_mathematica`` try to create an
 external Mathematica process to calculate the answer. They may hang
 or have other problems if Mathematica isn't available in your
-``$PATH``.
+``$PATH``, so be careful using them.
 
 .. warning:: This module may be broken into multiple components at
              some point.
@@ -42,8 +42,9 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
     variable : float or sympy variable
         The value to caltulate the Alexander polynomial at. Defaults to -1,
         but may be switched to the sympy variable ``t`` in the future.
-        Supports numeric types (will be treated as floats) or sympy
-        expressions.
+        Supports int/float/complex types (fast, works for thousands of
+        crossings) or sympy
+        expressions (much slower, works mostly only for <100 crossings).
     quadrant : str
         Determines what principal minor of the Alexander matrix should be
         used in the calculation; all choices *should* give the same answer.
