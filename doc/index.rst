@@ -3,11 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pyknot2's documentation
-=======================
+pyknot2
+=======
 
-
-pyknot2 collects classes and functions for analysing knots.
+pyknot2 collects classes and functions for analysing knots with Python.
 
 Contents:
 
@@ -17,8 +16,8 @@ Contents:
     api/spacecurves/spacecurves
     api/representations/gausscode
     api/representations/planardiagram
-    api/visualise
     api/invariants
+    api/visualise
    
 
 Indices and tables
