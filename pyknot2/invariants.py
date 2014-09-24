@@ -12,7 +12,10 @@ or have other problems if Mathematica isn't available in your
 .. warning:: This module may be broken into multiple components at
              some point.
 '''
+from __future__ import print_function
 import subprocess
+import re
+
 
 def alexander(representation, variable=-1, quadrant='lr', simplify=True):
     '''
@@ -63,12 +66,12 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
     elif len(code_list) > 1:
         raise Exception('tried to calculate alexander polynomial'
                         'for something with more than 1 component')
-    
+
     crossings = code_list[0]
 
     if len(crossings) == 0:
         return 1
-    if quadrant not in ['lr','ur','ul','ll']:
+    if quadrant not in ['lr', 'ur', 'ul', 'll']:
         raise Exception('invalid quadrant')
 
     if isinstance(variable, (int, float, complex)):
@@ -91,12 +94,10 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
-    
+
     over_clock = 1. - 1. / variable
-    under_clock_before = -1.
     under_clock_after = 1. / variable
     over_aclock = 1 - variable
-    under_aclock_before = -1.
     under_aclock_after = variable
 
     for i in range(len(crossings)):
@@ -131,6 +132,7 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
         poly_val = n.abs(poly_val)
     return poly_val
 
+
 def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     '''
     Sympy implementation of the Alexander polynomial, evaluated
@@ -147,12 +149,10 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
-    
+
     over_clock = 1 - 1 / variable
-    under_clock_before = -1
     under_clock_after = 1 / variable
     over_aclock = 1 - variable
-    under_aclock_before = -1
     under_aclock_after = variable
 
     for i in range(len(crossings)):
@@ -184,6 +184,7 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     elif quadrant == 'll':
         poly_val = matrix[1:, :-1].det()
     return poly_val
+
 
 def alexander_mathematica(representation, quadrant='ul', verbose=False,
                           via_file=True):
@@ -218,7 +219,7 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
         representation = GaussCode(representation)
 
     code = representation._gauss_code
-                          
+
     if len(code) == 0:
         return 1
     elif len(code) > 1:
@@ -226,13 +227,14 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
                         'for something with more than 1 component')
     mat_mat = _mathematica_matrix(code[0], quadrant=quadrant, verbose=verbose)
     if not via_file:
-        det = subprocess.check_output(['runMath','Det[' + mat_mat + ']'])[:-1]
+        det = subprocess.check_output(['runMath', 'Det[' + mat_mat + ']'])[:-1]
     else:
         _write_mathematica_script('mathematicascript.m', 'Print[Det[' +
-                               mat_mat + ']]')
-        det = subprocess.check_output(['bash','mathematicascript.m'])
+                                  mat_mat + ']]')
+        det = subprocess.check_output(['bash', 'mathematicascript.m'])
     t = sym.var('t')
-    return eval(det.replace('^','**'))
+    return eval(det.replace('^', '**'))
+
 
 def jones_mathematica(representation):
     '''
@@ -270,6 +272,7 @@ def jones_mathematica(representation):
     result = r.sub(r'sym.Integer(\1)', result)
     return eval(result.replace('^', '**'))
 
+
 def _write_mathematica_script(filen, text):
     '''
     Write the given text (mathematica code) to the given filename. It will
@@ -280,6 +283,7 @@ def _write_mathematica_script(filen, text):
                     '$(sed \'1,/^exit/d\' $0) ; Exit[]"\nexit $?\n')
         fileh.write(text)
         fileh.close()
+
 
 def _mathematica_matrix(cs, quadrant='lr', verbose=False):
     '''
@@ -300,7 +304,7 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
     written_indices = []
     for i, crossing in enumerate(cs):
         if verbose and (i+1) % 100 == 0:
-            sys.stdout.write('\ri = {0} / {1}'.format(i,len(cs)))
+            sys.stdout.write('\ri = {0} / {1}'.format(i, len(cs)))
         print('crossing is', crossing)
         identifier, upper, direc = crossing
         for entry in crossing_dict:
@@ -324,22 +328,22 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
             mathmat_entries.append((crossing_num,
                                     line_num % num_crossings,
                                     matrix_element))
-            spec = (crossing_num,line_num % num_crossings)
+            spec = (crossing_num, line_num % num_crossings)
             if spec in written_indices:
-                print spec
+                print(spec)
             else:
                 written_indices.append((crossing_num,
                                         line_num % num_crossings))
         else:
-            if direc>0.99999:
+            if direc > 0.99999:
                 new_matrix_element = '1/t'
             else:
                 new_matrix_element = 't'
             mathmat_entries.append((crossing_num,
                                     line_num % num_crossings, '-1'))
-            spec = (crossing_num,line_num % num_crossings)
+            spec = (crossing_num, line_num % num_crossings)
             if spec in written_indices:
-                print spec
+                print(spec)
             else:
                 written_indices.append((crossing_num,
                                         line_num % num_crossings))
@@ -349,20 +353,21 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
                                     new_matrix_element))
             spec = (crossing_num, line_num % num_crossings)
             if spec in written_indices:
-                print spec
+                print(spec)
             else:
-                written_indices.append((crossing_num,line_num % num_crossings))
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
 
     if quadrant == 'lr':
         mathmat_entries = filter(
-            lambda j: j[0] != 0 and j[1] != 0,mathmat_entries)
+            lambda j: j[0] != 0 and j[1] != 0, mathmat_entries)
         mathmat_entries = map(
-            lambda j: (j[0]-1,j[1]-1,j[2]),mathmat_entries)
+            lambda j: (j[0]-1, j[1]-1, j[2]), mathmat_entries)
     if quadrant == 'ur':
         mathmat_entries = filter(
-            lambda j: j[0] != num_crossings-1 and j[1] != 0,mathmat_entries)
+            lambda j: j[0] != num_crossings-1 and j[1] != 0, mathmat_entries)
         mathmat_entries = map(
-            lambda j: (j[0],j[1]-1,j[2]),mathmat_entries)
+            lambda j: (j[0], j[1]-1, j[2]), mathmat_entries)
     if quadrant == 'ul':
         mathmat_entries = filter(
             lambda j: j[0] != num_crossings-1 and j[1] != num_crossings-1,
@@ -371,13 +376,13 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
         mathmat_entries = filter(
             lambda j: j[0] != 0 and j[1] != num_crossings-1,
             mathmat_entries)
-        mathmat_entries = map(lambda j: (j[0]-1,j[1],j[2]), mathmat_entries)
+        mathmat_entries = map(lambda j: (j[0]-1, j[1], j[2]), mathmat_entries)
 
     if verbose:
         print
     outstr = 'Sparse_array[{ '
     for entry in mathmat_entries:
-        outstr += '{%d,%d}->%s, ' % (entry[0]+1,entry[1]+1,entry[2])
+        outstr += '{%d,%d}->%s, ' % (entry[0]+1, entry[1]+1, entry[2])
     outstr = outstr[:-2]
     outstr += ' }]'
     return outstr
