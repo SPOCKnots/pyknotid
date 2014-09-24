@@ -23,6 +23,10 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     '''
     if mode == 'mayavi':
         plot_line_mayavi(points, clf=clf, **kwargs)
+    elif mode == 'vispy':
+        plot_line_vispy(points, clf=clf, **kwargs)
+    elif mode == 'matplotlib':
+        plot_line_matplotlib(points, clf=clf, **kwargs)
     else:
         raise Exception('invalid toolkit/mode')
 
@@ -34,6 +38,25 @@ def plot_line_mayavi(points, clf=True, tube_radius=1., **kwargs):
     mus = n.linspace(0, 1, len(points))
     may.plot3d(points[:, 0], points[:, 1], points[:, 2], mus,
                colormap='hsv', tube_radius=tube_radius, **kwargs)
+
+def plot_line_matplotlib(points, **kwargs):
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot(points[:, 0], points[:, 1], points[:, 2])
+    fig.show()
+
+def plot_line_vispy(points, **kwargs):
+    from vispy import app, scene
+    canvas = scene.SceneCanvas(keys='interactive')
+    canvas.show()
+    view = canvas.central_widget.add_view()
+    view.set_camera('turntable', mode='perspective', up='z',
+                    distance=2)
+    l = scene.visuals.Line(points, color=(1, 0, 0, 1), width=4,
+                           mode='gl', antialias=True)
+    view.add(l)
+    app.run()
     
 
 def plot_projection(points, crossings=None, mark_start=False):
