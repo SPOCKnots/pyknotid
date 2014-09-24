@@ -182,26 +182,30 @@ class Knot(object):
 
         Parameters
         ----------
-        mode : str
+        mode : str, optional
             One of 'count_every_jump' and 'use_max_jump'. In the former
             case,
             walking along the line uses information about the length of
             every step. In the latter, it guesses that all steps have the
             same length as the maximum step length. The optimal choice
-            depends on the data.
-        include_closure : bool
+            depends on the data, but is usually ``use_max_jump``, which
+            is the default.
+        include_closure : bool, optional
             Whether to include crossings with the
             line joining the start and end points. Defaults to True.
-        recalculate : bool
+        recalculate : bool, optional
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
 
-        :rtype: The raw array of floats representing crossings, of the
-                form [[line_index, other_index, +-1, +-1], ...], where the
-                line_index and other_index are in arclength parameterised
-                by integers for each vertex and linearly interpolated,
-                and the +-1 represent over/under and clockwise/anticlockwise
-                respectively.
+        Returns
+        -------
+        array-like
+            The raw array of floats representing crossings, of the
+            form [[line_index, other_index, +-1, +-1], ...], where the
+            line_index and other_index are in arclength parameterised
+            by integers for each vertex and linearly interpolated,
+            and the +-1 represent over/under and clockwise/anticlockwise
+            respectively.
         '''
 
         if not recalculate and self._crossings is not None:
@@ -378,9 +382,11 @@ class Knot(object):
         obey_knotting : bool
             Whether to not let the line pass through itself. Defaults to
             True as this is always what you want for a closed curve.
+        **kwargs
+            Any remaining kwargs are passed to the
+            :class:`pyknot2.simplify.octree.OctreeCell`
+            constructor.
 
-        kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`
-        constructor.
         '''
         from pyknot2.simplify.octree import OctreeCell
         for i in range(runs):

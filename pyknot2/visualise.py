@@ -1,3 +1,11 @@
+'''
+Visualise
+=========
+
+This module contains functions for plotting knots, supporting
+different toolkits and types of plot.
+'''
+
 import numpy as n
 
 
@@ -8,6 +16,8 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     include vispy, matplotlib?
 
     kwargs are passed to the toolkit specific function, except for:
+
+    TODO: add auto toolkit selection
 
     Parameters
     ----------
@@ -20,8 +30,6 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     clf : bool
         Whether the existing figure should be cleared
         before drawing the new one.
-
-    TODO: remove mode, replace with auto toolkit selection
     '''
             
     if mode == 'mayavi':
