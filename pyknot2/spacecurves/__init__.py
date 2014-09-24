@@ -13,5 +13,6 @@ knots.
 
 '''
 
-__all__ = ['spacecurves']
+from spacecurves import Knot, Link
+__all__ = ('Knot', 'Link', )
 

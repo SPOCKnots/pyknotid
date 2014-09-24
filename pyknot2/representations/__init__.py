@@ -11,5 +11,7 @@ These provide convenient methods to convert between different
 representations, and to simplify via Reidemeister moves.
 '''
 
-__all__ = ['gausscode', 'planardiagram']
+from .gausscode import GaussCode
+from .planardiagram import PlanarDiagram
+__all__ = ['GaussCode', 'PlanarDiagram']
 

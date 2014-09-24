@@ -15,6 +15,8 @@ from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
 from ..utils import vprint
 
+__all__ = ('Knot', 'Link')
+
 
 class Knot(object):
     '''
@@ -183,12 +185,12 @@ class Knot(object):
         Parameters
         ----------
         mode : str, optional
-            One of 'count_every_jump' and 'use_max_jump'. In the former
+            One of ``'count_every_jump'`` and ``'use_max_jump'``. In the former
             case,
             walking along the line uses information about the length of
             every step. In the latter, it guesses that all steps have the
             same length as the maximum step length. The optimal choice
-            depends on the data, but is usually ``use_max_jump``, which
+            depends on the data, but is usually ``'use_max_jump'``, which
             is the default.
         include_closure : bool, optional
             Whether to include crossings with the
