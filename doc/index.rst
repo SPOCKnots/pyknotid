@@ -14,8 +14,11 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-    api/spacecurves
-    api/representations
+    api/spacecurves/spacecurves
+    api/representations/gausscode
+    api/representations/planardiagram
+    api/visualise
+    api/invariants
    
 
 Indices and tables
