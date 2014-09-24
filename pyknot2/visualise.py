@@ -14,13 +14,16 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     points : array-like
         The nx3 array to plot.
     mode : str
-        The toolkit to draw with. Defaults to 'mayavi'.
+        The toolkit to draw with. Defaults to 'auto', which will
+        automatically pick the first available toolkit from
+        ['mayavi', 'matplotlib', 'vispy'].
     clf : bool
         Whether the existing figure should be cleared
         before drawing the new one.
 
     TODO: remove mode, replace with auto toolkit selection
     '''
+            
     if mode == 'mayavi':
         plot_line_mayavi(points, clf=clf, **kwargs)
     elif mode == 'vispy':
