@@ -27,13 +27,11 @@ class GaussCode(object):
     Parameters
     ----------
     crossings : array-like or string or PlanarDiagram
-        One of:
-        - a raw_crossings array from a :class:`~pyknot2.spacecurves.Knot`
-          or :class:`~pyknot2.spacecurves.Link`.
-        - a string representation of the form (e.g.)
-          ``1+c,2-c,3+c,1-c,2+c,3-c``, with commas between entries,
-          and with multiple link components separated by spaces and/or
-          newlines.
+        A raw_crossings array from a :class:`~pyknot2.spacecurves.Knot`
+        or :class:`~pyknot2.spacecurves.Link`, or a string representation of the form (e.g.)
+        ``1+c,2-c,3+c,1-c,2+c,3-c``, with commas between entries,
+        and with multiple link components separated by spaces and/or
+        newlines.
     '''
 
     def __init__(self, crossings=''):
@@ -256,6 +254,10 @@ class GaussCode(object):
             Whether to use Reidemeister 1
         two : bool
             Whether to use Reidemeister 2
+        one_extended : bool
+            Whether to use extended Reidemeister 1, which removes crossings
+            connected by arcs which include only over or only under crossings
+            (and which must thus be topologically irrelevant).
         '''
 
         if verbose:
