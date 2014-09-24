@@ -39,7 +39,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
         A pyknot2 representation class for the knot, or anything that
         can automatically be converted into a GaussCode (i.e. by writing
         :code:`GaussCode(your_object)`).
-    variable : float or sympy variable
+    variable : float or complex or sympy variable
         The value to caltulate the Alexander polynomial at. Defaults to -1,
         but may be switched to the sympy variable ``t`` in the future.
         Supports int/float/complex types (fast, works for thousands of
