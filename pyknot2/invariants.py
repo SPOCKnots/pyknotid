@@ -130,76 +130,55 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
         poly_val = n.abs(poly_val)
     return poly_val
 
-def _alexander_sympy(crossings, t=None, quadrant='lr'):
+def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     '''
     Sympy implementation of the Alexander polynomial, evaluated
     with the variable replaced by some sympy expression.
     '''
     import sympy as sym
     if variable is None:
-        t = sym.var('t')
-
-    raise NotImplementedError('sympy alexander matrix not yet supported')
-
-    num_crossings = len(cs)/2
+        variable = sym.var('t')
+    num_crossings = len(crossings)/2
     matrix = sym.zeros((num_crossings, num_crossings))
     line_num = 0
-    crossingnum_counter = 0
+    crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
-    written_indices = []
-    for i in range(len(cs)):
-        crossing = cs[i]
-        for entry in crossing_dict:
-            if entry[0] == crossing[0]:
-                crossing_num = crossing_dict[entry]
-                crossing_entry = entry
-                crossing_exists = True
+    
+    over_clock = 1 - 1 / variable
+    under_clock_before = -1
+    under_clock_after = 1 / variable
+    over_aclock = 1 - variable
+    under_aclock_before = -1
+    under_aclock_after = variable
+
+    for i in range(len(crossings)):
+        identifier, over, clockwise = crossings[i]
+        if identifier in crossing_dict:
+            crossing_num = crossing_dict.pop(identifier)
+            crossing_exists = True
         if not crossing_exists:
-            crossing_num = crossingnum_counter
-            crossingnum_counter += 1
-            crossing_dict[crossing] = crossing_num
-        else:
-            crossing_dict.pop(crossing_entry)
+            crossing_num = crossing_num_counter
+            crossing_num_counter += 1
+            crossing_dict[identifier] = crossing_num
         crossing_exists = False
 
-        upper = crossing[1]
-        direc = crossing[2]
-        if upper > 0.99999:
-            if direc > 0.99999:
-                matrix_element = 1-1/t
-            else:
-                matrix_element = 1-t
-            matrix[crossing_num, line_num % num_crossings] = matrix_element
-            spec = (crossing_num, line_num % num_crossings)
-            if spec in written_indices:
-                print spec
-            else:
-                written_indices.append((crossing_num, line_num % num_crossings))
+        if over > 0.99999:
+            mat_elt = over_clock if clockwise > 0.999 else over_aclock
+            matrix[crossing_num, line_num % num_crossings] = mat_elt
         else:
-            if direc>0.99999:
-                new_matrix_element = 1/t
-            else:
-                new_matrix_element = t
+            new_mat_elt = (under_clock_after if clockwise > 0.999 else
+                           under_aclock_after)
             matrix[crossing_num, line_num % num_crossings] = -1
-            spec = (crossing_num, line_num % num_crossings)
-            if spec in written_indices:
-                print spec
-            else:
-                written_indices.append((crossing_num, line_num % num_crossings))
             line_num += 1
-            matrix[crossing_num, line_num % num_crossings] = new_matrix_element
-            spec = (crossing_num, line_num % num_crossings)
-            if spec in written_indices:
-                print spec
-            else:
-                written_indices.append((crossing_num, line_num % num_crossings))
+            matrix[crossing_num, line_num % num_crossings] = new_mat_elt
     if quadrant == 'lr':
-        poly = (matrix[1:, 1:]).det()
-    if quadrant == 'ur':
-        poly = (matrix[:-1, 1:]).det()
-    if quadrant == 'ul':
-        poly = (matrix[:-1,:-1]).det()
-    if quadrant == 'll':
-        poly = (matrix[1:,:-1]).det()
-    return poly.expand()
+        poly_val = matrix[1:, 1:].det()
+    elif quadrant == 'ur':
+        poly_val = matrix[:-1, 1:].det()
+    elif quadrant == 'ul':
+        poly_val = matrix[:-1:, :-1].det()
+    elif quadrant == 'll':
+        poly_val = matrix[1:, :-1].det()
+    return poly_val
+

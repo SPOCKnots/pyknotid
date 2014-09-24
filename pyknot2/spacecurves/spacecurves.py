@@ -377,6 +377,7 @@ class Knot(object):
         kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`
         constructor.
         '''
+        from pyknot2.simplify.octree import OctreeCell
         for i in range(runs):
             if len(self.points) > 30:
                 self._vprint('\rRun {} of {}, {} points remain'.format(
