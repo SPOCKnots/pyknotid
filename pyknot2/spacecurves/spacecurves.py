@@ -312,6 +312,24 @@ class Knot(object):
         return alexander(gc, variable=variable, quadrant=quadrant,
                          simplify=False)
 
+    def hyperbolic_volume(self):
+        '''
+        Returns the hyperbolic volume at the given point, via
+        :meth:`pyknot2.representations.PlanarDiagram.as_spherogram`.
+        '''
+        from ..invariants import hyperbolic_volume
+        return hyperbolic_volume(self.planar_diagram())
+
+    def exterior_manifold(self):
+        '''
+        The knot complement manifold of self as a SnapPy class
+        giving access to all of SnapPy's tools.
+
+        This method requires that Spherogram, and possibly SnapPy,
+        are installed.
+        '''
+        return self.planar_diagram().as_spherogram().exterior()
+
     def plot(self, mode='mayavi', clf=True, **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
