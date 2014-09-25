@@ -60,14 +60,19 @@ def plot_line_matplotlib(points, **kwargs):
 def plot_line_vispy(points, **kwargs):
     from vispy import app, scene
     canvas = scene.SceneCanvas(keys='interactive')
-    canvas.show()
-    view = canvas.central_widget.add_view()
-    view.set_camera('turntable', mode='perspective', up='z',
-                    distance=2)
+    canvas.view = canvas.central_widget.add_view()
     l = scene.visuals.Line(points, color=(1, 0, 0, 1), width=4,
-                           mode='gl', antialias=True)
-    view.add(l)
-    app.run()
+                                  mode='gl', antialias=True)
+    #l = scene.visuals.LinePlot(points[:, :2])
+    canvas.view.add(l)
+    canvas.view.set_camera('turntable', mode='perspective',
+                           up='z', distance=1.5*n.max(n.max(
+                               points, axis=0)))
+    l.transform = scene.transforms.AffineTransform()
+    l.transform.translate(-1*n.average(points, axis=0))
+
+    canvas.show()
+    return canvas
     
 
 def plot_projection(points, crossings=None, mark_start=False):
