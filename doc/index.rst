@@ -18,6 +18,7 @@ Contents:
     api/representations/planardiagram
     api/invariants
     api/visualise
+    api/catalogue/catalogue
    
 
 Indices and tables

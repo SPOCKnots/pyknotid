@@ -1,4 +1,8 @@
-'''Functions for identifying knots based on their polynomials.'''
+'''
+Identify knots
+==============
+
+Functions for identifying knots based on their polynomials.'''
 
 import database as db
 from database import Knot
