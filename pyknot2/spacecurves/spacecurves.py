@@ -268,6 +268,23 @@ class Knot(object):
 
         return crossings
 
+    def planar_writhe(self, **kwargs):
+        '''
+        Returns the current planar writhe of the knot; the signed sum
+        of crossings of the current projection.
+
+        The 'true' writhe is the average of this quantity, and is available
+        from the :meth:`writhe` method.
+
+        Parameters
+        ----------
+        **kwargs :
+            These are passed directly to :meth:`raw_crossings`.
+        '''
+        crossings = self.raw_crossings(**kwargs)
+        return n.sum(crossings[:, 3]) / 2.
+        
+
     def gauss_code(self, **kwargs):
         '''
         Returns a :class:`~pyknot2.representations.gausscode.GaussCode`
