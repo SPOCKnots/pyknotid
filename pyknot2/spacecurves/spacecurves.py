@@ -41,6 +41,8 @@ class Knot(object):
         self.points = n.array(points).astype(n.float)
         self.verbose = verbose
 
+        self._cached_writhe_and_crossing_numbers = None
+
         self._recent_octree = None 
 
     @property
@@ -51,6 +53,7 @@ class Knot(object):
     def points(self, points):
         self._points = points
         self._crossings = None
+        self._cached_writhe_and_crossing_numbers = None
 
     def _vprint(self, s, newline=True):
         '''Prints s, with optional newline. Intended for internal use
@@ -118,7 +121,7 @@ class Knot(object):
 
     @classmethod
     def from_lattice_data(cls, line):
-        '''returns a :class:`Knot` instance in which the line has been
+        '''Returns a :class:`Knot` instance in which the line has been
         slightly translated and rotated, in order to (practically) ensure
         no self intersections in closure or coincident points in
         projection.
@@ -283,7 +286,63 @@ class Knot(object):
         '''
         crossings = self.raw_crossings(**kwargs)
         return n.sum(crossings[:, 3]) / 2.
-        
+
+    def writhe(self, samples=10, recalculate=False, **kwargs):
+        '''
+        The (approximate) writhe of the space curve, obtained by averaging
+        the planar writhe over the given number of directions.
+
+        Parameters
+        ----------
+        samples : int
+            The number of directions to average over. Defaults to 10.
+        recalculate : bool
+            Whether to recalculate the writhe.
+        **kwargs :
+            These are passed directly to :meth:`raw_crossings`.
+        '''
+        crossing_number, writhe = self._writhe_and_crossing_numbers(
+            samples, recalculate=recalculate, **kwargs)
+        return writhe
+
+    def average_crossing_number(self, samples=10, recalculate=False,
+                                **kwargs):
+        '''
+        The (approximate) average crossing number of the space curve,
+        obtained by averaging
+        the planar writhe over the given number of directions.
+
+        Parameters
+        ----------
+        samples : int
+            The number of directions to average over.
+        recalculate : bool
+            Whether to recalculate the ACN.
+        **kwargs :
+            These are passed directly to :meth:`raw_crossings`.
+        '''
+        crossing_number, writhe = self._writhe_and_crossing_numbers(
+            samples, recalculate=recalculate, **kwargs)
+        return crossing_number
+
+    def _writhe_and_crossing_numbers(self, samples=10, recalculate=False,
+                                     **kwargs):
+        '''
+        Calculates and stores the writhe and average crossing number.
+        Internal (not intended for external use).
+        '''
+        if (self._cached_writhe_and_crossing_numbers is not None and
+            self._cached_writhe_and_crossing_numbers[0] == samples and
+            not recalculate):
+            return self._cached_writhe_and_crossing_numbers[1]
+
+        from .complexity import writhe_and_crossing_number
+        numbers = writhe_and_crossing_number(self.points, samples,
+                                             verbose=self.verbose,
+                                             **kwargs)
+        self._cached_writhe_and_crossing_numbers = (samples, numbers)
+
+        return numbers
 
     def gauss_code(self, **kwargs):
         '''
@@ -626,3 +685,4 @@ def get_rotation_matrix(angles):
              -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
             [-1*sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)]])
     return rotmat
+
