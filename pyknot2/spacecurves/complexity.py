@@ -38,7 +38,7 @@ def writhe_and_crossing_number(points, number_of_samples=10,
         k._apply_matrix(rotate_to_top(theta, phi))
         crossings = k.raw_crossings(**kwargs)
         crossing_numbers.append(len(crossings) / 2)
-        writhes.append(n.sum(crossings[:, 3]) / 2.)
+        writhes.append(n.sum(crossings[:, 3]) / 2. if len(crossings) else 0)
 
     return n.average(crossing_numbers), n.average(writhes)
 
