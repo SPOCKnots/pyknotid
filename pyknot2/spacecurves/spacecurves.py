@@ -674,6 +674,18 @@ class Link(object):
     def __len__(self):
         return n.sum(map(len, self.lines))
 
+    def arclength(self, include_closures=True):
+        '''
+        Returns the sum of arclengths of the lines.
+
+        Parameters
+        ----------
+        include_closures : bool
+            Whether to include the distance between the final and
+            first points of each line. Defaults to True.
+        '''
+        return n.sum(k.arclength(include_closures) for k in self.lines)
+        
 
         
         
