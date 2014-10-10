@@ -10,6 +10,7 @@ import numpy as n
 import sys
 
 import chelpers
+from .geometry import arclength
 
 from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
@@ -506,6 +507,19 @@ class Knot(object):
                 self.plot()
 
         self._vprint('\nReduced to {} points'.format(len(self.points)))
+
+    def arclength(self, include_closure=True):
+        '''
+        Returns the arclength of the line, the sum of lengths of each
+        piecewise linear segment.
+
+        Parameters
+        ----------
+        include_closure : bool
+            Whether to include the distance between the final and
+            first points. Defaults to True.
+        '''
+        return arclength(self.points, include_closure)
 
     def __len__(self):
         return len(self.points)
