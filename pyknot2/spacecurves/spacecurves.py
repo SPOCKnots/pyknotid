@@ -28,6 +28,11 @@ class Knot(object):
     A :class:`Knot` just represents a single space curve, it may be
     topologically trivial!
 
+    This class deliberately combines methods to do many different kinds
+    of measurements or manipulations. Some of these are externally
+    available through other modules in pyknot2 - if so, this is usually
+    indicated in the method docstrings.
+
     :param array-like points: the 3d points (vertices) of a piecewise
                               linear curve representation
     :param bool verbose: indicates whether the Knot should print
@@ -54,6 +59,8 @@ class Knot(object):
     @points.setter
     def points(self, points):
         self._points = points
+        # Changing the points may change the crossings, so
+        # reset any cached crossing attributes.
         self._crossings = None
         self._cached_writhe_and_crossing_numbers = None
 
@@ -278,8 +285,9 @@ class Knot(object):
         Returns the current planar writhe of the knot; the signed sum
         of crossings of the current projection.
 
-        The 'true' writhe is the average of this quantity, and is available
-        from the :meth:`writhe` method.
+        The 'true' writhe is the average of this quantity over all
+        projection directions, and is available from the :meth:`writhe`
+        method.
 
         Parameters
         ----------
