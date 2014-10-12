@@ -11,7 +11,8 @@ import numpy as n
 
 
 def writhe_and_crossing_number(points, number_of_samples=10,
-                               verbose=True, **kwargs):
+                               verbose=True, remove_duplicate_angles=False,
+                               **kwargs):
     '''
     Returns the writhe and crossing number of the given curve.
 
@@ -23,12 +24,19 @@ def writhe_and_crossing_number(points, number_of_samples=10,
         The number of projection directions to average over. These will
         be chosen to be roughly uniform on the sphere, as per
         :func:`get_rotation_angles`.
+    remove_duplicate_angles : bool
+        Whether to remove duplicate angles (i.e. points exactly opposite
+        one another on the sphere), adjusting the average appropriately.
+        This argument is currently experimental and defaults to False;
+        do *not* trust it to remove points correctly.
     **kwargs :
         These are passed to the raw_crossings method of Knot classes
         used internally.
     '''
 
     angles = get_rotation_angles(number_of_samples)
+    if remove_duplicate_angles:
+        angles = angles[:int(len(angles) / 2.)]
 
     crossing_numbers = []
     writhes = []
