@@ -8,6 +8,7 @@ topologically trivial) and links (multiple Knot classes).
 
 import numpy as n
 import sys
+from scipy.interpolate import interp1d
 
 import chelpers
 from .geometry import arclength
@@ -523,6 +524,86 @@ class Knot(object):
 
     def __len__(self):
         return len(self.points)
+
+    def reparameterised(self, mode='arclength', num_points=None,
+                           interpolation='linear'):
+        '''
+        Returns a new :class:`Knot` where new points have been selected
+        by interpolating the current ones.
+
+        .. warning:: This doesn't do what you expect! The new segments
+                     will probably not all be separated by the right amount
+                     in terms of the new parameterisation.
+
+        Parameters
+        ----------
+        mode : str
+            The function to reparameterise by. Defaults to 'arclength',
+            which is currently the only option.
+        num_points : int
+            The number of points in the new parameterisation. Defaults
+            to None, which means the same as the current number.
+        interpolation : str
+            The type of interpolation to use, passed directly to the
+            ``kind`` option of ``scipy.interpolate.interp1d``. Defaults
+            to 'linear', and other options have not been tested.
+        '''
+        indices = self._new_indices_by_arclength(num_points)
+
+        interp_xs = interp1d(range(len(self.points)+1),
+                             n.hstack((self.points[:, 0],
+                                      self.points[:, 0][:1])))
+        interp_ys = interp1d(range(len(self.points)+1),
+                             n.hstack((self.points[:, 1],
+                                      self.points[:, 1][:1])))
+        interp_zs = interp1d(range(len(self.points)+1),
+                             n.hstack((self.points[:, 2],
+                                      self.points[:, 2][:1])))
+
+        new_points = n.zeros((len(indices), 3), dtype=n.float)
+        new_points[:, 0] = interp_xs(indices)
+        new_points[:, 1] = interp_ys(indices)
+        new_points[:, 2] = interp_zs(indices)
+
+        return Knot(new_points)
+
+    def _new_indices_by_arclength(self, number, step=None, gap=0):
+        if number is None: 
+            number = len(self.points)
+        total_arclength = self.arclength()
+        if step is None:
+            arclengths = n.linspace(0, total_arclength - gap, number+1)[:-1]
+        else:
+            arclengths = n.arange(0, total_arclength - gap, step)
+
+        arclengths[0] += 0.000001
+       
+        points = self.points
+        segment_arclengths = self.segment_arclengths()
+        cumulative_arclength = n.hstack([[0.], n.cumsum(segment_arclengths)])
+        total_arclength = self.arclength()
+
+        indices = []
+
+        for arclength in arclengths:
+            first_greater_index = n.argmax(cumulative_arclength > arclength)
+            last_lower_index = (first_greater_index - 1) % len(points)
+            last_lower_point = points[last_lower_index]
+            arclength_below = cumulative_arclength[last_lower_index]
+            step_arclength = segment_arclengths[last_lower_index]
+            step_fraction = (arclength - arclength_below) / step_arclength
+            indices.append(last_lower_index + step_fraction)
+
+        return indices
+
+    def segment_arclengths(self):
+        '''
+        Returns an array of arclengths of every step in the line
+        defined by self.points.
+        '''
+        return n.apply_along_axis(
+            mag, 1, n.roll(self.points, -1, axis=0) - self.points)
+
 
 
 class Link(object):
