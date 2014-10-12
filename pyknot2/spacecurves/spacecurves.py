@@ -14,7 +14,7 @@ from .geometry import arclength
 
 from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
-from ..utils import vprint
+from ..utils import vprint, mag
 
 __all__ = ('Knot', 'Link')
 
@@ -694,9 +694,6 @@ def lineprint(x):
     sys.stdout.write('\r' + x)
     sys.stdout.flush()
     return 1
-
-def mag(v):
-    return n.sqrt(v.dot(v))
 
 def get_rotation_matrix(angles):
     phi, theta, psi = angles
