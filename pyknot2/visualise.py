@@ -8,12 +8,11 @@ different toolkits and types of plot.
 
 import numpy as n
 
-
 def plot_line(points, mode='mayavi', clf=True, **kwargs):
     '''
-    Plots the given line, using the toolkit given by mode.
-    Currently, only mayavi is supported. Future support will
-    include vispy, matplotlib?
+    Plots the given line, using the toolkit given by mode.  Currently,
+    only mayavi is supported. Future support will include vispy,
+    matplotlib?
 
     kwargs are passed to the toolkit specific function, except for:
 
