@@ -27,3 +27,14 @@ def vprint(string, newline=True, condition=True):
     if newline:
         sys.stdout.write('\n')
     sys.stdout.flush()
+
+def mag(v):
+    '''
+    Returns the magnitude of the vector v.
+
+    Parameters
+    ----------
+    v : ndarray
+        A vector of any dimension.
+    '''
+    return n.sqrt(v.dot(v))
