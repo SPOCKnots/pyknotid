@@ -4,8 +4,9 @@ Utility functions
 '''
 
 import sys
+import numpy as n
 
-def vprint(string, newline=True, condition=True):
+def vprint(string='', newline=True, condition=True):
     '''
     Verbose print; prints the given string if the input condition
     is met.
