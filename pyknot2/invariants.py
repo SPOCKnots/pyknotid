@@ -216,6 +216,7 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
         default is to True.
     '''
     from .representations.gausscode import GaussCode
+    import sympy as sym
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
@@ -255,6 +256,7 @@ def jones_mathematica(representation):
     '''
     from .representations.gausscode import GaussCode
     from .representations.planardiagram import PlanarDiagram
+    import sympy as sym
     if not isinstance(representation, (GaussCode, PlanarDiagram)):
         representation = GaussCode(representation)
     if isinstance(representation, GaussCode):
