@@ -18,7 +18,8 @@ import re
 import sympy as sym
 
 
-def alexander(representation, variable=-1, quadrant='lr', simplify=True):
+def alexander(representation, variable=-1, quadrant='lr', simplify=True,
+              mode='python'):
     '''
     Calculates the Alexander polynomial of the given knot. The
     representation *must* have just one knot component, or the calculation
@@ -32,6 +33,9 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
     elements. This is so important that this function automatically
     calls :meth:`pyknot2.representations.gausscode.GaussCode.simplify`,
     you must disable this manually if you don't want to do it.
+
+    .. note:: If 'maxima' or 'mathematica' is chosen as the mode, the
+              variable will automatically be set to ``t``.
 
     Parameters
     ----------
@@ -53,6 +57,12 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
         upper-left or lower-left respectively.
     simplify : bool
         Whether to call the GaussCode simplify method, defaults to True.
+    mode : string
+        One of 'python', 'maxima' or 'mathematica'. This denotes what
+        tools to use; if python, the calculation is performed with
+        numpy or sympy as appropriate. If maxima or mathematica, that
+        program is called by the function - this will only work if the
+        external tool is installed and available.
     '''
 
     from .representations.gausscode import GaussCode
@@ -73,8 +83,18 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True):
 
     if len(crossings) == 0:
         return 1
+
     if quadrant not in ['lr', 'ur', 'ul', 'll']:
         raise Exception('invalid quadrant')
+
+    if mode == 'maxima':
+        return alexander_maxima(representation, quadrant,
+                                verbose=False,
+                                simplify=False)
+    elif mode == 'mathematica':
+        return alexander_mathematica(representation, quadrant,
+                                     verbose=False)
+                                     
 
     if isinstance(variable, (int, float, complex)):
         return _alexander_numpy(crossings, variable, quadrant)
