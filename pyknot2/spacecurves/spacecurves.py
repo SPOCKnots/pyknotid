@@ -380,23 +380,20 @@ class Knot(object):
         crossings = self.raw_crossings(**kwargs)
         return PlanarDiagram(crossings)
 
-    def alexander_polynomial(self, variable=-1, quadrant='lr', **kwargs):
+    def alexander_polynomial(self, variable=-1, quadrant='lr',
+                             mode='python', **kwargs):
         '''
         Returns the Alexander polynomial at the given point,
         as calculated by :func:`pyknot2.invariants.alexander`.
 
-        This function only uses pyknot2's build in Alexander
-        polynomial functions, not those that would call
-        Mathematica. If you want to use these, call them
-        directly.
-
-        kwargs are passed to the gauss code calculation.
+        See :func:`pyknot2.invariants.alexander` for the meanings
+        of the named arguments.
         '''
         from ..invariants import alexander
         gc = self.gauss_code(**kwargs)
         gc.simplify()
         return alexander(gc, variable=variable, quadrant=quadrant,
-                         simplify=False)
+                         simplify=False, mode=mode)
 
     def hyperbolic_volume(self):
         '''
