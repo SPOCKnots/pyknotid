@@ -210,6 +210,30 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
 
 def alexander_maxima(representation, quadrant='ul', verbose=False,
                      simplify=True):
+    '''
+    Returns the Alexander polynomial of the given representation, by
+    calculating the matrix determinant in maxima.
+
+    The function only supports evaluating at the variable ``t``.
+
+    Parameters
+    ----------
+    representation : Anything convertible to a
+                     :class:`~pyknot2.representations.gausscode.GaussCode`
+        A pyknot2 representation class for the knot, or anything that
+        can automatically be converted into a GaussCode (i.e. by writing
+        :code:`GaussCode(your_object)`).
+    quadrant : str
+        Determines what principal minor of the Alexander matrix should be
+        used in the calculation; all choices *should* give the same answer.
+        Must be 'lr', 'ur', 'ul' or 'll' for lower-right, upper-right,
+    verbose : bool
+        Whether to print information about the procedure. Defaults to False.
+    simplify : bool
+        If True, tries to simplify the representation before calculating
+        the polynomial. Defaults to True.
+    '''
+
     from .representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
