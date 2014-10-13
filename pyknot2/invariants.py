@@ -15,6 +15,7 @@ or have other problems if Mathematica isn't available in your
 from __future__ import print_function
 import subprocess
 import re
+import sympy as sym
 
 
 def alexander(representation, variable=-1, quadrant='lr', simplify=True):
@@ -187,6 +188,43 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     return poly_val
 
 
+def alexander_maxima(representation, quadrant='ul', verbose=False,
+                     simplify=True):
+    from .representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    if simplify:
+        representation.simplify(one=True, two=True, one_extended=True)
+
+    if len(representation._gauss_code) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    code = representation._gauss_code[0]
+
+    if len(code) == 0:
+        return 1
+
+    mat_mat = _maxima_matrix(code, quadrant=quadrant, verbose=verbose)
+
+    code = ''.join([#'sparse: true;\n',
+                    'ratmx: true;\n',
+                    'display2d: false;\n',
+                    mat_mat,
+                    'expand(determinant(m2));'])
+
+    with open('maxima_batch.maxima', 'w') as fileh:
+        fileh.write(code)
+
+    result = subprocess.check_output(
+        ['maxima', '-b', 'maxima_batch.maxima']).split('\n')[-3][6:]
+
+    t = sym.var('t')
+
+    return eval(result.replace('^', '**'))
+
+                    
 def alexander_mathematica(representation, quadrant='ul', verbose=False,
                           via_file=True):
     '''
@@ -214,11 +252,16 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
         otherwise calls Mathematica directly with ``runMath``. The latter
         had a nasty bug in at least one recent Mathematica version, so the
         default is to True.
+    simplify : bool
+        If True, tries to simplify the representation before calculating
+        the polynomial. Defaults to True.
     '''
     from .representations.gausscode import GaussCode
-    import sympy as sym
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
+
+    if simplify:
+        representation.simplify(one=True, two=True, one_extended=True)
 
     code = representation._gauss_code
 
@@ -256,7 +299,6 @@ def jones_mathematica(representation):
     '''
     from .representations.gausscode import GaussCode
     from .representations.planardiagram import PlanarDiagram
-    import sympy as sym
     if not isinstance(representation, (GaussCode, PlanarDiagram)):
         representation = GaussCode(representation)
     if isinstance(representation, GaussCode):
@@ -414,5 +456,103 @@ def hyperbolic_volume(representation):
     if isinstance(representation, GaussCode):
         representation = PlanarDiagram(representation)
 
-    volume = representation.as_spherogram().exterior().volume()
-    return volume
+    volume = p.as_spherogram().exterior().volume()
+    return str(volume)[:accuracy]
+
+def _maxima_matrix(cs, quadrant='lr', verbose=False):
+    '''
+    Turns the given crossings into a string of maxima code
+    representing the Alexander matrix.
+
+    This functions is for internal use only.
+    '''
+    if len(cs) == 0:
+        return ''
+    mathmat_entries = {}
+
+    line_num = 0
+    num_crossings = len(cs)/2
+    crossing_num_counter = 0
+    crossing_dict = {}
+    crossing_exists = False
+    written_indices = []
+    for i, crossing in enumerate(cs):
+        if verbose and (i+1) % 100 == 0:
+            sys.stdout.write('\ri = {0} / {1}'.format(i, len(cs)))
+        identifier, upper, direc = crossing
+        for entry in crossing_dict:
+            if entry[0] == identifier:
+                crossing_num = crossing_dict[entry]
+                crossing_entry = entry
+                crossing_exists = True
+        if not crossing_exists:
+            crossing_num = crossing_num_counter
+            crossing_num_counter += 1
+            crossing_dict[tuple(crossing)] = crossing_num
+        else:
+            crossing_dict.pop(crossing_entry)
+        crossing_exists = False
+
+        if upper > 0.99999:
+            if direc > 0.99999:
+                matrix_element = '1-1/t'
+            else:
+                matrix_element = '1-t'
+            mathmat_entries[
+                (crossing_num, line_num % num_crossings)] =  matrix_element
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+        else:
+            if direc > 0.99999:
+                new_matrix_element = '1/t'
+            else:
+                new_matrix_element = 't'
+            mathmat_entries[(crossing_num, line_num % num_crossings)] =  '-1'
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+            line_num += 1
+            mathmat_entries[
+                (crossing_num, line_num % num_crossings)] = new_matrix_element
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+
+    if verbose:
+        print
+    outstrs = ['m: matrix(']
+    num_crossings = len(cs) / 2
+    for row in range(num_crossings):
+        outstrs.append('[')
+        for column in range(num_crossings):
+            if (row, column) in mathmat_entries:
+                value = mathmat_entries[(row, column)]
+            else:
+                value = '0'
+            outstrs.append(value)
+            outstrs.append(', ')
+        outstrs.pop()
+        outstrs.append(']')
+        outstrs.append(', ')
+    outstrs.pop()
+    outstrs.append(');\n')
+
+    outstrs.append(
+        {'lr': 'm2: submatrix(1, m, 1)',
+         'ur': 'm2: submatrix({nc}, m, 1)'.format(nc=num_crossings),
+         'ul': 'm2: submatrix({nc}, m, {nc})'.format(nc=num_crossings),
+         'll': 'm2: submatrix(1, m, {nc})'.format(nc=num_crossings)
+        }[quadrant])
+
+    outstrs.append(';\n')
+    return ''.join(outstrs)
