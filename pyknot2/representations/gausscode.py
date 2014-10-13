@@ -24,6 +24,9 @@ class GaussCode(object):
     This implements *only* extended Gauss code that includes the sign
     of each crossing (clockwise or anticlockwise).
 
+    The length of a Gauss code (e.g. ``len(GaussCode())``) is the
+    number of crossings in it.
+
     Parameters
     ----------
     crossings : array-like or string or PlanarDiagram
@@ -51,6 +54,9 @@ class GaussCode(object):
             self._init_from_raw_crossings_array(crossings)
 
         self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
+
+    def __len__(self):
+        return sum([len(c) for c in self._gauss_code]) / 2
 
     def _init_from_raw_crossings_array(self, crossings):
         '''
