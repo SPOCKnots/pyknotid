@@ -500,8 +500,8 @@ def hyperbolic_volume(representation):
     if isinstance(representation, GaussCode):
         representation = PlanarDiagram(representation)
 
-    volume = p.as_spherogram().exterior().volume()
-    return str(volume)[:accuracy]
+    volume = representation.as_spherogram().exterior().volume()
+    return volume
 
 def _maxima_matrix(cs, quadrant='lr', verbose=False):
     '''
