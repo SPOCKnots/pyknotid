@@ -49,6 +49,7 @@ class Knot(object):
         self.verbose = verbose
 
         self._cached_writhe_and_crossing_numbers = None
+        self._gauss_code = None
 
         self._recent_octree = None 
 
@@ -359,13 +360,21 @@ class Knot(object):
         Returns a :class:`~pyknot2.representations.gausscode.GaussCode`
         instance representing the crossings of the knot.
 
+        The GaussCode instance is cached internally. If you want to
+        recalculate it (e.g. to get an unsimplified version if you
+        have simplified it), you should pass `recalculate=True`.
+
         This method passes kwargs directly to :meth:`raw_crossings`,
         see the documentation of that function for all options.
         '''
 
         from ..representations.gausscode import GaussCode
+        if self._gauss_code is not None:
+            return self._gauss_code
         crossings = self.raw_crossings(**kwargs)
-        return GaussCode(crossings)
+        gc = GaussCode(crossings)
+        self._gauss_code = gc
+        return gc
 
     def planar_diagram(self, **kwargs):
         '''
