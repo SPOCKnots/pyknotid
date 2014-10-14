@@ -64,6 +64,7 @@ class Knot(object):
         # reset any cached crossing attributes.
         self._crossings = None
         self._cached_writhe_and_crossing_numbers = None
+        self._gauss_code = None
 
     def _vprint(self, s, newline=True):
         '''Prints s, with optional newline. Intended for internal use
