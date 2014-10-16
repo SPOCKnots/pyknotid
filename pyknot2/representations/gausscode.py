@@ -97,8 +97,8 @@ class GaussCode(object):
             line_crossings = line.split(',')
             for line_crossing in line_crossings:
                 line_gauss_code.append([int(line_crossing[:-2]),
-                                        over_under(line_crossing[-2]),
-                                        signs(line_crossing[-1])])
+                                        over_under[line_crossing[-2]],
+                                        signs[line_crossing[-1]]])
             gauss_code.append(n.array(line_gauss_code))
 
         self._gauss_code = gauss_code
