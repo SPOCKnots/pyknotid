@@ -41,6 +41,7 @@ class Link(object):
         self.lines = lines
 
         self._crossings = None
+        self._gauss_code = None
 
         self._recent_octree = None
 
@@ -51,9 +52,11 @@ class Link(object):
     @lines.setter
     def lines(self, lines):
         self._lines = lines
+        self._reset_cache()
 
     def _reset_cache(self):
         self._crossings = None
+        self._gauss_code = None
 
     @classmethod
     def from_periodic_lines(cls, lines, shape, perturb=True):
@@ -339,5 +342,25 @@ class Link(object):
         if self.verbose:
             vprint(s, newline)
         
+    def gauss_code(self, **kwargs):
+        '''
+        Returns a :class:`~pyknot2.representations.gausscode.GaussCode`
+        instance representing the crossings of the knot.
+
+        The GaussCode instance is cached internally. If you want to
+        recalculate it (e.g. to get an unsimplified version if you
+        have simplified it), you should pass `recalculate=True`.
+
+        This method passes kwargs directly to :meth:`raw_crossings`,
+        see the documentation of that function for all options.
+        '''
+
+        from ..representations.gausscode import GaussCode
+        if self._gauss_code is not None:
+            return self._gauss_code
+        crossings = self.raw_crossings(**kwargs)
+        gc = GaussCode(crossings)
+        self._gauss_code = gc
+        return gc
 
         
