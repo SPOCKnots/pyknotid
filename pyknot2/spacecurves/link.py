@@ -41,7 +41,7 @@ class Link(object):
         self.lines = lines
 
         self._crossings = None
-        self._gauss_code = None
+        self._gauss_code = {}
 
         self._recent_octree = None
 
@@ -56,7 +56,7 @@ class Link(object):
 
     def _reset_cache(self):
         self._crossings = None
-        self._gauss_code = None
+        self._gauss_code = {}
 
     @classmethod
     def from_periodic_lines(cls, lines, shape, perturb=True):
@@ -127,15 +127,16 @@ class Link(object):
             respectively.
         '''
 
-        if not recalculate and self._crossings is not None:
-            return self._crossings
+        if (not recalculate and self._crossings is not None and
+            self._crossings[0] == only_with_other_lines):
+            return self._crossings[1]
 
         lines = self.lines
 
         # Get length of each line
         line_lengths = [0.]
         line_lengths.extend([line.arclength() for line in lines])
-        cumulative_lengths = n.cumsum(line_lengths)
+        cumulative_lengths = n.cumsum(line_lengths)[:-1]
 
         if only_with_other_lines:
             crossings = [[] for _ in lines]
@@ -146,7 +147,8 @@ class Link(object):
                 mode=mode, include_closure=include_closures,
                 recalculate=recalculate) for k in lines]
             for index, cum_length in enumerate(cumulative_lengths):
-                crossings[index][:, :2] += cum_length
+                if len(crossings[index]):
+                    crossings[index][:, :2] += cum_length
                 crossings[index] = crossings[index].tolist()
 
         jump_mode = {'count_every_jump': 1, 'use_max_jump': 2,
@@ -220,7 +222,7 @@ class Link(object):
             [len(cs) / 2 for cs in crossings]))
         [cs.sort(key=lambda s: s[0]) for cs in crossings]
         crossings = [n.array(cs) for cs in crossings]
-        self._crossings = crossings
+        self._crossings = (only_with_other_lines, crossings)
 
         return crossings
                     
@@ -356,11 +358,11 @@ class Link(object):
         '''
 
         from ..representations.gausscode import GaussCode
-        if self._gauss_code is not None:
-            return self._gauss_code
+        include_self_linking = not kwargs.get('only_with_other_lines', True)
+        if ('recalculate' not in kwargs and
+            include_self_linking in self._gauss_code):
+            return self._gauss_code[include_self_linking]
         crossings = self.raw_crossings(**kwargs)
         gc = GaussCode(crossings)
-        self._gauss_code = gc
+        self._gauss_code[include_self_linking] = gc
         return gc
-
-        
