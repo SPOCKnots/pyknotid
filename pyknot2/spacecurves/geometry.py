@@ -28,3 +28,18 @@ def arclength(points, include_closure=True):
         arclength += length_mags[-1]
     return arclength
     
+def radius_of_gyration(points):
+    '''
+    Returns the radius of gyration of the given vertices, assuming
+    each has equal weight (and ignoring the connecting lines).
+
+    Parameters
+    ----------
+    points : array-like
+        Nx3 array of points in the line.
+    '''
+    av_pos = n.average(points, axis=0)
+    diffs = (points - av_pos)**2
+    rogs = n.sum(diffs, 1)
+    rog = n.average(rogs)
+    return n.sqrt(rog)

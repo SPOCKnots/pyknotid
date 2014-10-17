@@ -11,7 +11,7 @@ import sys
 from scipy.interpolate import interp1d
 
 import chelpers
-from .geometry import arclength
+from .geometry import arclength, radius_of_gyration
 
 from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
@@ -536,6 +536,14 @@ class Knot(object):
             first points. Defaults to True.
         '''
         return arclength(self.points, include_closure)
+
+    def radius_of_gyration(self):
+        '''
+        Returns the radius of gyration of the points of self,
+        assuming each has equal weight and ignoring the connecting
+        lines.
+        '''
+        return radius_of_gyration(self.points)
 
     def __len__(self):
         return len(self.points)
