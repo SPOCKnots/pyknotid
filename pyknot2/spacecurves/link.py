@@ -271,6 +271,43 @@ class Link(object):
         for line in lines[1:]:
             line.plot(mode=mode, clf=False, **kwargs)
 
+    def plot_projection(self, with_crossings=True, mark_start=False):
+        all_points = [line.points for line in self.lines]
+        lengths = [k.arclength() for k in self.lines]
+        cum_lengths = n.hstack([[0], n.cumsum(lengths)])
+
+        crossings = None
+        plot_crossings = []
+        if with_crossings:
+            all_crossings = self.raw_crossings()
+            plot_crossings = []
+            for index, crossings in enumerate(all_crossings):
+                remove_length = cum_lengths[index]
+                points = all_points[index]
+                for crossing in crossings:
+                    x, y, over, orientation = crossing
+
+                    # Work out which line the crossing is on
+                    # next_x_start = n.argmax(cum_lengths > x)
+                    # x_line = next_x_start - 1
+                    # x -= cum_lengths[x_line]
+                    x -= remove_length
+
+                    xint = int(x)
+                    r = points[xint]
+                    dr = points[(xint+1) % len(points)] - r
+                    plot_crossings.append(r + (x-xint) * dr)
+        fig, ax = plot_projection(all_points[0],
+                                  crossings=n.array(plot_crossings),
+                                  mark_start=mark_start)
+        for line in all_points[1:]:
+            plot_projection(line,
+                            crossings=n.array(plot_crossings),
+                            mark_start=mark_start,
+                            fig_ax=(fig, ax))
+
+        return fig, ax
+
     def octree_simplify(self, runs=1, plot=False, rotate=True,
                         obey_knotting=False, **kwargs):
         '''
