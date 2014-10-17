@@ -271,7 +271,8 @@ class Link(object):
         for line in lines[1:]:
             line.plot(mode=mode, clf=False, **kwargs)
 
-    def plot_projection(self, with_crossings=True, mark_start=False):
+    def plot_projection(self, with_crossings=True, mark_start=False,
+                        include_self_crossings=False):
         all_points = [line.points for line in self.lines]
         lengths = [k.arclength() for k in self.lines]
         cum_lengths = n.hstack([[0], n.cumsum(lengths)])
@@ -279,7 +280,8 @@ class Link(object):
         crossings = None
         plot_crossings = []
         if with_crossings:
-            all_crossings = self.raw_crossings()
+            all_crossings = self.raw_crossings(
+                only_with_other_lines=(not include_self_crossings))
             plot_crossings = []
             for index, crossings in enumerate(all_crossings):
                 remove_length = cum_lengths[index]
@@ -306,6 +308,7 @@ class Link(object):
                             mark_start=mark_start,
                             fig_ax=(fig, ax))
 
+        ax.autoscale(tight=False)
         return fig, ax
 
     def octree_simplify(self, runs=1, plot=False, rotate=True,
