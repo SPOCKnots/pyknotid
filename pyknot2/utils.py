@@ -39,3 +39,28 @@ def mag(v):
         A vector of any dimension.
     '''
     return n.sqrt(v.dot(v))
+
+def get_rotation_matrix(angles):
+    '''
+    Returns a rotation matrix based on sequentially rotating
+    around the 3 given axes (i.e. by multiplication of the component
+    rotation matrices).
+
+    Parameters
+    ----------
+    angles : iterable
+        The phy, theta and psi angles
+    '''
+    
+    phi, theta, psi = angles
+    sin = n.sin
+    cos = n.cos
+    rotmat = n.array([
+            [cos(theta)*cos(psi),
+             -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
+             sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi)],
+            [cos(theta)*sin(psi),
+             cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi),
+             -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
+            [-1*sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)]])
+    return rotmat

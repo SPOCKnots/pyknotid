@@ -15,7 +15,7 @@ from .geometry import arclength, radius_of_gyration
 
 from ..visualise import plot_line, plot_projection
 from ..io import to_json_file, from_json_file
-from ..utils import vprint, mag
+from ..utils import vprint, mag, get_rotation_matrix
 
 __all__ = ('Knot', 'Link')
 
@@ -954,24 +954,4 @@ class Link(object):
         
 
         
-        
-
-def lineprint(x):
-    sys.stdout.write('\r' + x)
-    sys.stdout.flush()
-    return 1
-
-def get_rotation_matrix(angles):
-    phi, theta, psi = angles
-    sin = n.sin
-    cos = n.cos
-    rotmat = n.array([
-            [cos(theta)*cos(psi),
-             -1*cos(phi)*sin(psi) + sin(phi)*sin(theta)*cos(psi),
-             sin(phi)*sin(psi) + cos(phi)*sin(theta)*cos(psi)],
-            [cos(theta)*sin(psi),
-             cos(phi)*cos(psi) + sin(phi)*sin(theta)*sin(psi),
-             -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
-            [-1*sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)]])
-    return rotmat
 
