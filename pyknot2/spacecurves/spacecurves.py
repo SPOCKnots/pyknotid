@@ -781,6 +781,8 @@ class Link(object):
                     '\rComparing line {} with {}'.format(line_index,
                                                          other_index))
 
+                other_index += line_index + 1
+                
                 points = line.points
                 comparison_points = other_line.points
                 if include_closures:
