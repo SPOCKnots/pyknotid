@@ -403,3 +403,15 @@ class Link(object):
         gc = GaussCode(crossings)
         self._gauss_code[include_self_linking] = gc
         return gc
+
+    def linking_number(self):
+        '''
+        Returns the linking number of the lines in the Link, the
+        sum of signed crossings between them, ignoring crossings of
+        a line with itself.
+        '''
+        crossings = self.raw_crossings(only_with_other_lines=True)
+        number = 0
+        for line in crossings:
+            number += n.sum(line[:, 3])
+        return int(n.abs(number / 2))
