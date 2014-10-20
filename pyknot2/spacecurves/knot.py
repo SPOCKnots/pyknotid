@@ -430,7 +430,8 @@ class Knot(object):
         '''
         plot_line(self.points, mode=mode, clf=clf, **kwargs)
 
-    def plot_projection(self, with_crossings=True, mark_start=False):
+    def plot_projection(self, with_crossings=True, mark_start=False,
+                        fig_ax=None):
         points = self.points
         crossings = None
         plot_crossings = []
@@ -446,7 +447,8 @@ class Knot(object):
                 plot_crossings.append(r + (x-xint) * dr)
         fig, ax = plot_projection(points,
                                   crossings=n.array(plot_crossings),
-                                  mark_start=mark_start)
+                                  mark_start=mark_start,
+                                  fig_ax=fig_ax)
         return fig, ax
 
     def __str__(self):
