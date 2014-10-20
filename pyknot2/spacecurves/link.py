@@ -37,8 +37,11 @@ class Link(object):
         self._lines = []
         self.verbose = verbose
 
-        lines = [Knot(line) for line in lines]
-        self.lines = lines
+        if isinstance(lines, Link):
+            self.lines = [Knot(line) for line in lines.lines]
+        else:
+            lines = [Knot(line) for line in lines]
+            self.lines = lines
 
         self._crossings = None
         self._gauss_code = {}
@@ -190,10 +193,10 @@ class Link(object):
                     first_line_range = first_line_range[:-1]
 
                 for i in first_line_range:
-                    if i % 100 == 0:
+                    if i % 1000 == 0:
                         self._vprint(
                             '\ri = {} / {}'.format(
-                                i, len(comparison_points)), False)
+                                i, len(first_line_range)), False)
                     v0 = points[i]
                     dv = points[(i + 1) % len(points)] - v0
 
@@ -416,5 +419,6 @@ class Link(object):
         crossings = self.raw_crossings(only_with_other_lines=True)
         number = 0
         for line in crossings:
-            number += n.sum(line[:, 3])
+            if len(line):
+                number += n.sum(line[:, 3])
         return int(n.abs(number / 2))
