@@ -6,6 +6,10 @@ Module for simplifying lines with an octree decomposition.
 '''
 
 import numpy as n
+try:
+    from coctree import angle_exceeds as cangle_exceeds
+except ImportError:
+    cangle_exceeds = None
 
 
 class OctreeCell(object):
@@ -94,6 +98,7 @@ class OctreeCell(object):
         lineseg.prev = lineseg
 
         return cls([lineseg], shape, **kwargs)
+
 
     @classmethod
     def from_lines(cls, lines, shape=None, **kwargs):
@@ -236,7 +241,7 @@ class OctreeCell(object):
             if not obey_knotting:
                 segment.replace_with_straight_line()
                 return
-            elif not angle_exceeds(segment.points, 2.*n.pi, False):
+            elif not angle_exceeds_func(segment.points, 2.*n.pi, True):
                 segment.replace_with_straight_line()
                 return  # No need to do more simplification if this happens
 
@@ -302,6 +307,7 @@ class OctreeCell(object):
         return (cut_x, cut_y, cut_z)
 
     def get_uniform_random_planes(self):
+
         '''Returns x, y and z values each uniformly randomly distributed
         through self.shape.'''
         xmin, xmax, ymin, ymax, zmin, zmax = self.shape
@@ -797,3 +803,8 @@ def split_cell_line(line, shape=(10, 10, 10.)):
             i += 1
     out.append(line)
     return out
+
+# Setup functions that *may* depend on cython
+angle_exceeds_func = angle_exceeds
+angle_exceeds_func = (cangle_exceeds if cangle_exceeds is not None
+                      else angle_exceeds)
