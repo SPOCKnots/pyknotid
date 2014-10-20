@@ -7,9 +7,11 @@ Module for simplifying lines with an octree decomposition.
 
 import numpy as n
 try:
-    from coctree import angle_exceeds as cangle_exceeds
+    from coctree import (angle_exceeds as cangle_exceeds,
+                         line_to_segments as cline_to_segments)
 except ImportError:
     cangle_exceeds = None
+    cline_to_segments = None
 
 
 class OctreeCell(object):
@@ -505,6 +507,7 @@ class LineSegment(object):
         else:  # if the line is a loop, just cut out most points
             self.points = self.points[::int(len(self.points)/3.)]
 
+
 class CellJumpSegment(LineSegment):
     '''A special LineSegment that denotes a jump through periodic boundary
     conditions. This has no special behaviour of its own, but is
@@ -520,14 +523,14 @@ def line_to_segments(line, cuts=None, join_ends=True):
     Returns a list of shorter lines resulting from cutting at
     all these cut planes.'''
 
-    xmin = n.min(line[:,0]) - 1
-    xmax = n.max(line[:,0]) + 1
-    ymin = n.min(line[:,1]) - 1
-    ymax = n.max(line[:,1]) + 1
-    zmin = n.min(line[:,2]) - 1
-    zmax = n.max(line[:,2]) + 1
-
     if cuts is None:
+        xmin = n.min(line[:,0]) - 1
+        xmax = n.max(line[:,0]) + 1
+        ymin = n.min(line[:,1]) - 1
+        ymax = n.max(line[:,1]) + 1
+        zmin = n.min(line[:,2]) - 1
+        zmax = n.max(line[:,2]) + 1
+
         cut_x = (xmax + xmin) / 2.
         cut_y = (ymax + ymin) / 2.
         cut_z = (zmin + zmax) / 2.
@@ -808,3 +811,6 @@ def split_cell_line(line, shape=(10, 10, 10.)):
 angle_exceeds_func = angle_exceeds
 angle_exceeds_func = (cangle_exceeds if cangle_exceeds is not None
                       else angle_exceeds)
+line_to_segments_func = line_to_segments
+line_to_segments_func = (cline_to_segments if cline_to_segments is not None
+                      else line_to_segments)
