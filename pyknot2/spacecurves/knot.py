@@ -21,6 +21,7 @@ from ..utils import vprint, mag, get_rotation_matrix
 __all__ = ('Knot', 'Link')
 
 
+
 class Knot(object):
     '''
     Class for holding the vertices of a single line, providing helper
@@ -52,7 +53,7 @@ class Knot(object):
         self._cached_writhe_and_crossing_numbers = None
         self._gauss_code = None
 
-        self._recent_octree = None 
+        self._recent_octree = None
 
     @property
     def points(self):
@@ -77,13 +78,15 @@ class Knot(object):
             sys.stdout.flush()
 
     def _unwrap_periodicity(self, shape):
-        '''Walks along the points of self, assuming that a periodic boundary on a
-
+        '''
+        Walks along the points of self, assuming that a periodic
+        boundary on a
         lattice bounded by :param:`shape` has been crossed whenever one
         point is too far from the previous one. When this occurs,
         subtracts the lattice vector in this direction.
 
-        :param array-like shape: The x, y, z distances of the periodic boundary.
+        :param array-like shape: The x, y, z distances of the periodic
+        boundary.
         '''
 
         dx, dy, dz = shape
@@ -229,7 +232,7 @@ class Knot(object):
             return self._crossings
 
         self._vprint('Finding crossings')
-        
+
         points = self.points
         segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
         segment_lengths = n.sqrt(n.sum(segment_lengths * segment_lengths,
@@ -239,12 +242,12 @@ class Knot(object):
         else:
             max_segment_length = n.max(segment_lengths[:-1])
         numtries = len(points) - 3
-        
+
         crossings = []
 
         jump_mode = {'count_every_jump': 1, 'use_max_jump': 2,
                      'naive': 3}[mode]
-        
+
         for i in range(len(points)-2):
             if self.verbose:
                 if i % 100 == 0:
@@ -252,7 +255,7 @@ class Knot(object):
                                 False)
             v0 = points[i]
             dv = points[(i+1) % len(points)] - v0
-            
+
             s = points[i+2:]
             vnum = i
             compnum = i+2
@@ -474,7 +477,7 @@ class Knot(object):
         '''
         Loads knot points from the given filename, assuming json format,
         and returns a :class:`Knot` with those points.
-        ''' 
+        '''
 
         points = from_json_file(filen)
         return cls(points)
@@ -552,7 +555,7 @@ class Knot(object):
         return len(self.points)
 
     def reparameterised(self, mode='arclength', num_points=None,
-                           interpolation='linear'):
+                        interpolation='linear'):
         '''
         Returns a new :class:`Knot` where new points have been selected
         by interpolating the current ones.
@@ -594,7 +597,7 @@ class Knot(object):
         return Knot(new_points)
 
     def _new_indices_by_arclength(self, number, step=None, gap=0):
-        if number is None: 
+        if number is None:
             number = len(self.points)
         total_arclength = self.arclength()
         if step is None:
@@ -603,7 +606,7 @@ class Knot(object):
             arclengths = n.arange(0, total_arclength - gap, step)
 
         arclengths[0] += 0.000001
-       
+
         points = self.points
         segment_arclengths = self.segment_arclengths()
         cumulative_arclength = n.hstack([[0.], n.cumsum(segment_arclengths)])
@@ -630,12 +633,12 @@ class Knot(object):
         return n.apply_along_axis(
             mag, 1, n.roll(self.points, -1, axis=0) - self.points)
 
-    def smooth(self, repeats=1, periodic=True, window_len=10, window='hanning'):
+    def smooth(self, repeats=1, periodic=True, window_len=10,
+               window='hanning'):
         '''
         Smooths each of the x, y and z components of self.points by
         convolving with a window of the given type and size.
 
-        
         Parameters
         ----------
         repeats : int
@@ -660,11 +663,3 @@ class Knot(object):
             points[:, 1] = smooth(points[:, 1], window_len, window)
             points[:, 2] = smooth(points[:, 2], window_len, window)
         self.points = points[(window_len + 1):-(window_len + 1)]
-
-
-
-
-        
-
-        
-
