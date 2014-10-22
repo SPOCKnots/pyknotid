@@ -356,6 +356,8 @@ class Link(object):
             oc.simplify(obey_knotting)
             self._recent_octree = oc
             self.lines = [Knot(line) for line in oc.get_lines()]
+            for line in self.lines:
+                line.points = remove_nearby_points(line.points)
 
             if rotate:
                 for line in self.lines:

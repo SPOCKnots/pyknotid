@@ -126,6 +126,9 @@ class OctreeCell(object):
             lineseg.prev = lineseg
             segments.append(lineseg)
 
+        # import ipdb
+        # ipdb.set_trace()
+
         return cls(segments, shape, **kwargs)
             
 
@@ -225,7 +228,7 @@ class OctreeCell(object):
 
         # First, immediately simplify if not following topology
 
-        if (len(segments) == 0 or self.depth > self.max_depth or
+        if (len(segments) == 0 or self.depth >= self.max_depth or
             any([span < self.min_cell for span in size])):
             # If any of these are True, no simplification is possible
             return
@@ -243,7 +246,7 @@ class OctreeCell(object):
             if not obey_knotting:
                 segment.replace_with_straight_line()
                 return
-            elif not angle_exceeds_func(segment.points, 2.*n.pi, True):
+            elif not angle_exceeds_func(segment.points, 2.*n.pi, False):
                 segment.replace_with_straight_line()
                 return  # No need to do more simplification if this happens
 
@@ -287,6 +290,8 @@ class OctreeCell(object):
 
         for i in range(8):
             octant_segments = octant_contents[i]
+            if not len(octant_segments):
+                continue
             shape = shapes[i]
             cxmin, cxmax, cymin, cymax, czmin, czmax = shape
             cell_size = (cxmax-cxmin) + (cymax-cymin) + (czmax-czmin)
@@ -522,6 +527,8 @@ def line_to_segments(line, cuts=None, join_ends=True):
 
     Returns a list of shorter lines resulting from cutting at
     all these cut planes.'''
+
+    line = line.copy()
 
     if cuts is None:
         xmin = n.min(line[:,0]) - 1
@@ -780,8 +787,9 @@ def remove_nearby_points(points):
     comparator = points[0]
     for i, point in enumerate(points):
         nex = points[(i+1) % len(points)]
-        if n.all((nex - point) < 0.00001):
+        if n.all(n.abs((nex - point)) < 0.00001):
             keep[i] = False
+    keep[-1] = True
 
     return points[keep]
                  
