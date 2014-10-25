@@ -41,13 +41,14 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
         raise Exception('invalid toolkit/mode')
 
 
-def plot_line_mayavi(points, clf=True, tube_radius=1., **kwargs):
+def plot_line_mayavi(points, clf=True, tube_radius=1., colormap='hsv',
+                     **kwargs):
     import mayavi.mlab as may
     if clf:
         may.clf()
     mus = n.linspace(0, 1, len(points))
     may.plot3d(points[:, 0], points[:, 1], points[:, 2], mus,
-               colormap='hsv', tube_radius=tube_radius, **kwargs)
+               colormap=colormap, tube_radius=tube_radius, **kwargs)
 
 def plot_line_matplotlib(points, **kwargs):
     import matplotlib.pyplot as plt
