@@ -405,7 +405,7 @@ class Knot(object):
         '''
         from ..invariants import alexander
         gc = self.gauss_code(**kwargs)
-        gc.simplify()
+        gc.simplify(verbose=self.verbose)
         return alexander(gc, variable=variable, quadrant=quadrant,
                          simplify=False, mode=mode)
 
