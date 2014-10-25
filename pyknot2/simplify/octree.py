@@ -817,8 +817,8 @@ def split_cell_line(line, shape=(10, 10, 10.)):
 
 # Setup functions that *may* depend on cython
 angle_exceeds_func = angle_exceeds
-angle_exceeds_func = (cangle_exceeds if cangle_exceeds is not None
-                      else angle_exceeds)
+# angle_exceeds_func = (cangle_exceeds if cangle_exceeds is not None
+#                       else angle_exceeds)
 line_to_segments_func = line_to_segments
-line_to_segments_func = (cline_to_segments if cline_to_segments is not None
-                      else line_to_segments)
+# line_to_segments_func = (cline_to_segments if cline_to_segments is not None
+#                       else line_to_segments)
