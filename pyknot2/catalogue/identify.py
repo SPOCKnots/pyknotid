@@ -32,7 +32,7 @@ def from_invariants(**kwargs):
 
     return_query = False
     conditions = []
-    for invariant, value in kwargs.iteritems():
+    for invariant, value in kwargs.items():
         invariant = invariant.lower()
         if invariant == 'identifier':
             conditions.append(Knot.identifier == value)
