@@ -44,6 +44,11 @@ def from_invariants(**kwargs):
         The abs of the Alexander polynomial at exp(2 Pi I / 3)
     alexander_imag_4 : int
         The abs of the Alexander polynomial at exp(Pi I / 2)
+    roots : iterable
+        The abs of the Alexander polnomial at the given roots, assumed
+        to start at 2, e.g. passing (3, 2, 1) is the same as identifying
+        at determinant=3, alexander_imag_3=2, alexander_imag_4=1. An
+        entry of None means the value is ignored in the lookup.
     jones : sympy
         The Jones polynomial, provided as a sympy expression in a single
         variable (ideally 'q').
