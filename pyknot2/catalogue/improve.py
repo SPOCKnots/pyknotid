@@ -6,6 +6,8 @@ from database import Knot, db
 from converters import homfly_to_jones, db2py_homfly, py2db_jones
 
 import csv
+import json
+import numpy as n
 
 def jones_from_homfly():
     '''Takes any knots with a homfly polynomial but lacking jones, and
@@ -39,6 +41,49 @@ def jones_from_homfly():
     with db.transaction():
         for knot in output_knots:
             knot.save()
+
+def alexander_imags_from_alexander(min_crossings=None):
+    '''Takes any knots with an Alexander polynomial but lacking its values
+    at exp(2 pi I / 3) and exp(2 pi I / 4). It could also do the
+    determinant (some of the determinants in the knot atlas data are
+    wrong), but doesn't for now.
+    '''
+    knots = Knot.select().where(~(Knot.alexander >> None))
+    if min_crossings is not None:
+        knots = knots.where(Knot.min_crossings == min_crossings)
+
+    output_knots = []
+    for i, knot in enumerate(knots):
+        if i % 100 == 0:
+            print i, len(output_knots)
+        if knot.alexander is not None:
+            array = json.loads(knot.alexander)
+            exp_3s = [n.exp(i*2*n.pi*1j/3.) for i in range(len(array))]
+            alexander_imag_3 = int(n.round(n.abs(n.sum([
+                coefficient * exponential for coefficient, exponential
+                in zip(array, exp_3s)]))))
+
+            exp_4s = [(1.j)**i for i in range(len(array))]
+            alexander_imag_4 = int(n.round(n.abs(n.sum([
+                coefficient * exponential for coefficient, exponential
+                in zip(array, exp_4s)]))))
+
+            knot.alexander_imag_3 = alexander_imag_3
+            knot.alexander_imag_4 = alexander_imag_4
+            output_knots.append(knot)
+
+        if i % 10000 == 0:
+            print('Saving changes')
+            with db.transaction():
+                for knot in output_knots:
+                    knot.save()
+            output_knots = []
+    print('Saving changes')
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
+    output_knots = []
+        
             
 def add_fiberedness():
     '''Adds fiberedness information to any knots where the information is
