@@ -58,6 +58,10 @@ def from_invariants(**kwargs):
     hyperbolic_volume or hyp_vol or hypvol : float or str
         The hyperbolic volume of the knot complement. The lookup is a
         string comparison based on the given number of significant digits.
+    other : iterable
+        A list of other peewee terms that can be chained in ``where()``
+        calls, e.g. ``database.Knot.min_crossings < 5``. This provides
+        more flexibility than the other options.
     '''
 
     return_query = False
@@ -98,6 +102,9 @@ def from_invariants(**kwargs):
             conditions.append(Knot.homfly << [val, chiral_val])
         elif invariant in ['hypvol', 'hyp_vol', 'hyperbolic_volume']:
             conditions.append(Knot.hyperbolic_volume % '{}*'.format(str(value)))
+        elif invariant == 'other':
+            for condition in value:
+                conditions.append(condition)
 
     selection = Knot.select()
     for condition in conditions:
