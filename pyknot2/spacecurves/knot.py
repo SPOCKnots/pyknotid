@@ -21,7 +21,6 @@ from ..utils import vprint, mag, get_rotation_matrix
 __all__ = ('Knot', 'Link')
 
 
-
 class Knot(object):
     '''
     Class for holding the vertices of a single line, providing helper
@@ -408,6 +407,31 @@ class Knot(object):
         gc.simplify(verbose=self.verbose)
         return alexander(gc, variable=variable, quadrant=quadrant,
                          simplify=False, mode=mode)
+
+    def alexander_at_root(self, root, round=True, **kwargs):
+        '''
+        Returns the Alexander polynomial at the given root of unity,
+        i.e. evaluated at exp(2 pi I / root). 
+
+        The result returned is the absolute value.
+
+        Parameters
+        ----------
+        root : int
+            The root of unity to use, i.e. evaluating at exp(2 pi I / root)
+        round : bool
+            If True and n in (1, 2, 3, 4), the result will be rounded
+            to the nearest integer for convenience, and returned as an
+            integer type.
+        **kwargs :
+            These are passed directly to :meth:`alexander_polynomial`.
+        '''
+        variable = n.exp(2 * n.pi * 1.j / root)
+        value = self.alexander_polynomial(variable, **kwargs)
+        value = n.abs(value)
+        if round and root in (1, 2, 3, 4):
+            value = int(n.round(value))
+        return value
 
     def hyperbolic_volume(self):
         '''
