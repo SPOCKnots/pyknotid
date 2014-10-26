@@ -24,15 +24,35 @@ def from_invariants(**kwargs):
 
     Does *not* support all available invariants. Currently, searching
     is supported by:
-    - identifier (e.g. '3_1')
-    - minimal crossings
-    - signature
-    - determinant
-    - unknotting number
-    - Alexander polynomial (provided as sympy)
-    - Jones polynomial (provided as sympy)
-    - HOMFLY
-    - hyperbolic volume
+
+    Parameters
+    ----------
+    identifier : str
+        The name of the knot following knot atlas conventions, e.g. '3_1'
+    min_crossings : int
+        The minimal crossing number of the knot.
+    signature : int
+        The signature invariant.
+    unknotting_number : int
+        The unknotting number of the knot.
+    alexander or alex : sympy
+        The Alexander polynomial, provided as a sympy expression in a
+        single variable (ideally 't').
+    determinant or alexander_imag_2: int
+        The Alexander polynomial at -1 (== exp(Pi I))
+    alexander_imag_3 : int
+        The abs of the Alexander polynomial at exp(2 Pi I / 3)
+    alexander_imag_4 : int
+        The abs of the Alexander polynomial at exp(Pi I / 2)
+    jones : sympy
+        The Jones polynomial, provided as a sympy expression in a single
+        variable (ideally 'q').
+    homfly : sympy
+        The HOMFLY-PT polynomial, provided as a sympy expression in two
+        variables.
+    hyperbolic_volume or hyp_vol or hypvol : float or str
+        The hyperbolic volume of the knot complement. The lookup is a
+        string comparison based on the given number of significant digits.
     '''
 
     return_query = False
