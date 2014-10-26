@@ -1,4 +1,5 @@
-'''Model classes and associated functions for storing and accessing
+'''
+Model classes and associated functions for storing and accessing
 knots in an sqlite database.
 
 These models use the peewee ORM. Other ORMs are not currently supported!
@@ -39,6 +40,14 @@ class Knot(BaseModel):
 
     determinant = IntegerField(null=True)
     '''The knot determinant (Alexander polynomial at -1)'''
+
+    alexander_imag_3 = IntegerField(null=True)
+    '''The absolute value of the Alexander polynomial at
+    exp(2 pi I / 3). This will always be an integer.'''
+
+    alexander_imag_4 = IntegerField(null=True)
+    '''The absolute value of the Alexander polynomial at
+    exp(2 pi I / 4) == I. This will always be an integer.'''
 
     alexander = TextField(null=True)
     '''Alexander polynomial, stored as a json list of coefficients from
