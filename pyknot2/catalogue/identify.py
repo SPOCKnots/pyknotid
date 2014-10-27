@@ -14,13 +14,9 @@ root_to_attr = {2: Knot.determinant,
                   3: Knot.alexander_imag_3,
                   4: Knot.alexander_imag_4}
 
-def from_invariants(**kwargs):
+def from_invariants(return_query=False, **kwargs):
     '''Takes invariants as kwargs, and does the appropriate conversion to
-    return a list of database objects matching all criteria.
-
-    Include the argument return_query=True to get the database query
-    (which can have further operations performed on it). By default,
-    this is False, and the function just returns a list of Knots.
+    return a list of database objects matching all the given criteria.
 
     Does *not* support all available invariants. Currently, searching
     is supported by:
@@ -62,6 +58,11 @@ def from_invariants(**kwargs):
         A list of other peewee terms that can be chained in ``where()``
         calls, e.g. ``database.Knot.min_crossings < 5``. This provides
         more flexibility than the other options.
+    return_query : bool
+        If True, returns the database iterator for the objects, otherwise
+        returns a list. Defaults to False (i.e. the list). This will
+        be much slower if the list is very large, but is convenient
+        for most searches.
     '''
 
     return_query = False
@@ -109,4 +110,6 @@ def from_invariants(**kwargs):
     selection = Knot.select()
     for condition in conditions:
         selection = selection.where(condition)
+    if return_query:
+        return selection
     return list(selection)
