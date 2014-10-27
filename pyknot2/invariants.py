@@ -91,6 +91,10 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
         return alexander_maxima(representation, quadrant,
                                 verbose=False,
                                 simplify=False)
+    elif mode == 'cypari':
+        return alexander_cypari(representation, quadrant,
+                                verbose=False,
+                                simplify=False)
     elif mode == 'mathematica':
         return alexander_mathematica(representation, quadrant,
                                      verbose=False)
@@ -263,6 +267,58 @@ def alexander_maxima(representation, quadrant='ul', verbose=False,
 
     result = subprocess.check_output(
         ['maxima', '-b', 'maxima_batch.maxima']).split('\n')[-3][6:]
+
+    t = sym.var('t')
+
+    return eval(result.replace('^', '**'))
+
+
+def alexander_cypari(representation, quadrant='ul', verbose=False,
+                     simplify=True):
+    '''
+    Returns the Alexander polynomial of the given representation, by
+    calculating the matrix determinant via cypari, a python interface
+    to Pari-GP.
+
+    The function only supports evaluating at the variable ``t``.
+
+    Parameters
+    ----------
+    representation : Anything convertible to a
+                     :class:`~pyknot2.representations.gausscode.GaussCode`
+        A pyknot2 representation class for the knot, or anything that
+        can automatically be converted into a GaussCode (i.e. by writing
+        :code:`GaussCode(your_object)`).
+    quadrant : str
+        Determines what principal minor of the Alexander matrix should be
+        used in the calculation; all choices *should* give the same answer.
+        Must be 'lr', 'ur', 'ul' or 'll' for lower-right, upper-right,
+    verbose : bool
+        Whether to print information about the procedure. Defaults to False.
+    simplify : bool
+        If True, tries to simplify the representation before calculating
+        the polynomial. Defaults to True.
+    '''
+
+    from .representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    if simplify:
+        representation.simplify(one=True, two=True, one_extended=True)
+
+    if len(representation._gauss_code) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    code = representation._gauss_code[0]
+
+    if len(code) == 0:
+        return 1
+
+    mat_mat = _cypari_matrix(code, quadrant=quadrant, verbose=verbose)
+
+    return mat_mat.matdet()
 
     t = sym.var('t')
 
@@ -600,3 +656,96 @@ def _maxima_matrix(cs, quadrant='lr', verbose=False):
 
     outstrs.append(';\n')
     return ''.join(outstrs)
+
+
+def _cypari_matrix(cs, quadrant='lr', verbose=False):
+    '''
+    Turns the given crossings into a string of maxima code
+    representing the Alexander matrix.
+
+    This functions is for internal use only.
+    '''
+    if len(cs) == 0:
+        return ''
+    mathmat_entries = {}
+
+    line_num = 0
+    num_crossings = len(cs)/2
+    crossing_num_counter = 0
+    crossing_dict = {}
+    crossing_exists = False
+    written_indices = []
+    for i, crossing in enumerate(cs):
+        if verbose and (i+1) % 100 == 0:
+            sys.stdout.write('\ri = {0} / {1}'.format(i, len(cs)))
+        identifier, upper, direc = crossing
+        for entry in crossing_dict:
+            if entry[0] == identifier:
+                crossing_num = crossing_dict[entry]
+                crossing_entry = entry
+                crossing_exists = True
+        if not crossing_exists:
+            crossing_num = crossing_num_counter
+            crossing_num_counter += 1
+            crossing_dict[tuple(crossing)] = crossing_num
+        else:
+            crossing_dict.pop(crossing_entry)
+        crossing_exists = False
+
+        if upper > 0.99999:
+            if direc > 0.99999:
+                matrix_element = '1-1/t'
+            else:
+                matrix_element = '1-t'
+            mathmat_entries[
+                (crossing_num, line_num % num_crossings)] =  matrix_element
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+        else:
+            if direc > 0.99999:
+                new_matrix_element = '1/t'
+            else:
+                new_matrix_element = 't'
+            mathmat_entries[(crossing_num, line_num % num_crossings)] =  '-1'
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+            line_num += 1
+            mathmat_entries[
+                (crossing_num, line_num % num_crossings)] = new_matrix_element
+            spec = (crossing_num, line_num % num_crossings)
+            if spec in written_indices:
+                print(spec)
+            else:
+                written_indices.append((crossing_num,
+                                        line_num % num_crossings))
+
+    if verbose:
+        print
+
+    print('Warning: quadrant ignored!')
+    
+    outstrs = ['[']
+    num_crossings = len(cs) / 2
+    for row in range(num_crossings-1):
+        for column in range(num_crossings-1):
+            if (row, column) in mathmat_entries:
+                value = mathmat_entries[(row, column)]
+            else:
+                value = '0'
+            outstrs.append(value)
+            outstrs.append(', ')
+        outstrs.pop()
+        outstrs.append(';')
+    outstrs.pop()
+    outstrs.append(']')
+
+    from cypari.gen import pari
+    return pari(''.join(outstrs))
