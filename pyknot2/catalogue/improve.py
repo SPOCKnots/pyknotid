@@ -58,6 +58,12 @@ def alexander_imags_from_alexander(min_crossings=None):
             print i, len(output_knots)
         if knot.alexander is not None:
             array = json.loads(knot.alexander)
+
+            exp_2s = [(-1.)**i for i in range(len(array))]
+            alexander_imag_2 = int(n.round(n.abs(n.sum([
+                coefficient * exponential for coefficient, exponential
+                in zip(array, exp_2s)]))))
+            
             exp_3s = [n.exp(i*2*n.pi*1j/3.) for i in range(len(array))]
             alexander_imag_3 = int(n.round(n.abs(n.sum([
                 coefficient * exponential for coefficient, exponential
@@ -68,6 +74,7 @@ def alexander_imags_from_alexander(min_crossings=None):
                 coefficient * exponential for coefficient, exponential
                 in zip(array, exp_4s)]))))
 
+            knot.determinant = alexander_imag_2
             knot.alexander_imag_3 = alexander_imag_3
             knot.alexander_imag_4 = alexander_imag_4
             output_knots.append(knot)
