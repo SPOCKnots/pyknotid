@@ -71,16 +71,21 @@ class Knot(BaseModel):
 
     conway_notation = CharField(null=True)
     '''Conway notation, as a string.'''
+
     gauss_code = CharField(null=True)
     '''Gauss code, as a string.'''
+
     planar_diagram = CharField(null=True)
     '''Planar diagram representation, as a string.'''
+
     dt_code = CharField(null=True)
     '''Dowker-Thistlethwaite code, as a string.'''
+
     two_bridge = CharField(null=True)
     '''Two-bridge notation, as a string.'''
 
     fibered = BooleanField(null=True)
+    '''Whether the knot is fibered or not.'''
 
     def __str__(self):
         if self.name:
