@@ -54,6 +54,12 @@ class Knot(object):
 
         self._recent_octree = None
 
+    def copy(self):
+        '''Returns another knot with the same points and verbosity
+        as self. Other attributes (e.g. cached crossings) are not
+        preserved.'''
+        return Knot(self.points.copy(), verbose=self.verbose)
+
     @property
     def points(self):
         return self._points
@@ -111,7 +117,7 @@ class Knot(object):
         self.points = points
 
     @classmethod
-    def from_periodic_line(cls, line, shape, perturb=True):
+    def from_periodic_line(cls, line, shape, perturb=True, **kwargs):
         '''Returns a :class:`Knot` instance in which the line has been
         unwrapped through
         the periodic boundaries.
