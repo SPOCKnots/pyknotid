@@ -49,7 +49,7 @@ def get_rotation_matrix(angles):
     Parameters
     ----------
     angles : iterable
-        The phy, theta and psi angles
+        The psi, theta and phi angles
     '''
     
     phi, theta, psi = angles
