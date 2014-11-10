@@ -37,6 +37,9 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     .. note:: If 'maxima' or 'mathematica' is chosen as the mode, the
               variable will automatically be set to ``t``.
 
+    .. note:: If the mode is 'cypari', the quadrant argument will be
+              ignored and the upper-left quadrant always used.
+
     Parameters
     ----------
     representation : Anything convertible to a
@@ -58,11 +61,12 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     simplify : bool
         Whether to call the GaussCode simplify method, defaults to True.
     mode : string
-        One of 'python', 'maxima' or 'mathematica'. This denotes what
+        One of 'python', 'maxima', 'cypari' or 'mathematica'. This
+        denotes what
         tools to use; if python, the calculation is performed with
         numpy or sympy as appropriate. If maxima or mathematica, that
         program is called by the function - this will only work if the
-        external tool is installed and available.
+        external tool is installed and available. Defaults to python.
     '''
 
     from .representations.gausscode import GaussCode
@@ -87,6 +91,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     if quadrant not in ['lr', 'ur', 'ul', 'll']:
         raise Exception('invalid quadrant')
 
+    mode = mode.lower()
     if mode == 'maxima':
         return alexander_maxima(representation, quadrant,
                                 verbose=False,
@@ -282,6 +287,8 @@ def alexander_cypari(representation, quadrant='ul', verbose=False,
 
     The function only supports evaluating at the variable ``t``.
 
+    The returned object is a cypari query type.
+
     Parameters
     ----------
     representation : Anything convertible to a
@@ -320,9 +327,6 @@ def alexander_cypari(representation, quadrant='ul', verbose=False,
 
     return mat_mat.matdet()
 
-    t = sym.var('t')
-
-    return eval(result.replace('^', '**'))
 
                     
 def alexander_mathematica(representation, quadrant='ul', verbose=False,
