@@ -76,7 +76,7 @@ class Link(object):
             If True, translates and rotates the knot to avoid any lattice
             problems.
         '''
-        lines = [Knot.from_periodic_line(line, shape, False)
+        lines = [Knot.from_periodic_line(line, shape, perturb=False)
                  for line in lines]
         link = cls(lines)
         if perturb:
@@ -236,16 +236,26 @@ class Link(object):
         return crossings
         
         
-    def translate(self, vector):
-        '''Translate all points in all lines of self.
+    def translate(self, vector, lines=None):
+        '''Translate all points in some or all lines of self.
 
         Parameters
         ----------
         vector : array-like
             The x, y, z translation distances
+        lines : list or int
+            The list of line indices to which the translation should
+            be applied. Defaults to None, which applies the translation
+            to all the lines of self. If an integer is supplied, only
+            the line with this index is translated.
         '''
-        for line in self.lines:
-            line.translate(vector)
+        if lines is None:
+            lines = range(len(self.lines))
+        elif isinstance(lines, int):
+            lines = [lines]
+        for index, line in enumerate(self.lines):
+            if index in lines:
+                line.translate(vector)
         
     def rotate(self, angles=None):
         '''
