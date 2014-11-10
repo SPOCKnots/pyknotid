@@ -18,9 +18,6 @@ class GaussCode(object):
     '''
     Class for containing and manipulating Gauss codes.
 
-    Just provides convenient display and conversion methods for now.
-    In the future, will support simplification.
-
     This implements *only* extended Gauss code that includes the sign
     of each crossing (clockwise or anticlockwise).
 
@@ -29,14 +26,15 @@ class GaussCode(object):
 
     Parameters
     ----------
-    crossings : array-like or string or PlanarDiagram
+    crossings : array-like or string or PlanarDiagram or GaussCode
         A raw_crossings array from a
         :class:`~pyknot2.spacecurves.spacecurves.Knot`
         or :class:`~pyknot2.spacecurves.spacecurves.Link`, or a string
         representation of the form (e.g.)
         ``1+c,2-c,3+c,1-c,2+c,3-c``, with commas between entries,
         and with multiple link components separated by spaces and/or
-        newlines.
+        newlines. If a PlanarDiagram or GaussCode is passed, the code
+        is duplicated.
     '''
 
     def __init__(self, crossings=''):
@@ -259,13 +257,17 @@ class GaussCode(object):
         Parameters
         ----------
         one : bool
-            Whether to use Reidemeister 1
+            Whether to use Reidemeister 1, defaults to True.
         two : bool
-            Whether to use Reidemeister 2
+            Whether to use Reidemeister 2, defaults to True.
         one_extended : bool
             Whether to use extended Reidemeister 1, which removes crossings
             connected by arcs which include only over or only under crossings
-            (and which must thus be topologically irrelevant).
+            (and which must thus be topologically irrelevant). Defaults
+            to True.
+        verbose : bool
+            Whether to print information about the ongoing siplification.
+            Defaults to True.
         '''
 
         if verbose:
