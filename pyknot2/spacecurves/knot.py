@@ -34,10 +34,14 @@ class Knot(object):
     available through other modules in pyknot2 - if so, this is usually
     indicated in the method docstrings.
 
-    :param array-like points: the 3d points (vertices) of a piecewise
-                              linear curve representation
-    :param bool verbose: indicates whether the Knot should print
-                         information during processing
+    Parameters
+    ----------
+    points : array-like
+        The 3d points (vertices) of a piecewise
+        linear curve representation
+    verbose : bool
+        Indicates whether the Knot should print
+        information during processing
     '''
 
     def __init__(self, points, verbose=True):
@@ -90,8 +94,10 @@ class Knot(object):
         point is too far from the previous one. When this occurs,
         subtracts the lattice vector in this direction.
 
-        :param array-like shape: The x, y, z distances of the periodic
-        boundary.
+        Parameters
+        ----------
+        shape : array-like
+            The x, y, z distances of the periodic boundary.
         '''
 
         dx, dy, dz = shape
@@ -146,7 +152,15 @@ class Knot(object):
         no self intersections in closure or coincident points in
         projection.
 
-        :rtype: :class:`Knot`
+        Parameters
+        ----------
+        line : array-like
+            The list of points in the line. May be any type that Knot
+            normally accepts.
+
+        Returns
+        -------
+        :class:`Knot`
         '''
         knot = cls(line)
         knot.translate(n.array([0.00123, 0.00231, 0.00321]))
@@ -156,7 +170,10 @@ class Knot(object):
     def translate(self, vector):
         '''Translates all the points of self by the given vector.
 
-        :param array-like vector: The x, y, z translation distances
+        Parameters
+        ----------
+        vector : array-like
+            The x, y, z translation distances
         '''
         self.points = self.points + n.array(vector)
 
