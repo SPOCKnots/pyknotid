@@ -766,7 +766,7 @@ class Knot(object):
         for root in roots:
             identify_kwargs[
                 'alex_imag_{}'.format(root)] = self.alexander_at_root(root)
-            
+
         if alexander:
             if not isinstance(alexander, dict):
                 alexander = {'variable': sym.var('t')}
@@ -775,4 +775,3 @@ class Knot(object):
 
         from pyknot2.catalogue.identify import from_invariants
         return from_invariants(**identify_kwargs)
-        
