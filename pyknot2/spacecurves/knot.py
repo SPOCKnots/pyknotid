@@ -774,4 +774,9 @@ class Knot(object):
             identify_kwargs['alexander'] = poly
 
         from pyknot2.catalogue.identify import from_invariants
+        from pyknot2.catalogue.database import Knot as DBKnot
+        if len(self.gauss_code()) < 16:
+            identify_kwargs['other'] = (
+                DBKnot.min_crossings <= len(self.gauss_code()), )
+
         return from_invariants(**identify_kwargs)
