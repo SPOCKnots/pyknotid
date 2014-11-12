@@ -61,6 +61,8 @@ class PlanarDiagram(list):
         '''
         Get a planar diagram class from the Spherogram module, which
         can be used to access SnapPy's manifold tools.
+
+        This method requires that spherogram and SnapPy are installed.
         '''
         from spherogram import Crossing, Link
         scs = [Crossing() for crossing in self]
