@@ -22,7 +22,7 @@ class Link(object):
     methods for convenient manipulation and analysis.
 
     The data is stored
-    internally as multiple :class:`Knots`.
+    internally as multiple :class:`Knot`s.
 
     Parameters
     ----------
