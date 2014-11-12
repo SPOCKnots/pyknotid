@@ -736,7 +736,8 @@ class Knot(object):
             points[:, 2] = smooth(points[:, 2], window_len, window)
         self.points = points[(window_len + 1):-(window_len + 1)]
 
-    def identify(self, determinant=True, alexander=False, roots=(2, 3, 4)):
+    def identify(self, determinant=True, alexander=False, roots=(2, 3, 4),
+                 min_crossings=True):
         '''
         Provides a simple interface to
         :func:`pyknot2.catalogue.identify.from_invariants`, by passing
@@ -757,6 +758,12 @@ class Knot(object):
             A list of roots of unity at which to evaluate. Defaults
             to (2, 3, 4), the first of which is redundant with the
             determinant.
+        min_crossings : bool
+            If True, the output is restricted to knots with fewer crossings
+            than the current projection of this one. Defaults to True. The
+            only reason to turn this off is to see what other knots have
+            the same invariants, it is never not useful for direct
+            identification.
         '''
         roots = set(roots)
         if determinant:
@@ -775,7 +782,7 @@ class Knot(object):
 
         from pyknot2.catalogue.identify import from_invariants
         from pyknot2.catalogue.database import Knot as DBKnot
-        if len(self.gauss_code()) < 16:
+        if min_crossings and len(self.gauss_code()) < 16:
             identify_kwargs['other'] = (
                 DBKnot.min_crossings <= len(self.gauss_code()), )
 
