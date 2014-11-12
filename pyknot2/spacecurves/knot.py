@@ -14,8 +14,10 @@ import chelpers
 from .geometry import arclength, radius_of_gyration
 from .smooth import smooth
 
+# We must be careful only to import modules that do not depend on this one, to
+# prevent import loops
 from ..visualise import plot_line, plot_projection
-from ..io import to_json_file, from_json_file
+from ..io import to_json_file, from_json_file, from_csv
 from ..utils import vprint, mag, get_rotation_matrix
 
 __all__ = ('Knot', 'Link')
@@ -42,9 +44,12 @@ class Knot(object):
     verbose : bool
         Indicates whether the Knot should print
         information during processing
+    add_closure : bool
+        If True, adds a final point to the knot near to the start point,
+        so that it will appear visually to close when plotted.
     '''
 
-    def __init__(self, points, verbose=True):
+    def __init__(self, points, verbose=True, add_closure=False):
         if isinstance(points, Knot):
             points = points.points.copy()
         self._points = n.zeros((0, 3))
@@ -57,6 +62,9 @@ class Knot(object):
         self._gauss_code = None
 
         self._recent_octree = None
+
+        if add_closure:
+            self._add_closure()
 
     def copy(self):
         '''Returns another knot with the same points and verbosity
@@ -85,6 +93,12 @@ class Knot(object):
             if newline:
                 sys.stdout.write('\n')
             sys.stdout.flush()
+
+    def _add_closure(self):
+        closing_distance = mag(self.points[-1] - self.points[0]) 
+        if closing_distance > 0.02:
+            self.points = k.vstack((self.points, self.points[:1] -
+                                    0.001*(self.points[0] - self.points[-1])))
 
     def _unwrap_periodicity(self, shape):
         '''
@@ -138,7 +152,7 @@ class Knot(object):
             If True, translates and rotates the knot to avoid any lattice
             problems.
         '''
-        knot = cls(line)
+        knot = cls(line, **kwargs)
         knot._unwrap_periodicity(shape)
         if perturb:
             knot.translate(n.array([0.00123, 0.00231, 0.00321]))
@@ -528,6 +542,16 @@ class Knot(object):
 
         points = from_json_file(filen)
         return cls(points)
+
+    @classmethod
+    def from_csv(cls, filen, **kwargs):
+        '''
+        Loads knot points from the given csv file, and returns a
+        :class:`Knot` with those points.
+        
+        Arguments are passed straight to :func:`pyknot.io.from_csv`.
+        '''
+        return cls(from_csv(filen, **kwargs))
 
     def octree_simplify(self, runs=1, plot=False, rotate=True,
                         obey_knotting=True, **kwargs):

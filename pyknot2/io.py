@@ -39,3 +39,30 @@ def from_json_file(filen):
         points = json.load(fileh)
 
     return n.array(points)
+
+
+def from_csv(filen, index_col=None, **kwargs):
+    '''
+    Loads an array of points from the given filename parsed
+    as a csv.
+    
+    .. note:: This function requires pandas to be installed.
+
+    .. note:: For data in a space-separated column format,
+              pass the argument `sep=' '` to read in as a csv.
+
+    Parameters
+    ----------
+    filen : str
+        The (relative) filename to load from.
+
+    **kwargs :
+        Passed directly to pandas.DataFrame.from_csv.
+    '''
+    import pandas as pn
+    df = pn.DataFrame.from_csv(filen, index_col=index_col,
+                               **kwargs)
+    return df.as_matrix()
+
+
+
