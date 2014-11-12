@@ -146,6 +146,7 @@ class GaussCode(object):
         # avoid modifying the arrays every time an RM is performed
         keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
 
+        # First do RM1 and RM2
         for line_index, line in enumerate(code):
             keep = keeps[line_index]
 
@@ -175,6 +176,7 @@ class GaussCode(object):
                         keeps[other_indices[0]][other_indices[2]] = False
 
 
+        # Next do RM1_extended separately (could be more efficient?)
         if one_extended:
             # Do extended RM1 as a separate step
             code = [line[keep] for (line, keep) in zip(code, keeps)]
