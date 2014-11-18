@@ -24,15 +24,23 @@ cpdef find_crossings(double [:] v, double [:] dv,
                      
     Parameters
     ----------
-    :param v0: the current point
-    :param dv: the vector connecting the current point to the next one
-    :param points: the array or (x, y) values of all the other points
-    :param segment_lengths: the length of each segment joining a point to the
-                            next
-    :param current_index: the index of the point currently being tested
-    :param comparison_index: the index of the first comparison point
-    :param int jump_mode: 1 to check every jump distance, 2 to jump based on
-                          the maximum one
+    v0 : ndarray
+        The current point, a 1D vector.
+    dv : ndarray
+        The vector connecting the current point to the next one
+    points : ndarray
+        The array or (x, y) values of all the other points
+    segment_lengths : ndarray
+        The length of each segment joining a point to the
+        next one.
+    current_index : long
+        The index of the point currently being tested.
+    comparison_index : long
+        The index of the first comparison point
+    jump_mode : int
+        1 to check every jump distance, 2 to jump based on
+        the maximum one, 3 to never jump and check the length
+        of every step.
     '''
 
     cdef list crossings = []
