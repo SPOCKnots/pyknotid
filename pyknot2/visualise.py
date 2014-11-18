@@ -21,7 +21,7 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
     mode : str
         The toolkit to draw with. Defaults to 'auto', which will
         automatically pick the first available toolkit from
-        ['mayavi', 'vispy', 'matplotlib'], or raise an exception
+        ['mayavi', 'matplotlib', 'vispy'], or raise an exception
         if none can be imported.
     clf : bool
         Whether the existing figure should be cleared
@@ -35,17 +35,18 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
             pass
     if mode == 'auto':
         try:
-            import vispy
-            mode = 'vispy'
-        except ImportError:
-            pass
-    if mode == 'auto':
-        try:
             import matplotlib.pyplot as plt
+            from mpl_toolkits.mplot3d import Axes3D
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             mode = 'matplotlib'
-        except ValueError:
+        except (ImportError, ValueError):
+            pass
+    if mode == 'auto':
+        try:
+            import vispy
+            mode = 'vispy'
+        except ImportError:
             pass
     if mode == 'auto':
         raise ImportError('Couldn\'t import any of mayavi, vispy, '
@@ -72,6 +73,7 @@ def plot_line_mayavi(points, clf=True, tube_radius=1., colormap='hsv',
 
 def plot_line_matplotlib(points, **kwargs):
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot(points[:, 0], points[:, 1], points[:, 2])
