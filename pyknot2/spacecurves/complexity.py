@@ -6,7 +6,7 @@ Functions for evaluating the (mainly geometrical) complexity of space
 curves.
 '''
 
-from .spacecurves import Knot
+from . import Knot
 import numpy as n
 
 
