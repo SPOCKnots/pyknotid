@@ -118,7 +118,7 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
     :func:`alexander`.
     '''
     import numpy as n
-    num_crossings = len(crossings)/2
+    num_crossings = int(len(crossings)/2)
     dtype = n.complex if isinstance(variable, n.complex) else n.float
     matrix = n.zeros((num_crossings, num_crossings), dtype=dtype)
     line_num = 0
@@ -174,7 +174,7 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     import sympy as sym
     if variable is None:
         variable = sym.var('t')
-    num_crossings = len(crossings)/2
+    num_crossings = int(len(crossings)/2)
     matrix = sym.zeros((num_crossings, num_crossings))
     line_num = 0
     crossing_num_counter = 0
@@ -273,7 +273,7 @@ def alexander_maxima(representation, quadrant='ul', verbose=False,
     result = subprocess.check_output(
         ['maxima', '-b', 'maxima_batch.maxima'])
     print('Maxima output is:\n', result)
-    result = result.split('\n')[-3][6:]
+    result = result.decode('utf-8').split('\n')[-3][6:]
 
     t = sym.var('t')
 
@@ -448,7 +448,7 @@ def _mathematica_matrix(cs, quadrant='lr', verbose=False):
     mathmat_entries = []
 
     line_num = 0
-    num_crossings = len(cs)/2
+    num_crossings = int(len(cs)/2)
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
@@ -577,7 +577,7 @@ def _maxima_matrix(cs, quadrant='lr', verbose=False):
     mathmat_entries = {}
 
     line_num = 0
-    num_crossings = len(cs)/2
+    num_crossings = int(len(cs)/2)
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
@@ -637,7 +637,7 @@ def _maxima_matrix(cs, quadrant='lr', verbose=False):
     if verbose:
         print
     outstrs = ['m: matrix(']
-    num_crossings = len(cs) / 2
+    num_crossings = int(len(cs) / 2)
     for row in range(num_crossings):
         outstrs.append('[')
         for column in range(num_crossings):
@@ -676,7 +676,7 @@ def _cypari_matrix(cs, quadrant='lr', verbose=False):
     mathmat_entries = {}
 
     line_num = 0
-    num_crossings = len(cs)/2
+    num_crossings = int(len(cs)/2)
     crossing_num_counter = 0
     crossing_dict = {}
     crossing_exists = False
@@ -739,7 +739,7 @@ def _cypari_matrix(cs, quadrant='lr', verbose=False):
     print('Warning: quadrant ignored!')
     
     outstrs = ['[']
-    num_crossings = len(cs) / 2
+    num_crossings = int(len(cs) / 2)
     for row in range(num_crossings-1):
         for column in range(num_crossings-1):
             if (row, column) in mathmat_entries:
