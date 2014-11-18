@@ -271,7 +271,9 @@ def alexander_maxima(representation, quadrant='ul', verbose=False,
         fileh.write(code)
 
     result = subprocess.check_output(
-        ['maxima', '-b', 'maxima_batch.maxima']).split('\n')[-3][6:]
+        ['maxima', '-b', 'maxima_batch.maxima'])
+    print('Maxima output is:\n', result)
+    result = result.split('\n')[-3][6:]
 
     t = sym.var('t')
 
