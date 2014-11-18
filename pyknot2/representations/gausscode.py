@@ -275,12 +275,12 @@ class GaussCode(object):
 
         if verbose:
             print('Simplifying: initially {} crossings'.format(
-                n.sum(map(len, self._gauss_code))))
+                n.sum([len(line) for line in self._gauss_code])))
 
         number_of_runs = 0
         while True:
             original_gc = self._gauss_code
-            original_len = n.sum(map(len, original_gc))
+            original_len = n.sum([len(line) for line in original_gc])
             self._do_reidemeister_moves(one, two)
             new_gc = self._gauss_code
             new_len = n.sum([len(line) for line in new_gc])
