@@ -1,7 +1,4 @@
-import invariants
-import spacecurves
-import representations
-import visualise
-import utils
-import catalogue
-import make
+from . import invariants
+from . import visualise
+from . import spacecurves
+from . import representations

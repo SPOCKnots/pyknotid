@@ -4,9 +4,9 @@ Identify knots
 
 Functions for identifying knots based on their polynomials.'''
 
-import database as db
-from database import Knot
-import converters
+from . import database as db
+from pyknot2.catalogue.database import Knot
+from pyknot2.catalogue import converters
 
 db.db.connect()
 

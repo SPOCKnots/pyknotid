@@ -10,15 +10,15 @@ import numpy as n
 import sys
 from scipy.interpolate import interp1d
 
-import chelpers
-from .geometry import arclength, radius_of_gyration
-from .smooth import smooth
+from pyknot2.spacecurves import chelpers
+from pyknot2.spacecurves.geometry import arclength, radius_of_gyration
+from pyknot2.spacecurves.smooth import smooth
 
 # We must be careful only to import modules that do not depend on this one, to
 # prevent import loops
-from ..visualise import plot_line, plot_projection
-from ..io import to_json_file, from_json_file, from_csv
-from ..utils import vprint, mag, get_rotation_matrix
+from pyknot2.visualise import plot_line, plot_projection
+from pyknot2.io import to_json_file, from_json_file, from_csv
+from pyknot2.utils import vprint, mag, get_rotation_matrix
 
 __all__ = ('Knot', 'Link')
 

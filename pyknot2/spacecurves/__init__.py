@@ -13,7 +13,7 @@ knots.
 
 '''
 
-from .knot import Knot
-from .link import Link
+from pyknot2.spacecurves.knot import Knot
+from pyknot2.spacecurves.link import Link
 __all__ = ('Knot', 'Link', )
 

@@ -10,7 +10,7 @@ See individual class documentation for more details.
 
 import numpy as n
 import sys
-import gausscode
+
 
 
 class PlanarDiagram(list):
@@ -33,6 +33,7 @@ class PlanarDiagram(list):
     '''
 
     def __init__(self, crossings=''):
+        from pyknot2.representations import gausscode
         if isinstance(crossings, str):
             self.extend(shorthand_to_crossings(crossings))
         elif isinstance(crossings, gausscode.GaussCode):

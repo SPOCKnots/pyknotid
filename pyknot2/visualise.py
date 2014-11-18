@@ -40,7 +40,7 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     else:
         raise Exception('invalid toolkit/mode')
 
-
+    
 def plot_line_mayavi(points, clf=True, tube_radius=1., colormap='hsv',
                      **kwargs):
     import mayavi.mlab as may

@@ -11,7 +11,7 @@ These provide convenient methods to convert between different
 representations, and to simplify via Reidemeister moves.
 '''
 
-from .gausscode import GaussCode
-from .planardiagram import PlanarDiagram
+from pyknot2.representations.gausscode import GaussCode
+from pyknot2.representations.planardiagram import PlanarDiagram
 __all__ = ['GaussCode', 'PlanarDiagram']
 

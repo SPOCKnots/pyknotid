@@ -8,12 +8,12 @@ necessarily actually be linked with one another.
 
 import numpy as n
 
-import chelpers
+from pyknot2.spacecurves import chelpers
 
-from .knot import Knot
-from ..visualise import plot_line, plot_projection
-from ..io import to_json_file, from_json_file
-from ..utils import vprint, mag, get_rotation_matrix
+from pyknot2.spacecurves.knot import Knot
+from pyknot2.visualise import plot_line, plot_projection
+from pyknot2.io import to_json_file, from_json_file
+from pyknot2.utils import vprint, mag, get_rotation_matrix
 
 
 class Link(object):

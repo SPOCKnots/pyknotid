@@ -1,1 +1,1 @@
-import knot
+from . import knot

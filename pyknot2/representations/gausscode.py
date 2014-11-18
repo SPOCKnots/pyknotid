@@ -12,7 +12,8 @@ from __future__ import print_function
 import numpy as n
 import re
 import sys
-import planardiagram
+
+from pyknot2.representations import planardiagram
 
 class GaussCode(object):
     '''
@@ -282,11 +283,11 @@ class GaussCode(object):
             original_len = n.sum(map(len, original_gc))
             self._do_reidemeister_moves(one, two)
             new_gc = self._gauss_code
-            new_len = n.sum(map(len, new_gc))
+            new_len = n.sum([len(line) for line in new_gc])
             number_of_runs += 1
             if verbose:
                 sys.stdout.write('\r-> {} crossings after {} runs'.format(
-                    n.sum(map(len, new_gc)), number_of_runs))
+                    n.sum([len(line) for line in new_gc]), number_of_runs))
                 sys.stdout.flush()
             if new_len == original_len:
                 break

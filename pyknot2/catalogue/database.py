@@ -8,7 +8,7 @@ These models use the peewee ORM. Other ORMs are not currently supported!
 from peewee import *
 import json
 import os
-import converters
+from pyknot2.catalogue import converters
 
 directory = os.path.dirname(os.path.realpath(__file__)) + '/knots.db'
 DB_LOCATION = directory
@@ -98,30 +98,30 @@ class Knot(BaseModel):
     def pprint(self):
         '''Pretty print all information contained about self.'''
         if self.name:
-            print 'Name: {}'.format(self.name)
+            print('Name: {}'.format(self.name))
         if self.identifier:
-            print 'Identifier: {}'.format(self.identifier)
+            print('Identifier: {}'.format(self.identifier))
         if self.min_crossings:
-            print 'Min crossings: {}'.format(self.min_crossings)
+            print('Min crossings: {}'.format(self.min_crossings))
         if self.fibered is not None:
-            print 'Fibered: {}'.format(self.fibered)
+            print('Fibered: {}'.format(self.fibered))
         if self.gauss_code:
-            print 'Gauss code: {}'.format(self.gauss_code)
+            print('Gauss code: {}'.format(self.gauss_code))
         if self.planar_diagram:
-            print 'Planar diagram: {}'.format(self.planar_diagram)
+            print('Planar diagram: {}'.format(self.planar_diagram))
         if self.determinant:
-            print 'Determinant: {}'.format(self.determinant)
+            print('Determinant: {}'.format(self.determinant))
         if self.signature:
-            print 'Signature: {}'.format(self.signature)
+            print('Signature: {}'.format(self.signature))
         if self.alexander:
-            print 'Alexander: {}'.format(
-                converters.json_to_alexander(self.alexander))
+            print('Alexander: {}'.format(
+                converters.json_to_alexander(self.alexander)))
         if self.jones:
-            print 'Jones: {}'.format(
-                converters.json_to_jones(self.jones))
+            print('Jones: {}'.format(
+                converters.json_to_jones(self.jones)))
         if self.homfly:
-            print 'HOMFLY: {}'.format(
-                converters.json_to_homfly(self.homfly))
+            print('HOMFLY: {}'.format(
+                converters.json_to_homfly(self.homfly)))
         if self.hyperbolic_volume:
-            print 'Hyperbolic voolume: {}'.format(self.hyperbolic_volume)
+            print('Hyperbolic voolume: {}'.format(self.hyperbolic_volume))
 

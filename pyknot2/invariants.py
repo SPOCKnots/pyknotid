@@ -69,7 +69,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
         external tool is installed and available. Defaults to python.
     '''
 
-    from .representations.gausscode import GaussCode
+    from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
@@ -243,7 +243,7 @@ def alexander_maxima(representation, quadrant='ul', verbose=False,
         the polynomial. Defaults to True.
     '''
 
-    from .representations.gausscode import GaussCode
+    from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
@@ -309,7 +309,7 @@ def alexander_cypari(representation, quadrant='ul', verbose=False,
         the polynomial. Defaults to True.
     '''
 
-    from .representations.gausscode import GaussCode
+    from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
@@ -362,7 +362,7 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
         If True, tries to simplify the representation before calculating
         the polynomial. Defaults to True.
     '''
-    from .representations.gausscode import GaussCode
+    from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
@@ -403,8 +403,8 @@ def jones_mathematica(representation):
         can automatically be converted into a GaussCode (i.e. by writing
         :code:`GaussCode(your_object)`), or a PlanarDiagram.
     '''
-    from .representations.gausscode import GaussCode
-    from .representations.planardiagram import PlanarDiagram
+    from pyknot2.representations.gausscode import GaussCode
+    from pyknot2.representations.planardiagram import PlanarDiagram
     if not isinstance(representation, (GaussCode, PlanarDiagram)):
         representation = GaussCode(representation)
     if isinstance(representation, GaussCode):
@@ -555,8 +555,8 @@ def hyperbolic_volume(representation):
         :code:`GaussCode(your_object)`), or a PlanarDiagram.
 
     '''
-    from .representations.gausscode import GaussCode
-    from .representations.planardiagram import PlanarDiagram
+    from pyknot2.representations.gausscode import GaussCode
+    from pyknot2.representations.planardiagram import PlanarDiagram
     if not isinstance(representation, (GaussCode, PlanarDiagram)):
         representation = GaussCode(representation)
     if isinstance(representation, GaussCode):
