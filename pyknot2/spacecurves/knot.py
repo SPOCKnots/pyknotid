@@ -489,7 +489,7 @@ class Knot(object):
         '''
         return self.planar_diagram().as_spherogram().exterior()
 
-    def plot(self, mode='mayavi', clf=True, **kwargs):
+    def plot(self, mode='auto', clf=True, **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
