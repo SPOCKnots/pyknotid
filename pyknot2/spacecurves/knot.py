@@ -97,7 +97,7 @@ class Knot(object):
     def _add_closure(self):
         closing_distance = mag(self.points[-1] - self.points[0]) 
         if closing_distance > 0.02:
-            self.points = k.vstack((self.points, self.points[:1] -
+            self.points = n.vstack((self.points, self.points[:1] -
                                     0.001*(self.points[0] - self.points[-1])))
 
     def _unwrap_periodicity(self, shape):
@@ -757,7 +757,8 @@ class Knot(object):
         roots : iterable
             A list of roots of unity at which to evaluate. Defaults
             to (2, 3, 4), the first of which is redundant with the
-            determinant.
+            determinant. Note that higher roots can be calculated, but
+            aren't available in the database.
         min_crossings : bool
             If True, the output is restricted to knots with fewer crossings
             than the current projection of this one. Defaults to True. The
@@ -765,6 +766,8 @@ class Knot(object):
             the same invariants, it is never not useful for direct
             identification.
         '''
+        if not roots:
+            roots = []
         roots = set(roots)
         if determinant:
             roots.add(2)
