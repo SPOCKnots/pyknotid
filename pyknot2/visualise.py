@@ -8,15 +8,11 @@ different toolkits and types of plot.
 
 import numpy as n
 
-def plot_line(points, mode='mayavi', clf=True, **kwargs):
+def plot_line(points, mode='auto', clf=True, **kwargs):
     '''
-    Plots the given line, using the toolkit given by mode.  Currently,
-    only mayavi is supported. Future support will include vispy,
-    matplotlib?
+    Plots the given line, using the toolkit given by mode.
 
     kwargs are passed to the toolkit specific function, except for:
-
-    TODO: add auto toolkit selection
 
     Parameters
     ----------
@@ -25,11 +21,35 @@ def plot_line(points, mode='mayavi', clf=True, **kwargs):
     mode : str
         The toolkit to draw with. Defaults to 'auto', which will
         automatically pick the first available toolkit from
-        ['mayavi', 'matplotlib', 'vispy'].
+        ['mayavi', 'vispy', 'matplotlib'], or raise an exception
+        if none can be imported.
     clf : bool
         Whether the existing figure should be cleared
         before drawing the new one.
     '''
+    if mode == 'auto':
+        try:
+            import mayavi.mlab as may
+            mode = 'mayavi'
+        except ImportError:
+            pass
+    if mode == 'auto':
+        try:
+            import vispy
+            mode = 'vispy'
+        except ImportError:
+            pass
+    if mode == 'auto':
+        try:
+            import matplotlib.pyplot as plt
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            mode = 'matplotlib'
+        except ValueError:
+            pass
+    if mode == 'auto':
+        raise ImportError('Couldn\'t import any of mayavi, vispy, '
+                          'or matplotlib\'s 3d axes.')
             
     if mode == 'mayavi':
         plot_line_mayavi(points, clf=clf, **kwargs)
