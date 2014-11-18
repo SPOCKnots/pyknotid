@@ -319,7 +319,8 @@ class OctreeCell(object):
         through self.shape.'''
         xmin, xmax, ymin, ymax, zmin, zmax = self.shape
         return (n.array([xmin, ymin, zmin]) +
-                n.random.random(3) * n.array(self.get_cell_size()))
+                (0.1 + 0.8*n.random.random(3)) *
+                n.array(self.get_cell_size()))
 
     def get_cell_size(self):
         return (self.shape[1] - self.shape[0],
