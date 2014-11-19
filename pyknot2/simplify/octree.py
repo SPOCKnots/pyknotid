@@ -64,7 +64,7 @@ class OctreeCell(object):
             state = {}
         self.state = state
 
-        if not state.has_key('boundaries'):
+        if 'boundaries' not in state:
             state['boundaries'] = []
         state['boundaries'].append(self.boundary_lines())
 
