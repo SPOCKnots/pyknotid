@@ -16,7 +16,7 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
 
     Parameters
     ----------
-    points : array-like
+    points : ndarray
         The nx3 array to plot.
     mode : str
         The toolkit to draw with. Defaults to 'auto', which will
