@@ -8,8 +8,11 @@ necessarily actually be linked with one another.
 
 import numpy as n
 
-from pyknot2.spacecurves import chelpers
-
+try:
+    from pyknot2.spacecurves import chelpers
+except:
+    from pyknot2.spacecurves import helpers as chelpers
+from pyknot2.spacecurves import helpers
 from pyknot2.spacecurves.knot import Knot
 from pyknot2.visualise import plot_line, plot_projection
 from pyknot2.io import to_json_file, from_json_file
@@ -86,7 +89,8 @@ class Link(object):
 
     def raw_crossings(self, mode='use_max_jump', only_with_other_lines=True,
                       include_closures=True,
-                      recalculate=False):
+                      recalculate=False,
+                      use_python=False):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -134,6 +138,11 @@ class Link(object):
             self._crossings[0] == only_with_other_lines):
             return self._crossings[1]
 
+        if use_python:
+            helpers_module = helpers
+        else:
+            helpers_module = chelpers
+
         lines = self.lines
 
         # Get length of each line
@@ -148,7 +157,7 @@ class Link(object):
                          'component lines'.format(len(lines)))
             crossings = [k.raw_crossings(
                 mode=mode, include_closure=include_closures,
-                recalculate=recalculate) for k in lines]
+                recalculate=recalculate, use_python=use_python) for k in lines]
             for index, cum_length in enumerate(cumulative_lengths):
                 if len(crossings[index]):
                     crossings[index][:, :2] += cum_length
@@ -203,7 +212,7 @@ class Link(object):
                     vnum = i
                     compnum = 0  # start at beginning of other line
                     
-                    new_crossings = chelpers.find_crossings(
+                    new_crossings = helpers_module.find_crossings(
                         v0, dv, comparison_points, other_seg_lengths,
                         vnum, compnum,
                         max_segment_length,
