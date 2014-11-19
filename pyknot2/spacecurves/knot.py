@@ -10,7 +10,11 @@ import numpy as n
 import sys
 from scipy.interpolate import interp1d
 
-from pyknot2.spacecurves import chelpers
+try:
+    from pyknot2.spacecurves import chelpers
+except ImportError:
+    from pyknot2.spacecurves import helpers as chelpers
+from pyknot2.spacecurves import helpers as helpers
 from pyknot2.spacecurves.geometry import arclength, radius_of_gyration
 from pyknot2.spacecurves.smooth import smooth
 
@@ -224,7 +228,7 @@ class Knot(object):
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
     def raw_crossings(self, mode='use_max_jump', include_closure=True,
-                      recalculate=False):
+                      recalculate=False, use_python=False):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -252,6 +256,11 @@ class Knot(object):
         recalculate : bool, optional
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
+        use_python : bool, optional
+            Whether to force the use of the python (not cython) implementation
+            of find_crossings. This will make no difference if the cython
+            could not be loaded, in which case python is already used automatically.
+            Defaults to False.
 
         Returns
         -------
@@ -266,6 +275,11 @@ class Knot(object):
 
         if not recalculate and self._crossings is not None:
             return self._crossings
+
+        if use_python:
+            helpers_module = helpers
+        else:
+            helpers_module = chelpers
 
         self._vprint('Finding crossings')
 
@@ -296,7 +310,7 @@ class Knot(object):
             vnum = i
             compnum = i+2
 
-            crossings.extend(chelpers.find_crossings(
+            crossings.extend(helpers_module.find_crossings(
                 v0, dv, s, segment_lengths[compnum:],
                 vnum, compnum,
                 max_segment_length,
@@ -309,7 +323,7 @@ class Knot(object):
             s = points[1:-1]
             vnum = len(points) - 1
             compnum = 1
-            crossings.extend(chelpers.find_crossings(
+            crossings.extend(helpers_module.find_crossings(
                 v0, dv, s, segment_lengths[compnum:],
                 vnum, compnum,
                 max_segment_length,
