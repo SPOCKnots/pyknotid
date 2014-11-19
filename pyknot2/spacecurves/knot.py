@@ -257,10 +257,10 @@ class Knot(object):
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
         use_python : bool, optional
-            Whether to force the use of the python (not cython) implementation
-            of find_crossings. This will make no difference if the cython
-            could not be loaded, in which case python is already used automatically.
-            Defaults to False.
+            Whether to force the use of the python (as opposed to cython)
+            implementation of find_crossings. This will make no difference
+            if the cython could not be loaded, in which case python is already
+            used automatically. Defaults to False.
 
         Returns
         -------
