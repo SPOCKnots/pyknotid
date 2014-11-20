@@ -41,7 +41,7 @@ def from_json_file(filen):
     return n.array(points)
 
 
-def from_csv(filen, index_col=None, **kwargs):
+def from_csv(filen, index_col=None, header_row=None, **kwargs):
     '''
     Loads an array of points from the given filename parsed
     as a csv.
@@ -55,13 +55,20 @@ def from_csv(filen, index_col=None, **kwargs):
     ----------
     filen : str
         The (relative) filename to load from.
+    index_col: int or None
+        The column that indexes the rows, defaults to None
+        meaning no such column is present.
+    header_row: int or None
+        The row with header information (i.e. column names), with
+        all previous rows ignored. Defaults to None, which means
+        no such header exists.
 
     **kwargs :
         Passed directly to pandas.DataFrame.from_csv.
     '''
     import pandas as pn
     df = pn.DataFrame.from_csv(filen, index_col=index_col,
-                               **kwargs)
+                               header_row=header_row, **kwargs)
     return df.as_matrix()
 
 
