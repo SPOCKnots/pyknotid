@@ -13,8 +13,6 @@ import numpy as n
 import re
 import sys
 
-from pyknot2.representations import planardiagram
-
 class GaussCode(object):
     '''
     Class for containing and manipulating Gauss codes.
@@ -39,7 +37,7 @@ class GaussCode(object):
     '''
 
     def __init__(self, crossings=''):
-
+        from pyknot2.representations import planardiagram
         if isinstance(crossings, str):
             self._init_from_string(crossings)
         elif isinstance(crossings, GaussCode):
