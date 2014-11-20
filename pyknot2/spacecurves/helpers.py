@@ -7,14 +7,15 @@ import numpy as n
 csqrt = n.sqrt
 floor = n.floor
 
+
 def find_crossings(v, dv,
-                     points,
-                     segment_lengths,
-                     current_index,
-                     comparison_index,
-                     max_segment_length,
-                     jump_mode=1
-                     ):
+                   points,
+                   segment_lengths,
+                   current_index,
+                   comparison_index,
+                   max_segment_length,
+                   jump_mode
+                   ):
     '''
     Searches for crossings between the given vector and any other
     vector in the
@@ -117,8 +118,6 @@ def find_crossings(v, dv,
     return crossings
                                       
 
-
-
 def do_vectors_intersect(px, py, dpx, dpy,
                                 qx, qy, dqx, dqy):
     """Takes four vectors p, dp and q, dq, then tests whether they cross in
@@ -137,12 +136,15 @@ def do_vectors_intersect(px, py, dpx, dpy,
             return (1, t, u)
     return (0, -1., -1.)
         
+
 def cross_product(px, py, qx, qy):
     '''Simple cython cross product for 2D vectors.'''
     return px * qy - py * qx
 
+
 def sign(a):
     return (1. if a > 0. else (-1. if a < 0. else 0.))
+
 
 def mag_difference(a, b):
     '''The magnitude of the vector joining a and b'''
