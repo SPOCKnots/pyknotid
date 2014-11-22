@@ -64,7 +64,6 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self).smooth(repeats=repeats, window_len=window_len,
                                      window=window, periodic=False)
 
-
     def plot_uniform_angles(self, number_of_samples):
         '''
         Plots the projection of the knot at each of the given
@@ -161,16 +160,8 @@ class OpenKnot(SpaceCurve):
 
         return sorted(fracs, key=lambda j: j[1])
         #return fracs[n.argsort(fracs[:, 1])]
-        
 
-    def alexander_diagram(self, number_of_samples=10,
-                               scatter_points=False,
-                               mode='imshow', **kwargs):
-        '''
-        Creates (and returns) a projective diagram showing each
-        different Alexander polynomial in a different colour according
-        to a closure on a far away point in this direction.
-        '''
+    def _alexander_map_values(self, number_of_samples=10, **kwargs):
         polys = self.alexander_polynomials(
             number_of_samples=number_of_samples, **kwargs)
 
@@ -187,6 +178,20 @@ class OpenKnot(SpaceCurve):
                           tuple(interpolation_points),
                           method='nearest')
 
+        return positions, values
+        
+
+    def plot_alexander_map(self, number_of_samples=10,
+                           scatter_points=False,
+                           mode='imshow', **kwargs):
+        '''
+        Creates (and returns) a projective diagram showing each
+        different Alexander polynomial in a different colour according
+        to a closure on a far away point in this direction.
+        '''
+
+        positions, values = self._alexander_map_values(number_of_samples)
+
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
 
@@ -198,20 +203,41 @@ class OpenKnot(SpaceCurve):
         ax.set_xticks([])
         ax.set_yticks([])
 
-        ax.set_xlim(0, 157)
-        ax.set_ylim(0, 100)
+        ax.set_xlim(-0.5, 156.5)
+        ax.set_ylim(-0.5, 99.5)
 
         im_positions = positions*25
         im_positions[:, 0] -= 0.5
         im_positions[:, 1] += 49.5
         print im_positions
         if scatter_points:
-            ax.scatter(im_positions[:, 0], im_positions[:, 1], color='red',
+            ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
                        alpha=1, s=1)
         
+        fig.tight_layout()
         fig.show()
 
         return fig, ax
+
+    def plot_alexander_shell(self, number_of_samples=10, **kwargs):
+
+        positions, values = self._alexander_map_values(number_of_samples, **kwargs)
+
+        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+        phis = n.linspace(0, 2*n.pi, 157)
+
+        thetas, phis = n.meshgrid(thetas, phis)
+
+        r = 10.
+        zs = r*n.cos(thetas)
+        xs = r*n.sin(thetas)*n.cos(phis)
+        ys = r*n.sin(thetas)*n.sin(phis)
+
+        import mayavi.mlab as may
+        print xs.shape, ys.shape, zs.shape, values.shape
+        may.mesh(xs, ys, zs, scalars=values)
+                                   
+                             
                           
 
 def gall_peters(theta, phi):
