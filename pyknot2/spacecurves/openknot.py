@@ -196,9 +196,9 @@ class OpenKnot(SpaceCurve):
         fig, ax = plt.subplots()
 
         if mode == 'imshow':
-            ax.imshow(values.T, cmap='rainbow', interpolation='none')
+            ax.imshow(values.T, cmap='jet', interpolation='none')
         else:
-            ax.contourf(values.T, cmap='rainbow',
+            ax.contourf(values.T, cmap='jet',
                         levels=[0] + range(3, int(n.max(values)+1.1), 2))
         ax.set_xticks([])
         ax.set_yticks([])
@@ -219,23 +219,40 @@ class OpenKnot(SpaceCurve):
 
         return fig, ax
 
-    def plot_alexander_shell(self, number_of_samples=10, **kwargs):
+    def plot_alexander_shell(self, number_of_samples=10, radius=None,
+                             zero_centroid=False,
+                             sphere_radius_factor=2.,
+                             opacity=0.3, **kwargs):
+        '''
+        Plots the curve in 3d via self.plot(), along with a translucent
+        sphere coloured by the type of knot obtained by closing on each
+        point.
 
-        positions, values = self._alexander_map_values(number_of_samples, **kwargs)
+        Parameters are all passed to :meth:`OpenKnot.alexander_polynomials`,
+        except opacity and kwargs which are given to mayavi.mesh, and
+        sphere_radius_factor which gives the radius of the enclosing
+        sphere in terms of the maximum Cartesian distance of any point
+        in the line from the origin.
+        '''
+
+        self.plot()
+
+        positions, values = self._alexander_map_values(
+            number_of_samples, radius=None, zero_centroid=False)
 
         thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
         phis = n.linspace(0, 2*n.pi, 157)
 
         thetas, phis = n.meshgrid(thetas, phis)
 
-        r = 10.
+        r = sphere_radius_factor*n.max(self.points)
         zs = r*n.cos(thetas)
         xs = r*n.sin(thetas)*n.cos(phis)
         ys = r*n.sin(thetas)*n.sin(phis)
 
         import mayavi.mlab as may
         print xs.shape, ys.shape, zs.shape, values.shape
-        may.mesh(xs, ys, zs, scalars=values)
+        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
                                    
                              
                           
