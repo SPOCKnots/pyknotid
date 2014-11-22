@@ -98,7 +98,7 @@ def plot_line_vispy(points, **kwargs):
     
 
 def plot_projection(points, crossings=None, mark_start=False,
-                    fig_ax=None):
+                    fig_ax=None, show=True):
     '''
     Plot the 2d projection of the given points, with optional
     markers for where the crossings are.
@@ -136,6 +136,7 @@ def plot_projection(points, crossings=None, mark_start=False,
     if crossings is not None and len(crossings):
         crossings = n.array(crossings)
         ax.plot(crossings[:, 0], crossings[:, 1], 'ro', alpha=0.5)
-    fig.show()
+    if show:
+        fig.show()
 
     return fig, ax
