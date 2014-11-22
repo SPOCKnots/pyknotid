@@ -39,9 +39,20 @@ def rotate_to_top(theta, phi):
         The longitudinal variable.
     '''
 
-    ct = n.cos(theta)
-    st = n.sin(theta)
-    cp = n.cos(phi)
-    sp = n.sin(phi)
+    chi = -1 * phi
+    alpha = theta
 
-    return n.array([[ct, -st, 0], [cp*st, cp*ct, -sp], [sp*st, ct*sp, cp]])
+    cc = n.cos(chi)
+    sc = n.sin(chi)
+    ca = n.cos(alpha)
+    sa = n.sin(alpha)
+    first_rotation = n.array([[cc, -sc, 0],
+                              [sc, cc, 0],
+                              [0, 0, 1]])
+    second_rotation = n.array([[ca, 0, -sa],
+                               [0, 1, 0],
+                               [sa, 0, ca]])
+                               
+    return second_rotation.dot(first_rotation)
+
+    #return n.array([[ct, -st, 0], [cp*st, cp*ct, -sp], [sp*st, ct*sp, cp]])
