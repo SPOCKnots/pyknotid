@@ -80,6 +80,7 @@ class OpenKnot(SpaceCurve):
             fig, ax = k.plot_projection(show=False)
             fig.set_size_inches((2, 2))
             fig.savefig('rotation{:05d}'.format(i))
+            fig.close()
 
     def alexander_polynomials(self, number_of_samples=10, radius=None,
                               zero_centroid=False):
