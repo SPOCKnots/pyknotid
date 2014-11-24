@@ -5,6 +5,7 @@ OpenKnot
 A class for working with the topology of open curves.
 '''
 
+from __future__ import print_function
 import numpy as n
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve
@@ -64,7 +65,7 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self).smooth(repeats=repeats, window_len=window_len,
                                      window=window, periodic=False)
 
-    def plot_uniform_angles(self, number_of_samples):
+    def _plot_uniform_angles(self, number_of_samples):
         '''
         Plots the projection of the knot at each of the given
         number of samples, approximately evenly distributed on
@@ -81,6 +82,38 @@ class OpenKnot(SpaceCurve):
             fig.set_size_inches((2, 2))
             fig.savefig('rotation{:05d}'.format(i))
             fig.close()
+
+    def _plot_projections(self, number_of_samples):
+        '''
+        Plots the projection of the knot at each of the given
+        number of samples, approximately evenly distributed on
+        the sphere.
+
+        This function is really just for testing.
+
+        '''
+        angles = get_rotation_angles(number_of_samples**2)
+
+        print('Got angles')
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(nrows=number_of_samples,
+                                 ncols=number_of_samples)
+
+        print('got axes')
+
+        all_axes = [ax for row in axes for ax in row]
+
+        for i, angs in enumerate(angles):
+            self._vprint('i = {} / {}'.format(i, len(angles)))
+            k = OpenKnot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(*angs))
+            ax = all_axes[i]
+            fig, ax = k.plot_projection(fig_ax=(fig, ax), show=False)
+
+        fig.tight_layout()
+        fig.show()
+        return fig, ax
 
     def alexander_polynomials(self, number_of_samples=10, radius=None,
                               zero_centroid=False):
@@ -128,7 +161,10 @@ class OpenKnot(SpaceCurve):
             radius = 10*n.max(self.points)
             # Not guaranteed to give 10* the real radius, but good enough
 
+        print_dist = int(max(1, 3000. / len(self.points)))
         for i, angs in enumerate(angles):
+            if i % print_dist == 0:
+                self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
             k = Knot(self.points, verbose=False)
             k._apply_matrix(rotate_to_top(*angs))
             if zero_centroid:
@@ -210,7 +246,6 @@ class OpenKnot(SpaceCurve):
         im_positions = positions*25
         im_positions[:, 0] -= 0.5
         im_positions[:, 1] += 49.5
-        print im_positions
         if scatter_points:
             ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
                        alpha=1, s=1)
@@ -252,7 +287,6 @@ class OpenKnot(SpaceCurve):
         ys = r*n.sin(thetas)*n.sin(phis)
 
         import mayavi.mlab as may
-        print xs.shape, ys.shape, zs.shape, values.shape
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
                                    
                              
