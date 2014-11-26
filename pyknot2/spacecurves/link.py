@@ -288,14 +288,19 @@ class Link(object):
             line.rotate(angles)
         self._reset_cache()
 
-    def plot(self, mode='mayavi', clf=True, **kwargs):
+    def plot(self, mode='mayavi', clf=True, colours=None, **kwargs):
         '''
         Plots all the lines. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
         '''
         lines = self.lines
+
+        if colours is not None:
+            kwargs.update({'color': colours[0]})
         lines[0].plot(mode=mode, clf=clf, **kwargs)
-        for line in lines[1:]:
+        for i, line in enumerate(lines[1:]):
+            if colours is not None:
+                kwargs.update({'color': colours[i+1]})
             line.plot(mode=mode, clf=False, **kwargs)
 
     def plot_projection(self, with_crossings=True, mark_start=False,
@@ -448,3 +453,14 @@ class Link(object):
             if len(line):
                 number += n.sum(line[:, 3])
         return int(n.abs(number / 2))
+
+    def smooth(self, **kwargs):
+        '''
+        Smooths each of the x, y and z components of each of self.lines
+        by convolving with a window of the given type and size.
+
+        kwargs are passed straight to
+        :meth:`pyknot2.spacecurves.spacecurve.SpaceCurve.smooth`.
+        '''
+        for line in self.lines:
+            line.smooth(**kwargs)
