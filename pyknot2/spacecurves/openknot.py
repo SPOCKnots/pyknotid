@@ -83,14 +83,15 @@ class OpenKnot(SpaceCurve):
             fig.savefig('rotation{:05d}'.format(i))
             fig.close()
 
-    def _plot_projections(self, number_of_samples):
+    def plot_projections(self, number_of_samples):
         '''
         Plots the projection of the knot at each of the given
-        number of samples, approximately evenly distributed on
-        the sphere.
+        number of samples squared, rotated such that the sample
+        direction is vertical.
 
-        This function is really just for testing.
-
+        The output (and return) is a matplotlib plot with
+        number_of_samples x number_of_samples axes.
+        
         '''
         angles = get_rotation_angles(number_of_samples**2)
 
@@ -198,7 +199,8 @@ class OpenKnot(SpaceCurve):
         return sorted(fracs, key=lambda j: j[1])
         #return fracs[n.argsort(fracs[:, 1])]
 
-    def _alexander_map_values(self, number_of_samples=10, **kwargs):
+    def _alexander_map_values(self, number_of_samples=10, interpolation=100,
+                              **kwargs):
         polys = self.alexander_polynomials(
             number_of_samples=number_of_samples, **kwargs)
 
@@ -209,8 +211,8 @@ class OpenKnot(SpaceCurve):
             positions.append(gall_peters(row[0], row[1]))
         positions = n.array(positions)
 
-        interpolation_points = n.mgrid[0:2*n.pi:157j,
-                                       -2.:2.:100j]
+        interpolation_points = n.mgrid[0:2*n.pi:int(1.57*interpolation)*1j,
+                                       -2.:2.:interpolation*1j]
         values = griddata(positions, polys[:, 2],
                           tuple(interpolation_points),
                           method='nearest')
@@ -220,14 +222,17 @@ class OpenKnot(SpaceCurve):
 
     def plot_alexander_map(self, number_of_samples=10,
                            scatter_points=False,
-                           mode='imshow', **kwargs):
+                           mode='imshow', interpolation=100,
+                           **kwargs):
         '''
         Creates (and returns) a projective diagram showing each
         different Alexander polynomial in a different colour according
         to a closure on a far away point in this direction.
         '''
 
-        positions, values = self._alexander_map_values(number_of_samples)
+        positions, values = self._alexander_map_values(
+            number_of_samples,
+            interpolation=interpolation)
 
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -240,8 +245,8 @@ class OpenKnot(SpaceCurve):
         ax.set_xticks([])
         ax.set_yticks([])
 
-        ax.set_xlim(-0.5, 156.5)
-        ax.set_ylim(-0.5, 99.5)
+        ax.set_xlim(-0.5, 1.565*interpolation)
+        ax.set_ylim(-0.5, 0.995*interpolation)
 
         im_positions = positions*25
         im_positions[:, 0] -= 0.5
