@@ -228,6 +228,20 @@ class OpenKnot(SpaceCurve):
         Creates (and returns) a projective diagram showing each
         different Alexander polynomial in a different colour according
         to a closure on a far away point in this direction.
+
+        Parameters
+        ----------
+        number_of_samples : int
+            The number of points on the sphere to close at.
+        scatter_points : bool
+            If True, plots a dot at each point on the map projection
+            where a closure was made.
+        mode : str
+            'imshow' to plot the pixels of an image, otherwise plots
+            filled contours. Defaults to 'imshow'.
+        interpolation : int
+            The (short) side length of the interpolation grid on which
+            the map projection is made. Defaults to 100.
         '''
 
         positions, values = self._alexander_map_values(
