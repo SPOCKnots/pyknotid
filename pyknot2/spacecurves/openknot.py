@@ -262,9 +262,9 @@ class OpenKnot(SpaceCurve):
         ax.set_xlim(-0.5, 1.565*interpolation)
         ax.set_ylim(-0.5, 0.995*interpolation)
 
-        im_positions = positions*25
+        im_positions = positions*25*float(interpolation / 100.)
         im_positions[:, 0] -= 0.5
-        im_positions[:, 1] += 49.5
+        im_positions[:, 1] += 49.*(interpolation / 100.) + 0.5
         if scatter_points:
             ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
                        alpha=1, s=1)
