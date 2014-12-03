@@ -446,6 +446,21 @@ class SpaceCurve(object):
         crossings = self.raw_crossings(**kwargs)
         return PlanarDiagram(crossings)
 
+    def gauss_diagram(self, simplify=False, **kwargs):
+        '''
+        Returns a
+        :class:`~pyknot2.representations.gaussdiagram.GaussDiagram`
+        instance representing the crossings of the knot.
+
+        This method passes kwargs directly to :meth:`raw_crossings`,
+        see the documentation of that function for all options.
+        '''
+        from ..representations.gaussdiagram import GaussDiagram
+        gc = self.gauss_code(**kwargs)
+        if simplify:
+            gc.simplify()
+        return GaussDiagram(gc)
+
     def plot(self, mode='auto', clf=True, **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
