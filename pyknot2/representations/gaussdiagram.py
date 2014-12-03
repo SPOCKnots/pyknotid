@@ -68,12 +68,14 @@ class GaussDiagram(object):
                                          n.sin(other_angle)])
 
                 over = gc[i, 1]
+                sign = gc[i, 2]
+                colour = {-1: 'red', 1: 'blue'}[sign]
                 if over > 0:
                     ax.annotate('', xy=other_pos, xytext=circ_pos,
-                                arrowprops={'frac': 0.1})
+                                arrowprops={'frac': 0.1, 'color': colour})
                 else:
                     ax.annotate('', xytext=other_pos, xy=circ_pos,
-                                arrowprops={'frac': 0.1})
+                                arrowprops={'frac': 0.1, 'color': colour})
             else:
                 other_angles[gc_entry] = angle
         
