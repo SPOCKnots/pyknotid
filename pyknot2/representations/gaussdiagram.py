@@ -66,8 +66,14 @@ class GaussDiagram(object):
                 other_angle = other_angles.pop(gc_entry)
                 other_pos = 100*n.array([n.cos(other_angle),
                                          n.sin(other_angle)])
-                ax.annotate('', xy=other_pos, xytext=circ_pos,
-                            arrowprops={'frac': 0.1})
+
+                over = gc[i, 1]
+                if over > 0:
+                    ax.annotate('', xy=other_pos, xytext=circ_pos,
+                                arrowprops={'frac': 0.1})
+                else:
+                    ax.annotate('', xytext=other_pos, xy=circ_pos,
+                                arrowprops={'frac': 0.1})
             else:
                 other_angles[gc_entry] = angle
         
