@@ -169,3 +169,41 @@ class Knot(SpaceCurve):
                 DBKnot.min_crossings <= len(self.gauss_code()), )
 
         return from_invariants(**identify_kwargs)
+
+    def slipknot_alexander(self, num_samples=0, **kwargs):
+        points = self.points
+        if num_samples == 0:
+            num_samples = len(points)
+        indices = n.linspace(0, len(points), num_samples).astype(n.int)
+
+        from pyknot2.spacecurves.openknot import OpenKnot
+
+        arr = n.ones((num_samples, num_samples))
+        for index, points_index in enumerate(indices):
+            self._vprint('\rindex = {} / {}'.format(index, len(indices)),
+                         False)
+            for other_index, other_points_index in enumerate(indices[(index+2):]):
+                k = OpenKnot(points[points_index:other_points_index], verbose=False)
+                if len(k.points) < 4:
+                    alex = 1.
+                else:
+                    alex = k.alexander_fractions(**kwargs)[-1][0]
+                arr[index, other_index] = alex
+
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.imshow(arr)
+
+        ax.plot(n.linspace(0, num_samples, 100) - 0.5,
+                n.linspace(num_samples, 0, 100) - 0.5,
+                color='black',
+                linewidth=3)
+
+        ax.set_xlim(-0.5, num_samples-0.5)
+        ax.set_ylim(-0.4, num_samples-0.5)
+
+        fig.show()
+
+        return arr
+        return fig, ax
+        
