@@ -171,6 +171,16 @@ class Knot(SpaceCurve):
         return from_invariants(**identify_kwargs)
 
     def slipknot_alexander(self, num_samples=0, **kwargs):
+        '''
+        Parameters
+        ----------
+        num_samples : int
+            The number of indices to cut at. Defaults to 0, which
+            means to sample at all indices.
+        **kwargs :
+            Keyword arguments, passed directly to
+            :meth:`pyknot2.spacecurves.openknot.OpenKnot.alexander_fractions.
+        '''
         points = self.points
         if num_samples == 0:
             num_samples = len(points)
