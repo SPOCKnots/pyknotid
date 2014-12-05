@@ -192,7 +192,7 @@ class Knot(SpaceCurve):
 
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
-        ax.imshow(arr)
+        ax.imshow(arr, interpolation='none')
 
         ax.plot(n.linspace(0, num_samples, 100) - 0.5,
                 n.linspace(num_samples, 0, 100) - 0.5,
@@ -204,6 +204,5 @@ class Knot(SpaceCurve):
 
         fig.show()
 
-        return arr
         return fig, ax
         
