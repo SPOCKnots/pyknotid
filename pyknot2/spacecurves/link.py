@@ -14,9 +14,8 @@ except:
     from pyknot2.spacecurves import helpers as chelpers
 from pyknot2.spacecurves import helpers
 from pyknot2.spacecurves.knot import Knot
-from pyknot2.visualise import plot_line, plot_projection
-from pyknot2.io import to_json_file, from_json_file
-from pyknot2.utils import vprint, mag, get_rotation_matrix
+from pyknot2.visualise import plot_projection
+from pyknot2.utils import vprint, get_rotation_matrix
 
 
 class Link(object):
@@ -191,7 +190,7 @@ class Link(object):
                                                          other_index))
 
                 other_index += line_index + 1
-                
+
                 points = line.points
                 comparison_points = other_line.points
                 if include_closures:
@@ -201,7 +200,7 @@ class Link(object):
                 other_seg_lengths = segment_lengths[other_index]
                 # other_seg_lengths is already corrected to include
                 # closures if necessary
-                
+
                 first_line_range = range(len(points))
                 if not include_closures:
                     first_line_range = first_line_range[:-1]
@@ -216,7 +215,7 @@ class Link(object):
 
                     vnum = i
                     compnum = 0  # start at beginning of other line
-                    
+
                     new_crossings = helpers_module.find_crossings(
                         v0, dv, comparison_points, other_seg_lengths,
                         vnum, compnum,
@@ -242,14 +241,7 @@ class Link(object):
         self._crossings = (only_with_other_lines, crossings)
 
         return crossings
-                    
 
-
-        
-
-        return crossings
-        
-        
     def translate(self, vector, lines=None):
         '''Translate all points in some or all lines of self.
 
@@ -270,7 +262,7 @@ class Link(object):
         for index, line in enumerate(self.lines):
             if index in lines:
                 line.translate(vector)
-        
+
     def rotate(self, angles=None):
         '''
         Rotates all the points of each line of self by the given angle
