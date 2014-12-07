@@ -16,7 +16,7 @@ from pyknot2.spacecurves.spacecurve import SpaceCurve
 # prevent import loops
 from pyknot2.io import to_json_file, from_json_file, from_csv
 
-__all__ = ('Knot', 'Link')
+__all__ = ('Knot', )
 
 
 class Knot(SpaceCurve):
