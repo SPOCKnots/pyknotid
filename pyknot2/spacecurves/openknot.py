@@ -34,7 +34,7 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self.__class__).points.fset(self, points)
         self._cached_alexanders = None
 
-    def raw_crossings(self, mode='use_max_jump', 
+    def raw_crossings(self, mode='use_max_jump',
                       recalculate=False, use_python=False):
         '''
         Calls :meth:`pyknot2.spacecurves.spacecurve.SpaceCurve.raw_crossings`,
@@ -91,7 +91,6 @@ class OpenKnot(SpaceCurve):
 
         The output (and return) is a matplotlib plot with
         number_of_samples x number_of_samples axes.
-        
         '''
         angles = get_rotation_angles(number_of_samples**2)
 
@@ -145,7 +144,7 @@ class OpenKnot(SpaceCurve):
         '''
         if zero_centroid:
             self.zero_centroid()
-        
+
         if self._cached_alexanders is not None:
             if (number_of_samples, radius) in self._cached_alexanders:
                 return self._cached_alexanders[(number_of_samples,
@@ -194,10 +193,8 @@ class OpenKnot(SpaceCurve):
         length = float(len(alexs))
         for alex in n.unique(alexs):
             fracs.append((alex, n.sum(alexs == alex) / length))
-        #fracs = n.array(fracs)
 
         return sorted(fracs, key=lambda j: j[1])
-        #return fracs[n.argsort(fracs[:, 1])]
 
     def _alexander_map_values(self, number_of_samples=10, interpolation=100,
                               **kwargs):
@@ -218,7 +215,6 @@ class OpenKnot(SpaceCurve):
                           method='nearest')
 
         return positions, values
-        
 
     def plot_alexander_map(self, number_of_samples=10,
                            scatter_points=False,
@@ -268,7 +264,7 @@ class OpenKnot(SpaceCurve):
         if scatter_points:
             ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
                        alpha=1, s=1)
-        
+
         fig.tight_layout()
         fig.show()
 
@@ -307,9 +303,7 @@ class OpenKnot(SpaceCurve):
 
         import mayavi.mlab as may
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
-                                   
-                             
-                          
+
 
 def gall_peters(theta, phi):
     '''
