@@ -13,6 +13,7 @@ import numpy as n
 import re
 import sys
 
+
 class GaussCode(object):
     '''
     Class for containing and manipulating Gauss codes.
@@ -88,7 +89,7 @@ class GaussCode(object):
         gauss_code = []
         over_under = {'+': 1, '-': -1}
         signs = {'c': 1, 'a': -1}
-        
+
         for line in lines:
             line_gauss_code = []
             line_crossings = line.split(',')
@@ -102,7 +103,7 @@ class GaussCode(object):
 
     def __repr__(self):
         out_strs = []
-        
+
         gauss_code = self._gauss_code
         for line in gauss_code:
             if len(line) == 0:
@@ -126,7 +127,7 @@ class GaussCode(object):
             out_strs.append('\n')
         out_strs = out_strs[:-1]
         return ''.join(out_strs)
-                
+
     def __str__(self):
         return repr(self)
 
@@ -164,7 +165,8 @@ class GaussCode(object):
                     (row[1] == next_row[1])):  # both over or under
                     numbers = tuple(sorted([row[0], next_row[0]]))
                     if numbers not in rm2_store:
-                        rm2_store[numbers] = (line_index, row_index, next_index)
+                        rm2_store[numbers] = (line_index, row_index,
+                                              next_index)
                     else:
                         other_indices = rm2_store.pop(numbers)
                         crossing_numbers.remove(row[0])
@@ -173,7 +175,6 @@ class GaussCode(object):
                         keep[next_index] = False
                         keeps[other_indices[0]][other_indices[1]] = False
                         keeps[other_indices[0]][other_indices[2]] = False
-
 
         # Next do RM1_extended separately (could be more efficient?)
         if one_extended:
@@ -187,7 +188,8 @@ class GaussCode(object):
                     identifier, over, crossings = row
                     if identifier not in crossing_indices:
                         crossing_indices[identifier] = []
-                    crossing_indices[identifier].append((line_index, row_index))
+                    crossing_indices[identifier].append((line_index,
+                                                         row_index))
             for number in list(crossing_numbers):
                 if number not in crossing_numbers:
                     continue  # The crossing has already been removed
