@@ -10,10 +10,6 @@ import numpy as n
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve
 
-# We must be careful only to import modules that do not depend on this one, to
-# prevent import loops
-from pyknot2.io import to_json_file, from_json_file, from_csv
-
 __all__ = ('Knot', )
 
 
