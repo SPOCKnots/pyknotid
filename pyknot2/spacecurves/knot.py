@@ -7,8 +7,6 @@ topologically trivial.
 '''
 
 import numpy as n
-import sys
-from scipy.interpolate import interp1d
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve
 
@@ -69,7 +67,7 @@ class Knot(SpaceCurve):
     def alexander_at_root(self, root, round=True, **kwargs):
         '''
         Returns the Alexander polynomial at the given root of unity,
-        i.e. evaluated at exp(2 pi I / root). 
+        i.e. evaluated at exp(2 pi I / root).
 
         The result returned is the absolute value.
 
@@ -158,6 +156,7 @@ class Knot(SpaceCurve):
 
         if alexander:
             if not isinstance(alexander, dict):
+                import sympy as sym
                 alexander = {'variable': sym.var('t')}
             poly = self.alexander_polynomial(**alexander)
             identify_kwargs['alexander'] = poly
@@ -192,8 +191,10 @@ class Knot(SpaceCurve):
         for index, points_index in enumerate(indices):
             self._vprint('\rindex = {} / {}'.format(index, len(indices)),
                          False)
-            for other_index, other_points_index in enumerate(indices[(index+2):]):
-                k = OpenKnot(points[points_index:other_points_index], verbose=False)
+            for other_index, other_points_index in enumerate(
+                    indices[(index+2):]):
+                k = OpenKnot(points[points_index:other_points_index],
+                             verbose=False)
                 if len(k.points) < 4:
                     alex = 1.
                 else:
@@ -215,4 +216,3 @@ class Knot(SpaceCurve):
         fig.show()
 
         return fig, ax
-        
