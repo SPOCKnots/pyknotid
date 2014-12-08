@@ -47,7 +47,7 @@ class GaussDiagram(object):
         c1 = plt.Circle((00, 00), radius=100., linewidth=2,
                         color='black',
                         fill=False, antialiased=True)
-        
+
         gc = self._gauss_code[0]
         num_points = len(gc)
 
@@ -56,7 +56,6 @@ class GaussDiagram(object):
         other_angles = {}
         for i, angle in enumerate(angles):
             gc_entry = gc[i, 0]
-            indices = n.where(gc == gc_entry)[0]
 
             circ_pos = 100*n.array([n.cos(angle), n.sin(angle)])
             rad_pos = 1.2*circ_pos
@@ -78,8 +77,7 @@ class GaussDiagram(object):
                                 arrowprops={'frac': 0.1, 'color': colour})
             else:
                 other_angles[gc_entry] = angle
-        
-        
+
         ax.add_artist(c1)
 
         ax.plot(100*n.cos(angles), 100*n.sin(angles), 'o', markersize=8,
@@ -91,5 +89,3 @@ class GaussDiagram(object):
         ax.set_yticks([])
         fig.show()
         return fig, ax
-        
-        
