@@ -9,8 +9,6 @@ See individual class documentation for more details.
 
 
 import numpy as n
-import sys
-
 
 
 class PlanarDiagram(list):
@@ -79,7 +77,7 @@ class PlanarDiagram(list):
                 else:
                     indices[number] = (i, j)
         return Link(scs)
-        
+
 
 class Crossing(list):
     '''
@@ -98,9 +96,9 @@ class Crossing(list):
         The fourth entry in the list of lines meeting at this Crossing.
     '''
 
-    def __init__(self,a=None, b=None, c=None, d=None):
+    def __init__(self, a=None, b=None, c=None, d=None):
         super(Crossing, self).__init__()
-        self.extend([a,b,c,d])
+        self.extend([a, b, c, d])
 
     def valid(self):
         '''
@@ -156,8 +154,6 @@ class Crossing(list):
                 self[i] = new
 
 
-        
-
 def shorthand_to_crossings(s):
     '''
     Takes a planar diagram shorthand string, and returns a list of
@@ -169,10 +165,10 @@ def shorthand_to_crossings(s):
         entry = entry.split('_')
         if entry[0] == 'X':
             a, b, c, d = [int(j) for j in entry[1].split(',')]
-            crossings.append(Crossing(a,b,c,d))
+            crossings.append(Crossing(a, b, c, d))
         elif entry[0] == 'P':
             a, b = [int(j) for j in entry[1].split(',')]
-            crossings.append(Point(a,b))
+            crossings.append(Point(a, b))
     return crossings
 
 

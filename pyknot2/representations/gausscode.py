@@ -247,7 +247,6 @@ class GaussCode(object):
         self._gauss_code = [line[keep] for (line, keep) in zip(code, keeps)]
         self.crossing_numbers = crossing_numbers
 
-        
     def simplify(self, one=True, two=True, one_extended=True, verbose=True):
         '''
         Simplifies the GaussCode, performing the given Reidemeister moves
@@ -313,8 +312,8 @@ class GaussCode(object):
     #         for identifier, over, clockwise in line:
     #             if identifier in cache:
     #                 comparator = cache.pop(identifier)
-                    
-        
+
+
 def _get_crossing_numbers(gc):
     '''
     Given GaussCode internal data, returns a list of all
@@ -325,4 +324,4 @@ def _get_crossing_numbers(gc):
         for entry in line:
             crossing_vals.add(entry[0])
     return crossing_vals
-    
+
