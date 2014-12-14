@@ -1,5 +1,6 @@
 import numpy as n
 
+
 def get_rotation_angles(number):
     '''
     Returns a list of theta, phi values, approximately evenly
@@ -22,9 +23,9 @@ def get_rotation_angles(number):
         angles[k-1, 0] = theta
         angles[k-1, 1] = phi
     angles[-1, 1] = 0.  # Last phi will be inf otherwise
-     
+
     return angles
-        
+
 
 def rotate_to_top(theta, phi):
     '''
@@ -52,7 +53,5 @@ def rotate_to_top(theta, phi):
     second_rotation = n.array([[ca, 0, -sa],
                                [0, 1, 0],
                                [sa, 0, ca]])
-                               
-    return second_rotation.dot(first_rotation)
 
-    #return n.array([[ct, -st, 0], [cp*st, cp*ct, -sp], [sp*st, ct*sp, cp]])
+    return second_rotation.dot(first_rotation)
