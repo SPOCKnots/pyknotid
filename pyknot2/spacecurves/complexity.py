@@ -42,7 +42,7 @@ def writhe_and_crossing_number(points, number_of_samples=10,
 
     crossing_numbers = []
     writhes = []
-    
+
     for theta, phi in angles:
         k = Knot(points, verbose=False)
         k._apply_matrix(rotate_to_top(theta, phi))
@@ -51,5 +51,3 @@ def writhe_and_crossing_number(points, number_of_samples=10,
         writhes.append(n.sum(crossings[:, 3]) / 2. if len(crossings) else 0)
 
     return n.average(crossing_numbers), n.average(writhes)
-
-
