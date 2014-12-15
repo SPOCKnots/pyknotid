@@ -64,3 +64,12 @@ def get_rotation_matrix(angles):
              -1*sin(phi)*cos(psi) + cos(phi)*sin(theta)*sin(psi)],
             [-1*sin(theta), sin(phi)*cos(theta), cos(phi)*cos(theta)]])
     return rotmat
+
+
+def ensure_shape_tuple(shape):
+    '''If the input is a number, returns a tuple with that number
+    repeated three times, otherwise just returns the input.
+    '''
+    if isinstance(shape, (float, long, int)):
+        return (shape, shape, shape)
+    return shape

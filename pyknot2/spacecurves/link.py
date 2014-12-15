@@ -15,7 +15,8 @@ except:
 from pyknot2.spacecurves import helpers
 from pyknot2.spacecurves.knot import Knot
 from pyknot2.visualise import plot_projection
-from pyknot2.utils import vprint, get_rotation_matrix
+from pyknot2.utils import (vprint, get_rotation_matrix,
+                           ensure_shape_tuple)
 
 
 class Link(object):
@@ -78,6 +79,7 @@ class Link(object):
             If True, translates and rotates the knot to avoid any lattice
             problems.
         '''
+        shape = ensure_shape_tuple(shape)
         lines = [Knot.from_periodic_line(line, shape, perturb=False)
                  for line in lines]
         link = cls(lines)

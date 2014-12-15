@@ -23,7 +23,8 @@ from pyknot2.spacecurves.smooth import smooth
 # prevent import loops
 from pyknot2.visualise import plot_line, plot_projection
 from pyknot2.io import to_json_file, from_json_file, from_csv
-from pyknot2.utils import vprint, mag, get_rotation_matrix
+from pyknot2.utils import (vprint, mag, get_rotation_matrix,
+                           ensure_shape_tuple)
 
 
 class SpaceCurve(object):
@@ -157,6 +158,7 @@ class SpaceCurve(object):
             If True, translates and rotates the knot to avoid any lattice
             problems.
         '''
+        shape = ensure_shape_tuple(shape)
         knot = cls(line, **kwargs)
         knot._unwrap_periodicity(shape)
         if perturb:
