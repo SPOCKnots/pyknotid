@@ -23,7 +23,7 @@ from pyknot2.spacecurves.smooth import smooth
 # prevent import loops
 from pyknot2.visualise import plot_line, plot_projection
 from pyknot2.io import to_json_file, from_json_file, from_csv
-from pyknot2.utils import (vprint, mag, get_rotation_matrix,
+from pyknot2.utils import (mag, get_rotation_matrix,
                            ensure_shape_tuple)
 
 
@@ -101,7 +101,7 @@ class SpaceCurve(object):
             sys.stdout.flush()
 
     def _add_closure(self):
-        closing_distance = mag(self.points[-1] - self.points[0]) 
+        closing_distance = mag(self.points[-1] - self.points[0])
         if closing_distance > 0.02:
             self.points = n.vstack((self.points, self.points[:1] -
                                     0.001*(self.points[0] - self.points[-1])))
@@ -219,8 +219,6 @@ class SpaceCurve(object):
         if angles is None:
             angles = n.random.random(3)
         phi, theta, psi = angles
-        sin = n.sin
-        cos = n.cos
         rot_mat = get_rotation_matrix(angles)
         self._apply_matrix(rot_mat)
 
@@ -305,7 +303,7 @@ class SpaceCurve(object):
             if self.verbose:
                 if i % 100 == 0:
                     self._vprint('\ri = {} / {}'.format(i, numtries),
-                                False)
+                                 False)
             v0 = points[i]
             dv = points[(i+1) % len(points)] - v0
 
@@ -481,7 +479,6 @@ class SpaceCurve(object):
             for crossing in crossings:
                 x, y, over, orientation = crossing
                 xint = int(x)
-                yint = int(y)
                 r = points[xint]
                 dr = points[(xint+1) % len(points)] - r
                 plot_crossings.append(r + (x-xint) * dr)
@@ -664,7 +661,6 @@ class SpaceCurve(object):
         for arclength in arclengths:
             first_greater_index = n.argmax(cumulative_arclength > arclength)
             last_lower_index = (first_greater_index - 1) % len(points)
-            last_lower_point = points[last_lower_index]
             arclength_below = cumulative_arclength[last_lower_index]
             step_arclength = segment_arclengths[last_lower_index]
             step_fraction = (arclength - arclength_below) / step_arclength
@@ -710,4 +706,3 @@ class SpaceCurve(object):
             points[:, 1] = smooth(points[:, 1], window_len, window)
             points[:, 2] = smooth(points[:, 2], window_len, window)
         self.points = points[(window_len + 1):-(window_len + 1)]
-
