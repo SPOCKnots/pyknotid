@@ -163,7 +163,7 @@ class SpaceCurve(object):
         knot._unwrap_periodicity(shape)
         if perturb:
             knot.translate(n.array([0.00123, 0.00231, 0.00321]))
-            knot.rotate()
+            knot.rotate((0.0002, 0.0001, 0.0001))
         return knot
 
     @classmethod
