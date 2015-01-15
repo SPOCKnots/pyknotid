@@ -244,13 +244,14 @@ class SpaceCurve(object):
         Parameters
         ----------
         mode : str, optional
-            One of ``'count_every_jump'`` and ``'use_max_jump'``. In the former
-            case,
+            One of ``'count_every_jump'`` or ``'use_max_jump'`` or
+            ``'naive'``. In the first case,
             walking along the line uses information about the length of
-            every step. In the latter, it guesses that all steps have the
-            same length as the maximum step length. The optimal choice
-            depends on the data, but is usually ``'use_max_jump'``, which
-            is the default.
+            every step. In the second, it guesses that all steps have the
+            same length as the maximum step length. In the last, no
+            optimisation is made and every crossing is checked.
+            The optimal choice depends on the data but is usually
+            ``'use_max_jump'``, which is the default.
         include_closure : bool, optional
             Whether to include crossings with the
             line joining the start and end points. Defaults to True.
