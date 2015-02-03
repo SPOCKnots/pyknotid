@@ -20,10 +20,9 @@ import sympy as sym
 
 def alexander(representation, variable=-1, quadrant='lr', simplify=True,
               mode='python'):
-    '''
-    Calculates the Alexander polynomial of the given knot. The
-    representation *must* have just one knot component, or the calculation
-    will fail or potentially give bad results.
+    '''Calculates the Alexander polynomial of the given knot. The
+    representation *must* have just one knot component, or the
+    calculation will fail or potentially give bad results.
 
     The result is returned with whatever numerical precision the
     algorithm produces, it is not rounded.
@@ -31,8 +30,9 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     The given representation *must* be simplified (RM1 performed if
     possible) for this to work, otherwise the matrix has overlapping
     elements. This is so important that this function automatically
-    calls :meth:`pyknot2.representations.gausscode.GaussCode.simplify`,
-    you must disable this manually if you don't want to do it.
+    calls
+    :meth:`pyknot2.representations.gausscode.GaussCode.simplify`, you
+    must disable this manually if you don't want to do it.
 
     .. note:: If 'maxima' or 'mathematica' is chosen as the mode, the
               variable will automatically be set to ``t``.
@@ -67,6 +67,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
         numpy or sympy as appropriate. If maxima or mathematica, that
         program is called by the function - this will only work if the
         external tool is installed and available. Defaults to python.
+
     '''
 
     from pyknot2.representations.gausscode import GaussCode
