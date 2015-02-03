@@ -295,10 +295,11 @@ class SpaceCurve(object):
         segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
         segment_lengths = n.sqrt(n.sum(segment_lengths * segment_lengths,
                                        axis=1))
-        if include_closure:
-            max_segment_length = n.max(segment_lengths)
-        else:
-            max_segment_length = n.max(segment_lengths[:-1])
+        # if include_closure:
+        #     max_segment_length = n.max(segment_lengths)
+        # else:
+        max_segment_length = n.max(segment_lengths[:-1])
+
         numtries = len(points) - 3
 
         crossings = []
@@ -326,6 +327,9 @@ class SpaceCurve(object):
                 ))
 
         if include_closure:
+            closure_segment_length = segment_lengths[-1]
+            max_segment_length = n.max([closure_segment_length,
+                                        max_segment_length])
             v0 = points[-1]
             dv = points[0] - v0
             s = points[1:-1]
