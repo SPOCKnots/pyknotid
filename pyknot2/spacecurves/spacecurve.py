@@ -53,9 +53,13 @@ class SpaceCurve(object):
     add_closure : bool
         If True, adds a final point to the knot near to the start point,
         so that it will appear visually to close when plotted.
+    zero_centroid : bool
+        If True, shifts the coordinates of the points so that their centre
+        of mass is at the origin.
     '''
 
-    def __init__(self, points, verbose=True, add_closure=False):
+    def __init__(self, points, verbose=True, add_closure=False,
+                 zero_centroid=False):
         if isinstance(points, SpaceCurve):
             points = points.points.copy()
         self._points = n.zeros((0, 3))
@@ -71,6 +75,8 @@ class SpaceCurve(object):
 
         if add_closure:
             self._add_closure()
+        if zero_centroid:
+            self.zero_centroid()
 
     def copy(self):
         '''Returns another knot with the same points and verbosity
