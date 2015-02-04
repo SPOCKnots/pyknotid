@@ -757,6 +757,27 @@ def _cypari_matrix(cs, quadrant='lr', verbose=False):
     from cypari.gen import pari
     return pari(''.join(outstrs))
 
+def _crossing_arrows_and_signs(gc, crossing_numbers):
+    '''Internal function to get a list of crossing arrow indices
+    (as per a Gauss diagram) and signs, both in dictionaries.'''
+
+    ## Arrow diagram for v_2 is
+    ## appear -> leave -> leave -> appear (with crossed arrows)
+    over_crossing_indices = {}
+    under_crossing_indices = {}
+    signs = {}
+    for i, row in enumerate(gc):
+        if row[1] == 1:
+            over_crossing_indices[row[0]] = i
+        else:
+            under_crossing_indices[row[0]] = i
+        signs[row[0]] = row[2]
+
+    arrows = {index: (over_crossing_indices[index],
+                      under_crossing_indices[index])
+              for index in crossing_numbers}
+
+    return arrows, signs
 
 def vassiliev_degree_2(representation):
     ## See Polyak and Viro
@@ -772,24 +793,9 @@ def vassiliev_degree_2(representation):
                         'for something with more than 1 component')
 
     gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
     
-    ## Arrow diagram for v_2 is
-    ## appear -> leave -> leave -> appear (with crossed arrows)
-
-    over_crossing_indices = {}
-    under_crossing_indices = {}
-    signs = {}
-    for i, row in enumerate(gc):
-        if row[1] == 1:
-            over_crossing_indices[row[0]] = i
-        else:
-            under_crossing_indices[row[0]] = i
-        signs[row[0]] = row[2]
-
-    arrows = {index: (over_crossing_indices[index],
-                      under_crossing_indices[index])
-              for index in representation.crossing_numbers}
-
     crossing_numbers = list(representation.crossing_numbers)
     representations_sum = 0
     for index, i1 in enumerate(crossing_numbers):
