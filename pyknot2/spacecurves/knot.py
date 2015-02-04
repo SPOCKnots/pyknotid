@@ -85,6 +85,13 @@ class Knot(SpaceCurve):
             value = int(n.round(value))
         return value
 
+    def vassiliev_degree_2(self, simplify=True, **kwargs):
+        from ..invariants import vassiliev_degree_2
+        gc = self.gauss_code(**kwargs)
+        if simplify:
+            gc.simplify(verbose=self.verbose)
+        return vassiliev_degree_2(gc)
+
     def hyperbolic_volume(self):
         '''
         Returns the hyperbolic volume at the given point, via
