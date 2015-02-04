@@ -423,7 +423,7 @@ class SpaceCurve(object):
 
         return numbers
 
-    def gauss_code(self, **kwargs):
+    def gauss_code(self, recalculate=False, **kwargs):
         '''
         Returns a :class:`~pyknot2.representations.gausscode.GaussCode`
         instance representing the crossings of the knot.
@@ -437,9 +437,9 @@ class SpaceCurve(object):
         '''
 
         from ..representations.gausscode import GaussCode
-        if self._gauss_code is not None:
+        if not recalculate and self._gauss_code is not None:
             return self._gauss_code
-        crossings = self.raw_crossings(**kwargs)
+        crossings = self.raw_crossings(recalculate=recalculate, **kwargs)
         gc = GaussCode(crossings)
         self._gauss_code = gc
         return gc
