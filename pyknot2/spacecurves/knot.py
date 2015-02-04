@@ -70,7 +70,9 @@ class Knot(SpaceCurve):
         Parameters
         ----------
         root : int
-            The root of unity to use, i.e. evaluating at exp(2 pi I / root)
+            The root of unity to use, i.e. evaluating at exp(2 pi I / root).
+            If this is iterable, this method returns a list of the results
+            at every value of that iterable.
         round : bool
             If True and n in (1, 2, 3, 4), the result will be rounded
             to the nearest integer for convenience, and returned as an
@@ -78,6 +80,8 @@ class Knot(SpaceCurve):
         **kwargs :
             These are passed directly to :meth:`alexander_polynomial`.
         '''
+        if hasattr(root, '__contains__'):
+            return [self.alexander_at_root(r) for r in root]
         variable = n.exp(2 * n.pi * 1.j / root)
         value = self.alexander_polynomial(variable, **kwargs)
         value = n.abs(value)
@@ -91,6 +95,13 @@ class Knot(SpaceCurve):
         if simplify:
             gc.simplify(verbose=self.verbose)
         return vassiliev_degree_2(gc)
+
+    def vassiliev_degree_3(self, simplify=True, **kwargs):
+        from ..invariants import vassiliev_degree_3
+        gc = self.gauss_code(**kwargs)
+        if simplify:
+            gc.simplify(verbose=self.verbose)
+        return vassiliev_degree_3(gc)
 
     def hyperbolic_volume(self):
         '''
