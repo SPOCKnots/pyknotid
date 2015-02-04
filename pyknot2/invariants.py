@@ -756,3 +756,55 @@ def _cypari_matrix(cs, quadrant='lr', verbose=False):
 
     from cypari.gen import pari
     return pari(''.join(outstrs))
+
+
+def vassiliev_degree_2(representation):
+    ## See Polyak and Viro
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    
+    ## Arrow diagram for v_2 is
+    ## appear -> leave -> leave -> appear (with crossed arrows)
+
+    over_crossing_indices = {}
+    under_crossing_indices = {}
+    signs = {}
+    for i, row in enumerate(gc):
+        if row[1] == 1:
+            over_crossing_indices[row[0]] = i
+        else:
+            under_crossing_indices[row[0]] = i
+        signs[row[0]] = row[2]
+
+    arrows = {index: (over_crossing_indices[index],
+                      under_crossing_indices[index])
+              for index in representation.crossing_numbers}
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers[index+1:]:
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            if a2s > a1s and a2e < a1s and a1e > a2s:
+                representations_sum += signs[i1] * signs[i2]
+            elif a1s > a2s and a1e < a2s and a2e > a1s:
+                representations_sum += signs[i1] * signs[i2]
+
+    return representations_sum
+
+        
+    
