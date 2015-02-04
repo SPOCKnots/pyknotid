@@ -12,6 +12,9 @@ from pyknot2.spacecurves.spacecurve import SpaceCurve
 from pyknot2.spacecurves.knot import Knot
 from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top
 
+from pyknot2.invariants import alexander
+from pyknot2.representations.gausscode import GaussCode
+
 
 class OpenKnot(SpaceCurve):
     '''
@@ -116,7 +119,9 @@ class OpenKnot(SpaceCurve):
         return fig, ax
 
     def alexander_polynomials(self, number_of_samples=10, radius=None,
-                              zero_centroid=False):
+                              recalculate=False,
+                              zero_centroid=False,
+                              optimise_closure=True):
         '''
         Returns a list of Alexander polynomials for the knot, closing
         on a sphere of the given radius, with the given number of sample
@@ -128,10 +133,14 @@ class OpenKnot(SpaceCurve):
         ----------
         number_of_samples : int
             The number of points on the sphere to sample. Defaults to 10.
+        optimise_closure: bool
+            If True, doesn't really close on a sphere but at infinity.
+            This lets the calculation be optimised slightly, and so is the
+            default.
         radius : float
             The radius of the sphere on which to close the knot. Defaults
             to None, which picks 10 times the largest Cartesian deviation
-            from 0.
+            from 0. This is *only* used if optimise_closure=False.
         zero_centroid : bool
             Whether to first move the average position of vertices to
             (0, 0, 0). Defaults to False.
@@ -145,7 +154,7 @@ class OpenKnot(SpaceCurve):
         if zero_centroid:
             self.zero_centroid()
 
-        if self._cached_alexanders is not None:
+        if not recalculate and self._cached_alexanders is not None:
             if (number_of_samples, radius) in self._cached_alexanders:
                 return self._cached_alexanders[(number_of_samples,
                                                 radius)]
@@ -169,12 +178,24 @@ class OpenKnot(SpaceCurve):
             k._apply_matrix(rotate_to_top(*angs))
             if zero_centroid:
                 k.zero_centroid()
-            points = k.points
-            closure_point = points[-1] + points[0] / 2.
-            closure_point[2] = radius
-            k.points = n.vstack([points, closure_point])
+            if optimise_closure:
+                cs = k.raw_crossings()
+                closure_cs = n.argwhere(((cs[:, 0] > 79) & (cs[:, 2] < 0.)) |
+                                        ((cs[:, 1] > 79.) & (cs[:, 2] > 0.)))
+                indices = closure_cs.flatten()
+                for index in indices:
+                    cs[index, 2:] *= -1
+                gc = GaussCode(cs)
+                gc.simplify(verbose=False)
+                polys.append([angs[0], angs[1], alexander(gc, simplify=False)])
 
-            polys.append([angs[0], angs[1], k.alexander_polynomial()])
+            else:
+                points = k.points
+                closure_point = points[-1] + points[0] / 2.
+                closure_point[2] = radius
+                k.points = n.vstack([points, closure_point])
+
+                polys.append([angs[0], angs[1], k.alexander_polynomial()])
 
         self._cached_alexanders[
             (number_of_samples, cache_radius)] = n.array(polys)
