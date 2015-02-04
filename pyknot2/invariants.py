@@ -813,4 +813,60 @@ def vassiliev_degree_2(representation):
     return representations_sum
 
         
+def vassiliev_degree_3(representation):
+    ## See Polyak and Viro
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+    
+    crossing_numbers = list(representation.crossing_numbers)
+    used_sets = set()
+    representations_sum_1 = 0
+    representations_sum_2 = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        a1e = (a1e - a1s) % len(gc)
+        for i2 in crossing_numbers:
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+            a2s = (a2s - a1s) % len(gc)
+            a2e = (a2e - a1s) % len(gc)
+            for i3 in crossing_numbers:
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+                a3s = (a3s - a1s) % len(gc)
+                a3e = (a3e - a1s) % len(gc)
+
+                ordered_indices = tuple(sorted((i1, i2, i3)))
+                if ordered_indices in used_sets:
+                    continue
+
+                if (a2s < a1e and a3e < a1e and a3e > a2s and
+                    a3s > a1e and a2e > a3s):
+                    print('type 1', i1, i2, i3)
+                    representations_sum_1 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+                if (a2e < a1e and a3s < a1e and a3s > a2e and
+                    a2s > a1e and a3e > a2s):
+                    print('type 2', i1, i2, i3)
+                    representations_sum_2 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+                    
+    
+    return int(round(representations_sum_1 / 2.)) + representations_sum_2
+
     
