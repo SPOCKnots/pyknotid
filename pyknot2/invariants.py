@@ -838,8 +838,14 @@ def vassiliev_degree_2(representation):
 
     return representations_sum
 
+def vassiliev_degree_3(representation, use_python=False):
+
+    if not use_python:
+        return _vassiliev_degree_3_numpy(representation)
+    return _vassiliev_degree_3_python(representation)
+
         
-def vassiliev_degree_3(representation):
+def _vassiliev_degree_3_python(representation):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
@@ -897,8 +903,7 @@ def vassiliev_degree_3(representation):
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
     
-import cinvariants
-def vassiliev_degree_3_numpy(representation, use_c=True):
+def _vassiliev_degree_3_numpy(representation):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
@@ -915,7 +920,11 @@ def vassiliev_degree_3_numpy(representation, use_c=True):
     arrows = _crossing_arrows_and_signs_numpy(
         gc, representation.crossing_numbers)
 
-    if use_c:
+    try:
+        from pyknot2 import cinvariants
+    except ImportError:
+        print('Failed to import cinvariants. Using *slow* python numpy method.')
+    else:
         return int(round(cinvariants.vassiliev_degree_3(arrows)))
 
     num_crossings = len(arrows) * 2
@@ -926,7 +935,7 @@ def vassiliev_degree_3_numpy(representation, use_c=True):
     arrow_range = range(len(arrows))
     for i1 in arrow_range:
         if i1 % 10 == 0:
-            vprint('\rCurrently comparing index {}'.format(i1), False)
+            vprint('\rCurrently comparing index {}   '.format(i1), False)
         arrow1 = arrows[i1]
         a1s, a1e, sign1 = arrow1
         a1e = (a1e - a1s) % num_crossings
