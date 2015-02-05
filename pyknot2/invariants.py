@@ -16,7 +16,9 @@ from __future__ import print_function
 import subprocess
 import re
 import sympy as sym
+import numpy as n
 
+from pyknot2.utils import vprint
 
 def alexander(representation, variable=-1, quadrant='lr', simplify=True,
               mode='python'):
@@ -779,6 +781,30 @@ def _crossing_arrows_and_signs(gc, crossing_numbers):
 
     return arrows, signs
 
+def _crossing_arrows_and_signs_numpy(gc, crossing_numbers):
+    ## Arrow diagram for v_2 is
+    ## appear -> leave -> leave -> appear (with crossed arrows)
+    over_crossing_indices = {}
+    under_crossing_indices = {}
+    signs = {}
+    for i, row in enumerate(gc):
+        if row[1] == 1:
+            over_crossing_indices[row[0]] = i
+        else:
+            under_crossing_indices[row[0]] = i
+        signs[row[0]] = row[2]
+
+    arrows = n.zeros((len(crossing_numbers), 3), dtype=n.long)
+
+    for index, number in enumerate(crossing_numbers):
+        row = arrows[index]
+        row[0] = over_crossing_indices[number]
+        row[1] = under_crossing_indices[number]
+        row[2] = signs[number]
+
+    return arrows
+
+
 def vassiliev_degree_2(representation):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
@@ -835,6 +861,8 @@ def vassiliev_degree_3(representation):
     representations_sum_1 = 0
     representations_sum_2 = 0
     for index, i1 in enumerate(crossing_numbers):
+        if index % 10 == 0:
+            vprint('\rCurrently comparing index {}'.format(index), False)
         arrow1 = arrows[i1]
         a1s, a1e = arrow1
         a1e = (a1e - a1s) % len(gc)
@@ -855,16 +883,78 @@ def vassiliev_degree_3(representation):
 
                 if (a2s < a1e and a3e < a1e and a3e > a2s and
                     a3s > a1e and a2e > a3s):
-                    print('type 1', i1, i2, i3)
                     representations_sum_1 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
                 if (a2e < a1e and a3s < a1e and a3s > a2e and
                     a2s > a1e and a3e > a2s):
-                    print('type 2', i1, i2, i3)
                     representations_sum_2 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+
+    print 
+    
+    return int(round(representations_sum_1 / 2.)) + representations_sum_2
+
+    
+import cinvariants
+def vassiliev_degree_3_numpy(representation, use_c=True):
+    ## See Polyak and Viro
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows = _crossing_arrows_and_signs_numpy(
+        gc, representation.crossing_numbers)
+
+    if use_c:
+        return int(round(cinvariants.vassiliev_degree_3(arrows)))
+
+    num_crossings = len(arrows) * 2
+    
+    used_sets = set()
+    representations_sum_1 = 0
+    representations_sum_2 = 0
+    arrow_range = range(len(arrows))
+    for i1 in arrow_range:
+        if i1 % 10 == 0:
+            vprint('\rCurrently comparing index {}'.format(i1), False)
+        arrow1 = arrows[i1]
+        a1s, a1e, sign1 = arrow1
+        a1e = (a1e - a1s) % num_crossings
+        for i2 in arrow_range:
+            arrow2 = arrows[i2]
+            a2s, a2e, sign2 = arrow2
+            a2s = (a2s - a1s) % num_crossings
+            a2e = (a2e - a1s) % num_crossings
+            for i3 in arrow_range:
+                arrow3 = arrows[i3]
+                a3s, a3e, sign3 = arrow3
+                a3s = (a3s - a1s) % num_crossings
+                a3e = (a3e - a1s) % num_crossings
+
+                ordered_indices = tuple(sorted((i1, i2, i3)))
+                if ordered_indices in used_sets:
+                    continue
+
+                if (a2s < a1e and a3e < a1e and a3e > a2s and
+                    a3s > a1e and a2e > a3s):
+                    representations_sum_1 += sign1 * sign2 * sign3
+                    used_sets.add(ordered_indices)
+                if (a2e < a1e and a3s < a1e and a3s > a2e and
+                    a2s > a1e and a3e > a2s):
+                    representations_sum_2 += sign1 * sign2 * sign3
+                    used_sets.add(ordered_indices)
+
+    print
                     
     
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
