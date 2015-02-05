@@ -90,6 +90,19 @@ class Knot(SpaceCurve):
         return value
 
     def vassiliev_degree_2(self, simplify=True, **kwargs):
+        '''
+        Returns the Vassiliev invariant of degree 2 for the Knot.
+
+        Parameters
+        ==========
+        simplify : bool
+            If True, simplifies the Gauss code of self before
+            calculating the invariant. Defaults to True, but
+            will work fine if you set it to False (and might even
+            be faster).
+        **kwargs :
+            These are passed directly to :meth:`gauss_code`.
+        '''
         from ..invariants import vassiliev_degree_2
         gc = self.gauss_code(**kwargs)
         if simplify:
@@ -97,6 +110,25 @@ class Knot(SpaceCurve):
         return vassiliev_degree_2(gc)
 
     def vassiliev_degree_3(self, simplify=True, try_cython=True, **kwargs):
+        '''Returns the Vassiliev invariant of degree 3 for the Knot.
+
+        Parameters
+        ==========
+        simplify : bool
+            If True, simplifies the Gauss code of self before
+            calculating the invariant. Defaults to True, but
+            will work fine if you set it to False (and might even
+            be faster).
+        try_cython : bool
+            Whether to try and use an optimised cython version of the
+            routine (takes about 1/3 of the time for complex
+            representations).  Defaults to True, but the python
+            fallback will be *slower* than setting it to False if the
+            cython function is not available.
+        **kwargs :
+            These are passed directly to :meth:`gauss_code`.
+
+        '''
         from ..invariants import vassiliev_degree_3
         gc = self.gauss_code(**kwargs)
         if simplify:
