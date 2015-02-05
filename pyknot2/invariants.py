@@ -838,9 +838,9 @@ def vassiliev_degree_2(representation):
 
     return representations_sum
 
-def vassiliev_degree_3(representation, use_python=False):
+def vassiliev_degree_3(representation, try_cython=True):
 
-    if not use_python:
+    if try_cython:
         return _vassiliev_degree_3_numpy(representation)
     return _vassiliev_degree_3_python(representation)
 
