@@ -9,6 +9,8 @@ ext_modules = [
                   libraries=["m"]),
         Extension("pyknot2.simplify.coctree", ["pyknot2/simplify/coctree.pyx"],
                   libraries=["m"]),
+        Extension("pyknot2.cinvariants", ["pyknot2/cinvariants.pyx"],
+                  libraries=["m"]),
         ]
 
 setup(
