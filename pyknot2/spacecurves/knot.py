@@ -96,12 +96,12 @@ class Knot(SpaceCurve):
             gc.simplify(verbose=self.verbose)
         return vassiliev_degree_2(gc)
 
-    def vassiliev_degree_3(self, simplify=True, **kwargs):
+    def vassiliev_degree_3(self, simplify=True, try_cython=True, **kwargs):
         from ..invariants import vassiliev_degree_3
         gc = self.gauss_code(**kwargs)
         if simplify:
             gc.simplify(verbose=self.verbose)
-        return vassiliev_degree_3(gc)
+        return vassiliev_degree_3(gc, try_cython=try_cython)
 
     def hyperbolic_volume(self):
         '''

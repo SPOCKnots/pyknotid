@@ -91,7 +91,7 @@ class Link(object):
     def raw_crossings(self, mode='use_max_jump', only_with_other_lines=True,
                       include_closures=True,
                       recalculate=False,
-                      use_python=False):
+                      try_cython=True):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -123,11 +123,11 @@ class Link(object):
         recalculate : bool, optional
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
-        use_python : bool, optional
-            Whether to force the use of the python (as opposed to cython)
-            implementation of find_crossings. This will make no difference
-            if the cython could not be loaded, in which case python is already
-            used automatically. Defaults to False.
+        try_cython : bool, optional
+            Whether to try to use a cython implementation of crossing
+            finding. This will make no difference if the cython could not
+            be loaded, in which case python is already
+            used automatically. Defaults to True.
 
         Returns
         -------
@@ -144,10 +144,10 @@ class Link(object):
             self._crossings[0] == only_with_other_lines):
             return self._crossings[1]
 
-        if use_python:
-            helpers_module = helpers
-        else:
+        if try_cython:
             helpers_module = chelpers
+        else:
+            helpers_module = helpers
 
         lines = self.lines
 
@@ -163,7 +163,7 @@ class Link(object):
                          'component lines'.format(len(lines)))
             crossings = [k.raw_crossings(
                 mode=mode, include_closure=include_closures,
-                recalculate=recalculate, use_python=use_python) for k in lines]
+                recalculate=recalculate, try_cython=try_cython) for k in lines]
             for index, cum_length in enumerate(cumulative_lengths):
                 if len(crossings[index]):
                     crossings[index][:, :2] += cum_length

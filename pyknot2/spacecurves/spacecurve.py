@@ -235,7 +235,7 @@ class SpaceCurve(object):
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
     def raw_crossings(self, mode='use_max_jump', include_closure=True,
-                      recalculate=False, use_python=False):
+                      recalculate=False, try_cython=True):
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
@@ -264,11 +264,11 @@ class SpaceCurve(object):
         recalculate : bool, optional
             Whether to force a recalculation of the crossing positions.
             Defaults to False.
-        use_python : bool, optional
+        try_cython : bool, optional
             Whether to force the use of the python (as opposed to cython)
             implementation of find_crossings. This will make no difference
             if the cython could not be loaded, in which case python is already
-            used automatically. Defaults to False.
+            used automatically. Defaults to True.
 
         Returns
         -------
@@ -284,10 +284,10 @@ class SpaceCurve(object):
         if not recalculate and self._crossings is not None:
             return self._crossings
 
-        if use_python:
-            helpers_module = helpers
-        else:
+        if try_cython:
             helpers_module = chelpers
+        else:
+            helpers_module = helpers
 
         self._vprint('Finding crossings')
 

@@ -38,7 +38,7 @@ class OpenKnot(SpaceCurve):
         self._cached_alexanders = None
 
     def raw_crossings(self, mode='use_max_jump',
-                      recalculate=False, use_python=False):
+                      recalculate=False, try_cython=False):
         '''
         Calls :meth:`pyknot2.spacecurves.spacecurve.SpaceCurve.raw_crossings`,
         but without including the closing line between the last
@@ -47,7 +47,7 @@ class OpenKnot(SpaceCurve):
         return super(OpenKnot, self).raw_crossings(mode=mode,
                                                    include_closure=False,
                                                    recalculate=recalculate,
-                                                   use_python=use_python)
+                                                   try_cython=try_cython)
 
     def __str__(self):
         if self._crossings is not None:
