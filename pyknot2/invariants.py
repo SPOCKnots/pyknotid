@@ -806,6 +806,18 @@ def _crossing_arrows_and_signs_numpy(gc, crossing_numbers):
 
 
 def vassiliev_degree_2(representation):
+    '''Calculates the Vassiliev invariant of degree 2 of the given
+    knot. The representation must have just one knot component,
+    this doesn't work for links.
+
+    Parameters
+    ==========
+    representation : Anything convertible to a
+                     :class:`~pyknot2.representations.gausscode.GaussCode`
+        A pyknot2 representation class for the knot, or anything that
+        can automatically be converted into a GaussCode (i.e. by writing
+        :code:`GaussCode(your_object)`).
+    '''
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
@@ -839,6 +851,24 @@ def vassiliev_degree_2(representation):
     return representations_sum
 
 def vassiliev_degree_3(representation, try_cython=True):
+    '''Calculates the Vassiliev invariant of degree 3 of the given
+    knot. The representation must have just one knot component,
+    this doesn't work for links.
+
+    Parameters
+    ==========
+    representation : Anything convertible to a
+                     :class:`~pyknot2.representations.gausscode.GaussCode`
+        A pyknot2 representation class for the knot, or anything that
+        can automatically be converted into a GaussCode (i.e. by writing
+        :code:`GaussCode(your_object)`).
+    try_cython : bool
+        Whether to try and use an optimised cython version of the
+        routine (takes about 1/3 of the time for complex representations).
+        Defaults to True, but the python fallback will be *slower*
+        than setting it to False if the cython function is not
+        available.
+    '''
 
     if try_cython:
         return _vassiliev_degree_3_numpy(representation)
