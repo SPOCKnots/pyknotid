@@ -180,11 +180,12 @@ class OpenKnot(SpaceCurve):
                 k.zero_centroid()
             if optimise_closure:
                 cs = k.raw_crossings()
-                closure_cs = n.argwhere(((cs[:, 0] > 79) & (cs[:, 2] < 0.)) |
-                                        ((cs[:, 1] > 79.) & (cs[:, 2] > 0.)))
-                indices = closure_cs.flatten()
-                for index in indices:
-                    cs[index, 2:] *= -1
+                if len(cs) > 0:
+                    closure_cs = n.argwhere(((cs[:, 0] > len(self.points)-1) & (cs[:, 2] < 0.)) |
+                                            ((cs[:, 1] > len(self.points)-1) & (cs[:, 2] > 0.)))
+                    indices = closure_cs.flatten()
+                    for index in indices:
+                        cs[index, 2:] *= -1
                 gc = GaussCode(cs)
                 gc.simplify(verbose=False)
                 polys.append([angs[0], angs[1], alexander(gc, simplify=False)])
