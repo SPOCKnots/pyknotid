@@ -474,7 +474,7 @@ class OpenKnot(SpaceCurve):
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
         
         
-    def virtual_slink(self):
+    def slink(self):
         '''
         Takes an open curve, finds its Gauss code (for the default projection) 
         and calculates its self linking number, J(K). See Kauffman 2004 for 
@@ -506,7 +506,7 @@ class OpenKnot(SpaceCurve):
         return slink_counter   
         
    
-    def virtual_slink_projections(self, number_of_samples=10, 
+    def slink_projections(self, number_of_samples=10, 
                                         zero_centroid=False):
         '''
         Returns a list of self linking numbers for the curve with a given 
@@ -541,16 +541,16 @@ class OpenKnot(SpaceCurve):
             k._apply_matrix(rotate_to_top(*angs))
             if zero_centroid:
                 k.zero_centroid()
-            slink = k.virtual_slink()
+            slink = k.slink()
             polys.append([angs[0], angs[1], slink])
             
         return n.array(polys)
         
-    def virtual_slink_fractions(self, number_of_samples=10, **kwargs):
+    def slink_fractions(self, number_of_samples=10, **kwargs):
         '''Returns each of the self linking numbers from
         self.virtual.slink.projections, with the fraction of each type.
         '''
-        polys = self.virtual_slink_projections(
+        polys = self.slink_projections(
             number_of_samples=number_of_samples, **kwargs)
         alexs = n.round(polys[:, 2]).astype(n.int)
 
@@ -563,8 +563,8 @@ class OpenKnot(SpaceCurve):
         return sorted(fracs, key=lambda j: j[1])
         #return fracs[n.argsort(fracs[:, 1])]
         
-    def _virtual_slink_map_values(self, number_of_samples=10, **kwargs):
-        polys = self.virtual_slink_projections(
+    def _slink_map_values(self, number_of_samples=10, **kwargs):
+        polys = self.slink_projections(
             number_of_samples=number_of_samples, **kwargs)
 
         from scipy.interpolate import griddata
@@ -583,7 +583,7 @@ class OpenKnot(SpaceCurve):
         return positions, values
         
 
-    def plot_virtual_slink_map(self, number_of_samples=10,
+    def plot_slink_map(self, number_of_samples=10,
                            scatter_points=False,
                            mode='imshow', **kwargs):
         '''
@@ -592,7 +592,7 @@ class OpenKnot(SpaceCurve):
         to a projection in this direction.
         '''
 
-        positions, values = self._virtual_slink_map_values(number_of_samples)
+        positions, values = self._slink_map_values(number_of_samples)
 
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -620,7 +620,7 @@ class OpenKnot(SpaceCurve):
 
         return fig, ax
 
-    def plot_virtual_slink_shell(self, number_of_samples=10,
+    def plot_slink_shell(self, number_of_samples=10,
                              zero_centroid=False,
                              sphere_radius_factor=2.,
                              opacity=0.3, **kwargs):
@@ -638,7 +638,7 @@ class OpenKnot(SpaceCurve):
 
         self.plot()
 
-        positions, values = self._virtual_slink_map_values(
+        positions, values = self._slink_map_values(
             number_of_samples, zero_centroid=False)
 
         thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
