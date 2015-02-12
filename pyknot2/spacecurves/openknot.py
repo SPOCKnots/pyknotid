@@ -143,7 +143,7 @@ class OpenKnot(SpaceCurve):
             from 0. This is *only* used if optimise_closure=False.
         zero_centroid : bool
             Whether to first move the average position of vertices to
-            (0, 0, 0). Defaults to False.
+            (0, 0, 0). Defaults to True.
 
         Returns
         -------
@@ -167,7 +167,7 @@ class OpenKnot(SpaceCurve):
         cache_radius = radius
 
         if radius is None:
-            radius = 10*n.max(self.points)
+            radius = 100*n.max(self.points)
             # Not guaranteed to give 10* the real radius, but good enough
 
         print_dist = int(max(1, 3000. / len(self.points)))
@@ -200,8 +200,11 @@ class OpenKnot(SpaceCurve):
 
         self._cached_alexanders[
             (number_of_samples, cache_radius)] = n.array(polys)
-
+            
         return n.array(polys)
+
+
+        
 
     def alexander_fractions(self, number_of_samples=10, **kwargs):
         '''Returns each of the Alexander polynomials from
@@ -326,7 +329,370 @@ class OpenKnot(SpaceCurve):
         import mayavi.mlab as may
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
 
+    def virtual_check(self):
+        '''
+        Takes an open curve and checks (for the default projection) if its 
+        Gauss code corresponds to a virtual knot or not. Returns a Boolean of 
+        this information.
 
+        Returns
+        -------
+        : virtual : bool
+            True if the Gauss code corresponds to a virtual knot. False
+            otherwise
+        '''
+        gausscode = self.gauss_code()._gauss_code[0][:, 0]
+        l = len(gausscode)
+        totalcrossings = l/2
+        crossingcounter = 1
+        virtual = False
+        
+        while(virtual == False and crossingcounter < totalcrossings + 1): 
+            occurences = n.where(gausscode == crossingcounter)[0]
+            firstoccurence = occurences[0]
+            secondoccurence = occurences[1]
+            crossingdifference = secondoccurence - firstoccurence        
+                  
+            if(crossingdifference%2 == 0):
+                virtual = True
+                  
+            crossingcounter += 1
+                
+        return virtual   
+        
+   
+    def virtual_check_projections(self, number_of_samples=10, 
+                                        zero_centroid=False):
+        '''
+        Returns a list of virtual Booleans for the curve with a given number 
+        if projections taken from directions approximately evenly distributed. 
+        A value of True corresponds to the projection giving a virtual knot, 
+        with False returned otherwise.
+
+        Parameters
+        ----------
+        number_of_samples : int
+            The number of points on the sphere to project from. Defaults to 10.
+        zero_centroid : bool
+            Whether to first move the average position of vertices to
+            (0, 0, 0). Defaults to False.
+
+        Returns
+        -------
+        : ndarray
+            A number_of_samples by 3 array of angles and virtual Booleans 
+            (True if virtual, False otherwise)
+        '''
+        if zero_centroid:
+            self.zero_centroid()
+        
+        angles = get_rotation_angles(number_of_samples)
+
+        polys = []
+
+        print_dist = int(max(1, 3000. / len(self.points)))
+        for i, angs in enumerate(angles):
+            if i % print_dist == 0:
+                self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
+            k = OpenKnot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(*angs))
+            if zero_centroid:
+                k.zero_centroid()
+            isvirtual = k.virtual_check()
+            polys.append([angs[0], angs[1], isvirtual])
+            
+        return n.array(polys)
+        
+    def virtual_fractions(self, number_of_samples=10, **kwargs):
+        '''Returns each of the virtual Booleans from
+        self.virtual.check.projections, with the fraction of each type.
+        '''
+        polys = self.virtual_check_projections(
+            number_of_samples=number_of_samples, **kwargs)
+        alexs = n.round(polys[:, 2]).astype(n.int)
+
+        fracs = []
+        length = float(len(alexs))
+        for alex in n.unique(alexs):
+            fracs.append((alex, n.sum(alexs == alex) / length))
+        #fracs = n.array(fracs)
+
+        return sorted(fracs, key=lambda j: j[1])
+        #return fracs[n.argsort(fracs[:, 1])]
+        
+    def _virtual_map_values(self, number_of_samples=10, **kwargs):
+        polys = self.virtual_check_projections(
+            number_of_samples=number_of_samples, **kwargs)
+
+        from scipy.interpolate import griddata
+
+        positions = []
+        for i, row in enumerate(polys):
+            positions.append(gall_peters(row[0], row[1]))
+        positions = n.array(positions)
+
+        interpolation_points = n.mgrid[0:2*n.pi:157j,
+                                       -2.:2.:100j]
+        values = griddata(positions, polys[:, 2],
+                          tuple(interpolation_points),
+                          method='nearest')
+
+        return positions, values
+        
+
+    def plot_virtual_map(self, number_of_samples=10,
+                           scatter_points=False,
+                           mode='imshow', **kwargs):
+        '''
+        Creates (and returns) a projective diagram showing each
+        different virtual Boolean in a different colour according
+        to a projection in this direction.
+        '''
+
+        positions, values = self._virtual_map_values(number_of_samples)
+
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+
+        if mode == 'imshow':
+            ax.imshow(values.T, cmap='jet', interpolation='none')
+        else:
+            ax.contourf(values.T, cmap='jet',
+                        levels=[0] + range(3, int(n.max(values)+1.1), 2))
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        ax.set_xlim(-0.5, 156.5)
+        ax.set_ylim(-0.5, 99.5)
+
+        im_positions = positions*25
+        im_positions[:, 0] -= 0.5
+        im_positions[:, 1] += 49.5
+        if scatter_points:
+            ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
+                       alpha=1, s=1)
+        
+        fig.tight_layout()
+        fig.show()
+
+        return fig, ax
+
+    def plot_virtual_shell(self, number_of_samples=10,
+                             zero_centroid=False,
+                             sphere_radius_factor=2.,
+                             opacity=0.3, **kwargs):
+        '''
+        Plots the curve in 3d via self.plot(), along with a translucent
+        sphere coloured according to whether or not the projection from this 
+        point corresponds to a virtual knot or not.
+
+        Parameters are all passed to 
+        :meth:`OpenKnot.virtual_check_projections`, except opacity and kwargs 
+        which are given to mayavi.mesh, and sphere_radius_factor which gives 
+        the radius of the enclosing sphere in terms of the maximum Cartesian
+        distance of any point in the line from the origin.
+        '''
+
+        self.plot()
+
+        positions, values = self._virtual_map_values(
+            number_of_samples, zero_centroid=False)
+
+        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+        phis = n.linspace(0, 2*n.pi, 157)
+
+        thetas, phis = n.meshgrid(thetas, phis)
+
+        r = sphere_radius_factor*n.max(self.points)
+        zs = r*n.cos(thetas)
+        xs = r*n.sin(thetas)*n.cos(phis)
+        ys = r*n.sin(thetas)*n.sin(phis)
+
+        import mayavi.mlab as may
+        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
+        
+        
+    def slink(self):
+        '''
+        Takes an open curve, finds its Gauss code (for the default projection) 
+        and calculates its self linking number, J(K). See Kauffman 2004 for 
+        more information. 
+
+        Returns
+        -------
+        : slink_counter : int
+            The self linking number of the open curve
+        '''
+    
+        gausscode = self.gauss_code()._gauss_code
+        l = len(gausscode[0][:,0])
+        totalcrossings = l/2
+        crossingcounter = 1
+        slink_counter = 0        
+        
+        for i in range(0, totalcrossings):
+            occurences = n.where(gausscode[0][:,0] == crossingcounter)[0]
+            firstoccurence = occurences[0]
+            secondoccurence = occurences[1]
+            crossingdifference = secondoccurence - firstoccurence        
+                  
+            if(crossingdifference%2 == 0):
+                slink_counter += 2 * gausscode[0][occurences[0],2]
+                
+            crossingcounter += 1          
+            
+        return slink_counter   
+        
+   
+    def slink_projections(self, number_of_samples=10, 
+                                        zero_centroid=False):
+        '''
+        Returns a list of self linking numbers for the curve with a given 
+        number of projections taken from directions approximately evenly
+        distributed.
+        
+        Parameters
+        ----------
+        number_of_samples : int
+            The number of points on the sphere to project from. Defaults to 10.
+        zero_centroid : bool
+            Whether to first move the average position of vertices to
+            (0, 0, 0). Defaults to False.
+
+        Returns
+        -------
+        : ndarray
+            A number_of_samples by 3 array of angles and self linking number
+        '''
+        if zero_centroid:
+            self.zero_centroid()
+        
+        angles = get_rotation_angles(number_of_samples)
+
+        polys = []
+
+        print_dist = int(max(1, 3000. / len(self.points)))
+        for i, angs in enumerate(angles):
+            if i % print_dist == 0:
+                self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
+            k = OpenKnot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(*angs))
+            if zero_centroid:
+                k.zero_centroid()
+            slink = k.slink()
+            polys.append([angs[0], angs[1], slink])
+            
+        return n.array(polys)
+        
+    def slink_fractions(self, number_of_samples=10, **kwargs):
+        '''Returns each of the self linking numbers from
+        self.virtual.slink.projections, with the fraction of each type.
+        '''
+        polys = self.slink_projections(
+            number_of_samples=number_of_samples, **kwargs)
+        alexs = n.round(polys[:, 2]).astype(n.int)
+
+        fracs = []
+        length = float(len(alexs))
+        for alex in n.unique(alexs):
+            fracs.append((alex, n.sum(alexs == alex) / length))
+        #fracs = n.array(fracs)
+
+        return sorted(fracs, key=lambda j: j[1])
+        #return fracs[n.argsort(fracs[:, 1])]
+        
+    def _slink_map_values(self, number_of_samples=10, **kwargs):
+        polys = self.slink_projections(
+            number_of_samples=number_of_samples, **kwargs)
+
+        from scipy.interpolate import griddata
+
+        positions = []
+        for i, row in enumerate(polys):
+            positions.append(gall_peters(row[0], row[1]))
+        positions = n.array(positions)
+
+        interpolation_points = n.mgrid[0:2*n.pi:157j,
+                                       -2.:2.:100j]
+        values = griddata(positions, polys[:, 2],
+                          tuple(interpolation_points),
+                          method='nearest')
+
+        return positions, values
+        
+
+    def plot_slink_map(self, number_of_samples=10,
+                           scatter_points=False,
+                           mode='imshow', **kwargs):
+        '''
+        Creates (and returns) a projective diagram showing each
+        different self linkming number in a different colour according
+        to a projection in this direction.
+        '''
+
+        positions, values = self._slink_map_values(number_of_samples)
+
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+
+        if mode == 'imshow':
+            ax.imshow(values.T, cmap='jet', interpolation='none')
+        else:
+            ax.contourf(values.T, cmap='jet',
+                        levels=[0] + range(3, int(n.max(values)+1.1), 2))
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        ax.set_xlim(-0.5, 156.5)
+        ax.set_ylim(-0.5, 99.5)
+
+        im_positions = positions*25
+        im_positions[:, 0] -= 0.5
+        im_positions[:, 1] += 49.5
+        if scatter_points:
+            ax.scatter(im_positions[:, 0], im_positions[:, 1], color='black',
+                       alpha=1, s=1)
+        
+        fig.tight_layout()
+        fig.show()
+
+        return fig, ax
+
+    def plot_slink_shell(self, number_of_samples=10,
+                             zero_centroid=False,
+                             sphere_radius_factor=2.,
+                             opacity=0.3, **kwargs):
+        '''
+        Plots the curve in 3d via self.plot(), along with a translucent
+        sphere coloured by the self linking number obtained by projecting from 
+        this point.
+
+        Parameters are all passed to 
+        :meth:`OpenKnot.virtual_check_projections`, except opacity and kwargs 
+        which are given to mayavi.mesh, and sphere_radius_factor which gives 
+        the radius of the enclosing sphere in terms of the maximum Cartesian
+        distance of any point in the line from the origin.
+        '''
+
+        self.plot()
+
+        positions, values = self._slink_map_values(
+            number_of_samples, zero_centroid=False)
+
+        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+        phis = n.linspace(0, 2*n.pi, 157)
+
+        thetas, phis = n.meshgrid(thetas, phis)
+
+        r = sphere_radius_factor*n.max(self.points)
+        zs = r*n.cos(thetas)
+        xs = r*n.sin(thetas)*n.cos(phis)
+        ys = r*n.sin(thetas)*n.sin(phis)
+
+        import mayavi.mlab as may
+        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
+        
+        
 def gall_peters(theta, phi):
     '''
     Converts spherical coordinates to the Gall-Peters
