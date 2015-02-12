@@ -522,22 +522,22 @@ class OpenKnot(SpaceCurve):
             The self linking number of the open curve
         '''
     
-        gausscode = self.gauss_code()._gauss_code
-        l = len(gausscode[0][:,0])
-        totalcrossings = l/2
-        crossingcounter = 1
+        gauss_code = self.gauss_code()._gauss_code
+        l = len(gauss_code[0][:,0])
+        total_crossings = l/2
+        crossing_counter = 1
         slink_counter = 0        
         
-        for i in range(0, totalcrossings):
-            occurences = n.where(gausscode[0][:,0] == crossingcounter)[0]
+        for i in range(0, total_crossings):
+            occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
             firstoccurence = occurences[0]
             secondoccurence = occurences[1]
             crossingdifference = secondoccurence - firstoccurence        
                   
             if(crossingdifference%2 == 0):
-                slink_counter += 2 * gausscode[0][occurences[0],2]
+                slink_counter += 2 * gauss_code[0][occurences[0],2]
                 
-            crossingcounter += 1          
+            crossing_counter += 1          
             
         return slink_counter   
         

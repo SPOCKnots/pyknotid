@@ -28,6 +28,7 @@ def arclength(points, include_closure=True):
         arclength += length_mags[-1]
     return arclength
     
+
 def radius_of_gyration(points):
     '''
     Returns the radius of gyration of the given vertices, assuming
@@ -43,3 +44,13 @@ def radius_of_gyration(points):
     rogs = n.sum(diffs, 1)
     rog = n.average(rogs)
     return n.sqrt(rog)
+
+
+# def persistences(points, step=None):
+#     '''
+#     Returns a set of xs and ys for persistence length calculation.
+#     '''
+
+#     if step is None:
+#         import pyknot.
+#         step = n.average

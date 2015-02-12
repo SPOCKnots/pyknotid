@@ -25,6 +25,7 @@ cpdef vassiliev_degree_3(long [:, :] arrows):
     cdef set used_sets = set()
     cdef long representations_sum_1 = 0
     cdef long representations_sum_2 = 0
+    cdef tuple ordered_indices
     for i1 in range(num_arrows):
         if i1 % 10 == 0:
             vprint('\rCurrently comparing index {}    '.format(i1), False)
