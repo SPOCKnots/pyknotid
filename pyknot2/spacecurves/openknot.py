@@ -337,31 +337,31 @@ class OpenKnot(SpaceCurve):
 
         Returns
         -------
-        : virtual : bool
+        virtual : bool
             True if the Gauss code corresponds to a virtual knot. False
-            otherwise
+            otherwise.
         '''
-        gausscode = self.gauss_code()._gauss_code[0][:, 0]
-        l = len(gausscode)
-        totalcrossings = l/2
-        crossingcounter = 1
+        gauss_code = self.gauss_code()._gauss_code[0][:, 0]
+        l = len(gauss_code)
+        total_crossings = l / 2
+        crossing_counter = 1
         virtual = False
         
-        while(virtual == False and crossingcounter < totalcrossings + 1): 
-            occurences = n.where(gausscode == crossingcounter)[0]
-            firstoccurence = occurences[0]
-            secondoccurence = occurences[1]
-            crossingdifference = secondoccurence - firstoccurence        
+        while(virtual == False and crossing_counter < total_crossings + 1): 
+            occurences = n.where(gauss_code == crossing_counter)[0]
+            first_occurence = occurences[0]
+            second_occurence = occurences[1]
+            crossing_difference = second_occurence - first_occurence        
                   
-            if(crossingdifference%2 == 0):
+            if(crossing_difference % 2 == 0):
                 virtual = True
                   
-            crossingcounter += 1
+            crossing_counter += 1
                 
         return virtual   
         
    
-    def virtual_check_projections(self, number_of_samples=10, 
+    def virtual_checks(self, number_of_samples=10, 
                                         zero_centroid=False):
         '''
         Returns a list of virtual Booleans for the curve with a given number 
@@ -404,10 +404,10 @@ class OpenKnot(SpaceCurve):
         return n.array(polys)
         
     def virtual_fractions(self, number_of_samples=10, **kwargs):
-        '''Returns each of the virtual Booleans from
+        '''Returns each of the virtual booleans from
         self.virtual.check.projections, with the fraction of each type.
         '''
-        polys = self.virtual_check_projections(
+        polys = self.virtual_checks(
             number_of_samples=number_of_samples, **kwargs)
         alexs = n.round(polys[:, 2]).astype(n.int)
 
@@ -415,13 +415,11 @@ class OpenKnot(SpaceCurve):
         length = float(len(alexs))
         for alex in n.unique(alexs):
             fracs.append((alex, n.sum(alexs == alex) / length))
-        #fracs = n.array(fracs)
 
         return sorted(fracs, key=lambda j: j[1])
-        #return fracs[n.argsort(fracs[:, 1])]
         
     def _virtual_map_values(self, number_of_samples=10, **kwargs):
-        polys = self.virtual_check_projections(
+        polys = self.virtual_checks(
             number_of_samples=number_of_samples, **kwargs)
 
         from scipy.interpolate import griddata
@@ -487,7 +485,7 @@ class OpenKnot(SpaceCurve):
         point corresponds to a virtual knot or not.
 
         Parameters are all passed to 
-        :meth:`OpenKnot.virtual_check_projections`, except opacity and kwargs 
+        :meth:`OpenKnot.virtual_checks`, except opacity and kwargs 
         which are given to mayavi.mesh, and sphere_radius_factor which gives 
         the radius of the enclosing sphere in terms of the maximum Cartesian
         distance of any point in the line from the origin.
@@ -668,7 +666,7 @@ class OpenKnot(SpaceCurve):
         this point.
 
         Parameters are all passed to 
-        :meth:`OpenKnot.virtual_check_projections`, except opacity and kwargs 
+        :meth:`OpenKnot.virtual_checks`, except opacity and kwargs 
         which are given to mayavi.mesh, and sphere_radius_factor which gives 
         the radius of the enclosing sphere in terms of the maximum Cartesian
         distance of any point in the line from the origin.
