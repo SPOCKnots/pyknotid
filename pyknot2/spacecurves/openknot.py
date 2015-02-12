@@ -510,7 +510,7 @@ class OpenKnot(SpaceCurve):
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
         
         
-    def self_linking(self):
+    def self_linking_in_projection(self):
         '''
         Takes an open curve, finds its Gauss code (for the default projection) 
         and calculates its self linking number, J(K). See Kauffman 2004 for 
@@ -518,7 +518,7 @@ class OpenKnot(SpaceCurve):
 
         Returns
         -------
-        : slink_counter : int
+        : self_link_counter : int
             The self linking number of the open curve
         '''
     
@@ -526,7 +526,7 @@ class OpenKnot(SpaceCurve):
         l = len(gauss_code[0][:,0])
         total_crossings = l/2
         crossing_counter = 1
-        slink_counter = 0        
+        self_link_counter = 0        
         
         for i in range(0, total_crossings):
             occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
@@ -535,11 +535,11 @@ class OpenKnot(SpaceCurve):
             crossingdifference = secondoccurence - firstoccurence        
                   
             if(crossingdifference%2 == 0):
-                slink_counter += 2 * gauss_code[0][occurences[0],2]
+                self_link_counter += 2 * gauss_code[0][occurences[0],2]
                 
             crossing_counter += 1          
             
-        return slink_counter   
+        return self_link_counter   
         
    
     def self_linkings(self, number_of_samples=10, 
@@ -577,7 +577,7 @@ class OpenKnot(SpaceCurve):
             k._apply_matrix(rotate_to_top(*angs))
             if zero_centroid:
                 k.zero_centroid()
-            slink = k.self_linking()
+            slink = k.self_linking_in_projection()
             polys.append([angs[0], angs[1], slink])
             
         return n.array(polys)
