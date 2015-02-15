@@ -537,6 +537,21 @@ class SpaceCurve(object):
         '''
         return cls(from_csv(filen, **kwargs))
 
+    def to_txt(self, filen):
+        '''
+        Writes the knot points to the given filename, formatted
+        with each x,y,z component of each point space-separated
+        on its own line, i.e.::
+
+            ...
+            1.2 6.1 98.5
+            6.19 8.5 1.9
+            ...
+        '''
+        with open(filen, 'w') as fileh:
+            for line in self.points:
+                fileh.write('{} {} {}\n'.format(line[0], line[1], line[2]))
+
     def octree_simplify(self, runs=1, plot=False, rotate=True,
                         obey_knotting=True, **kwargs):
         '''
