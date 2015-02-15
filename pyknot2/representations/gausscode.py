@@ -54,7 +54,7 @@ class GaussCode(object):
         self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
 
     def __len__(self):
-        return sum([len(c) for c in self._gauss_code]) / 2
+        return int(sum([len(c) for c in self._gauss_code]) / 2)
 
     def _init_from_raw_crossings_array(self, crossings):
         '''
@@ -294,24 +294,36 @@ class GaussCode(object):
         if verbose:
             print()
 
-    # def validate(self):
-    #     '''
-    #     Returns True if the code is valid, False otherwise.
-    #     '''
-    #     code = self._gauss_code
-    #     crossing_numbers = self.crossing_numbers
 
-    #     # Check that all identifiers are known properly
-    #     from collections import Counter
-    #     real_crossing_numbers = Counter()
-    #     for line in code:
-    #         for crossing
+class VirtualGaussCode(GaussCode):
+    def self_linking(self):
+        '''Returns the self linking number J(K) of the Gauss code, an
+        invariant of virtual knots. See Kauffman 2004 for more information.
 
-    #     cache = {}
-    #     for line in code:
-    #         for identifier, over, clockwise in line:
-    #             if identifier in cache:
-    #                 comparator = cache.pop(identifier)
+        Returns
+        -------
+        : slink_counter : int
+            The self linking number of the open curve
+        '''
+
+        gauss_code = self.gauss_code()._gauss_code
+        l = len(gauss_code[0][:,0])
+        total_crossings = l/2
+        crossing_counter = 1
+        slink_counter = 0        
+        
+        for i in range(0, total_crossings):
+            occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
+            firstoccurence = occurences[0]
+            secondoccurence = occurences[1]
+            crossingdifference = secondoccurence - firstoccurence        
+                  
+            if(crossingdifference%2 == 0):
+                slink_counter += 2 * gauss_code[0][occurences[0],2]
+                
+            crossing_counter += 1          
+            
+        return slink_counter   
 
 
 def _get_crossing_numbers(gc):
