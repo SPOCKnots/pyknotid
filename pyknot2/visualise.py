@@ -85,9 +85,14 @@ def plot_line_vispy(points, **kwargs):
     from vispy import app, scene
     canvas = scene.SceneCanvas(keys='interactive')
     canvas.view = canvas.central_widget.add_view()
-    l = scene.visuals.Line(points, color=(1, 0, 0, 1), width=4,
-                                  mode='gl', antialias=True)
-    #l = scene.visuals.LinePlot(points[:, :2])
+
+    from colorsys import hsv_to_rgb
+    colours = n.linspace(0, 1, len(points))
+    colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
+    
+    l = scene.visuals.Tube(points, colors=colours,
+                           shading='smooth')
+    
     canvas.view.add(l)
     canvas.view.set_camera('turntable', mode='perspective',
                            up='z', distance=1.5*n.max(n.max(
