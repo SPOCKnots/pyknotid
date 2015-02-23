@@ -47,7 +47,7 @@ class GaussCode(object):
             raise NotImplementedError(
                 'planar diagram -> gauss code not implemented')
         else:
-            if isinstance(crossings, (n.ndarray, list)):
+            if isinstance(crossings, n.ndarray):
                 crossings = [crossings]
             self._init_from_raw_crossings_array(crossings)
 
