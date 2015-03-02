@@ -56,6 +56,24 @@ class Cell(object):
         boundary = self.shape if boundary else None
         plot_cell(self.lines, boundary, clf, **kwargs)
 
+    def smooth(self, repeats=1, window_len=10):
+        from pyknot2.spacecurves import Knot
+        new_lines = []
+        for i, line in enumerate(self.lines):
+            new_segments = []
+            for segment in line:
+                if len(segment) > window_len:
+                    k = Knot(segment)
+                    k.smooth(repeats)
+                    new_segments.append(k.points)
+                else:
+                    new_segments.append(segment)
+            new_lines.append(new_segments)
+        self.lines = new_lines
+                
+
+                
+
 
         
 def _interpret_line(line):
