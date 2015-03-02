@@ -7,6 +7,9 @@ different toolkits and types of plot.
 '''
 
 import numpy as n
+from colorsys import hsv_to_rgb
+from pyknot2.utils import ensure_shape_tuple
+import random
 
 def plot_line(points, mode='auto', clf=True, **kwargs):
     '''
@@ -91,7 +94,8 @@ def plot_line_vispy(points, **kwargs):
     colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
     
     l = scene.visuals.Tube(points, colors=colours,
-                           shading='smooth')
+                           shading='smooth',
+                           tube_points=8)
     
     canvas.view.add(l)
     canvas.view.set_camera('turntable', mode='perspective',
@@ -147,3 +151,21 @@ def plot_projection(points, crossings=None, mark_start=False,
         fig.show()
 
     return fig, ax
+
+def plot_cell(lines, boundary=None, clf=True, **kwargs):
+    mode = 'mayavi'
+    import mayavi.mlab as may
+    may.clf()
+
+    hues = n.linspace(0, 1, len(lines) + 1)[:-1]
+    colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
+    random.shuffle(colours)
+    for (line, colour) in zip(lines, colours):
+        for segment in line:
+            plot_line(segment, clf=False, color=colour, **kwargs)
+    
+    if boundary is not None:
+        if isinstance(boundary, (float, int)):
+            boundary = ensure_shape_tuple(boundary)
+        if len(boundary) == 3:
+            boundary = (0, boundary[0], 0, boundary[1], 0, boundary[2])
