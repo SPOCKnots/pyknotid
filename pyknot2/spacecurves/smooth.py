@@ -4,7 +4,6 @@ Modified version of code from http://scipy.org/Cookbook/SignalSmooth
 """
 
 import numpy as n
-import matplotlib.pyplot as plt
 
 def smooth(x, window_len=10, window='hanning'):
     """smooth the data using a window with requested size.
