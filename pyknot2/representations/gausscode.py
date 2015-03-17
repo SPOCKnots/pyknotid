@@ -179,7 +179,8 @@ class GaussCode(object):
         # Next do RM1_extended separately (could be more efficient?)
         if one_extended:
             # Do extended RM1 as a separate step
-            code = [line[keep] for (line, keep) in zip(code, keeps)]
+            print
+            code = [(line[keep] if len(line) > 0 else line) for (line, keep) in zip(code, keeps)]
             keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
 
             crossing_indices = {}
@@ -206,7 +207,8 @@ class GaussCode(object):
                 # First, check crossings in the middle of the list
                 in_between = code[line_index][first_index+1:second_index]
                 in_between_keeps = keeps[line_index][first_index+1:second_index]
-                in_between = in_between[in_between_keeps]
+                if len(in_between) > 0:
+                    in_between = in_between[in_between_keeps]
 
                 if n.abs(n.sum(in_between[:, 1])) == len(in_between):
                     # all crossings over or under
@@ -228,7 +230,8 @@ class GaussCode(object):
                                        code[line_index][:first_index]))
                 in_between_keeps = n.hstack((keeps[line_index][second_index+1:],
                                              keeps[line_index][:first_index]))
-                in_between = in_between[in_between_keeps]
+                if len(in_between) > 0:
+                    in_between = in_between[in_between_keeps]
 
                 if n.abs(n.sum(in_between[:, 1])) == len(in_between):
                     keeps[line_index][first_index] = False
@@ -244,7 +247,7 @@ class GaussCode(object):
 
 
         # Get rid of all crossings that have been removed by RMs
-        self._gauss_code = [line[keep] for (line, keep) in zip(code, keeps)]
+        self._gauss_code = [(line[keep] if len(line) > 0 else line) for (line, keep) in zip(code, keeps)]
         self.crossing_numbers = crossing_numbers
 
     def simplify(self, one=True, two=True, one_extended=True, verbose=True):
