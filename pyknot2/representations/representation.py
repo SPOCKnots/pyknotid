@@ -25,7 +25,7 @@ class Representation(GaussCode):
         return PlanarDiagram(self)
 
     def alexander_polynomial(self, variable=-1, quadrant='lr',
-                             mode='python'):
+                             mode='python', force_no_simplify=False):
         '''
         Returns the Alexander polynomial at the given point,
         as calculated by :func:`pyknot2.invariants.alexander`.
@@ -34,11 +34,12 @@ class Representation(GaussCode):
         of the named arguments.
         '''
         from ..invariants import alexander
-        self.simplify()
+        if not force_no_simplify:
+            self.simplify()
         return alexander(self, variable=variable, quadrant=quadrant,
                          simplify=False, mode=mode)
 
-    def alexander_at_root(self, root, round=True):
+    def alexander_at_root(self, root, round=True, **kwargs):
         '''
         Returns the Alexander polynomial at the given root of unity,
         i.e. evaluated at exp(2 pi I / root).
@@ -61,7 +62,7 @@ class Representation(GaussCode):
         if hasattr(root, '__contains__'):
             return [self.alexander_at_root(r) for r in root]
         variable = n.exp(2 * n.pi * 1.j / root)
-        value = self.alexander_polynomial(variable)
+        value = self.alexander_polynomial(variable, **kwargs)
         value = n.abs(value)
         if round and root in (1, 2, 3, 4):
             value = int(n.round(value))
@@ -108,7 +109,7 @@ class Representation(GaussCode):
         '''
         from ..invariants import vassiliev_degree_3
         if simplify:
-            self.simplify(verbose=self.verbose)
+            self.simplify()
         return vassiliev_degree_3(self, try_cython=try_cython)
 
     def hyperbolic_volume(self):
@@ -185,19 +186,6 @@ class Representation(GaussCode):
 
         return from_invariants(**identify_kwargs)
 
-    def self_linking(self):
-        '''Returns the self linking number J(K) of the Gauss code, an
-        invariant of virtual knots. See Kauffman 2004 for more information.
-
-        Returns
-        -------
-        slink_counter : int
-            The self linking number of the open curve
-        '''
-        from ..invariants import self_linking
-        return self_linking(self)
-
-
     def is_virtual(self):
         '''
         Takes an open curve and checks (for the default projection) if its 
@@ -228,3 +216,15 @@ class Representation(GaussCode):
             crossing_counter += 1
                 
         return virtual   
+
+    def self_linking(self):
+        '''Returns the self linking number J(K) of the Gauss code, an
+        invariant of virtual knots. See Kauffman 2004 for more information.
+
+        Returns
+        -------
+        slink_counter : int
+            The self linking number of the open curve
+        '''
+        from ..invariants import self_linking
+        return self_linking(self)
