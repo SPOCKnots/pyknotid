@@ -216,7 +216,7 @@ class Representation(GaussCode):
         crossing_counter = 1
         virtual = False
         
-        while .(virtual == False and crossing_counter < total_crossings + 1): 
+        while (not virtual and crossing_counter < total_crossings + 1): 
             occurences = n.where(gauss_code == crossing_counter)[0]
             first_occurence = occurences[0]
             second_occurence = occurences[1]
