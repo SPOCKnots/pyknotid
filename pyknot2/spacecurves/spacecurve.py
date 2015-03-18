@@ -70,6 +70,7 @@ class SpaceCurve(object):
 
         self._cached_writhe_and_crossing_numbers = None
         self._gauss_code = None
+        self._representation = None
 
         self._recent_octree = None
 
@@ -440,9 +441,31 @@ class SpaceCurve(object):
         if not recalculate and self._gauss_code is not None:
             return self._gauss_code
         crossings = self.raw_crossings(recalculate=recalculate, **kwargs)
-        gc = GaussCode(crossings)
+        gc = GaussCode(crossings, verbose=self.verbose)
         self._gauss_code = gc
         return gc
+
+    def representation(self, recalculate=False, **kwargs):
+        '''
+        Returns a :class:`~pyknot2.representations.representation.Representation`
+        instance representing the crossings of the knot.
+
+        The Representation instance is cached internally. If you want to
+        recalculate it (e.g. to get an unsimplified version if you
+        have simplified it), you should pass `recalculate=True`.
+
+        This method passes kwargs directly to :meth:`raw_crossings`,
+        see the documentation of that function for all options.
+        '''
+
+        from ..representations.representation import Representation
+        if not recalculate and self._representation is not None:
+            return self._representation
+        crossings = self.raw_crossings(recalculate=recalculate, **kwargs)
+        gc = Representation(crossings, verbose=self.verbose)
+        self._representation = gc
+        return gc
+        
 
     def planar_diagram(self, **kwargs):
         '''
