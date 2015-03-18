@@ -35,9 +35,12 @@ class GaussCode(object):
         and with multiple link components separated by spaces and/or
         newlines. If a PlanarDiagram or GaussCode is passed, the code
         is duplicated.
+    verbose : bool
+        Whether to print information during calculations. Defaults to
+        True.
     '''
 
-    def __init__(self, crossings=''):
+    def __init__(self, crossings='', verbose=True):
         from pyknot2.representations import planardiagram
         if isinstance(crossings, str):
             self._init_from_string(crossings)
@@ -52,6 +55,7 @@ class GaussCode(object):
             self._init_from_raw_crossings_array(crossings)
 
         self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
+        self.verbose = verbose
 
     def __len__(self):
         return int(sum([len(c) for c in self._gauss_code]) / 2)
@@ -250,7 +254,7 @@ class GaussCode(object):
         self._gauss_code = [(line[keep] if len(line) > 0 else line) for (line, keep) in zip(code, keeps)]
         self.crossing_numbers = crossing_numbers
 
-    def simplify(self, one=True, two=True, one_extended=True, verbose=True):
+    def simplify(self, one=True, two=True, one_extended=True):
         '''
         Simplifies the GaussCode, performing the given Reidemeister moves
         everywhere possible, as many times as possible, until the
@@ -270,12 +274,9 @@ class GaussCode(object):
             connected by arcs which include only over or only under crossings
             (and which must thus be topologically irrelevant). Defaults
             to True.
-        verbose : bool
-            Whether to print information about the ongoing siplification.
-            Defaults to True.
         '''
 
-        if verbose:
+        if self.verbose:
             print('Simplifying: initially {} crossings'.format(
                 n.sum([len(line) for line in self._gauss_code])))
 
@@ -287,14 +288,14 @@ class GaussCode(object):
             new_gc = self._gauss_code
             new_len = n.sum([len(line) for line in new_gc])
             number_of_runs += 1
-            if verbose:
+            if self.verbose:
                 sys.stdout.write('\r-> {} crossings after {} runs'.format(
                     n.sum([len(line) for line in new_gc]), number_of_runs))
                 sys.stdout.flush()
             if new_len == original_len:
                 break
 
-        if verbose:
+        if self.verbose:
             print()
 
 
