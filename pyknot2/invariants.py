@@ -998,4 +998,32 @@ def _vassiliev_degree_3_numpy(representation):
     
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
-    
+
+def self_linking(representation):
+    '''Returns the self linking number J(K) of the Gauss code, an
+    invariant of virtual knots. See Kauffman 2004 for more
+    information.
+    '''
+
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gauss_code = representation._gauss_code
+    l = len(gauss_code[0][:,0])
+    total_crossings = l/2
+    crossing_counter = 1
+    slink_counter = 0        
+
+    for i in range(0, total_crossings):
+        occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
+        first_occurence = occurences[0]
+        second_occurence = occurences[1]
+        crossing_difference = second_occurence - first_occurence        
+
+        if(crossing_difference % 2 == 0):
+            slink_counter += 2 * gauss_code[0][occurences[0],2]
+
+        crossing_counter += 1          
+
+    return slink_counter   
