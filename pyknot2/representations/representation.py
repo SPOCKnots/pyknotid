@@ -184,3 +184,47 @@ class Representation(GaussCode):
                 DBKnot.min_crossings <= len(self.gauss_code()), )
 
         return from_invariants(**identify_kwargs)
+
+    def self_linking(self):
+        '''Returns the self linking number J(K) of the Gauss code, an
+        invariant of virtual knots. See Kauffman 2004 for more information.
+
+        Returns
+        -------
+        slink_counter : int
+            The self linking number of the open curve
+        '''
+        from ..invariants import self_linking
+        return self_linking(self)
+
+
+    def is_virtual(self):
+        '''
+        Takes an open curve and checks (for the default projection) if its 
+        Gauss code corresponds to a virtual knot or not. Returns a Boolean of 
+        this information.
+
+        Returns
+        -------
+        virtual : bool
+            True if the Gauss code corresponds to a virtual knot. False
+            otherwise.
+        '''
+        gauss_code = self._gauss_code[0][:, 0]
+        l = len(gauss_code)
+        total_crossings = l / 2
+        crossing_counter = 1
+        virtual = False
+        
+        while .(virtual == False and crossing_counter < total_crossings + 1): 
+            occurences = n.where(gauss_code == crossing_counter)[0]
+            first_occurence = occurences[0]
+            second_occurence = occurences[1]
+            crossing_difference = second_occurence - first_occurence        
+                  
+            if(crossing_difference % 2 == 0):
+                virtual = True
+                  
+            crossing_counter += 1
+                
+        return virtual   
