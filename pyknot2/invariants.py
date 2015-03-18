@@ -178,7 +178,7 @@ def _alexander_sympy(crossings, variable=None, quadrant='lr'):
     if variable is None:
         variable = sym.var('t')
     num_crossings = int(len(crossings)/2)
-    matrix = sym.zeros((num_crossings, num_crossings))
+    matrix = sym.zeros(num_crossings)
     line_num = 0
     crossing_num_counter = 0
     crossing_dict = {}
