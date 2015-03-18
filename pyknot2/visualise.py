@@ -8,7 +8,7 @@ different toolkits and types of plot.
 
 import numpy as n
 from colorsys import hsv_to_rgb
-from pyknot2.utils import ensure_shape_tuple
+from pyknot2.utils import ensure_shape_tuple, vprint
 import random
 
 def plot_line(points, mode='auto', clf=True, **kwargs):
@@ -93,7 +93,7 @@ def plot_line_vispy(points, **kwargs):
     colours = n.linspace(0, 1, len(points))
     colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
     
-    l = scene.visuals.Tube(points, colors=colours,
+    l = scene.visuals.Tube(points, color=colours,
                            shading='smooth',
                            tube_points=8)
     
@@ -160,12 +160,61 @@ def plot_cell(lines, boundary=None, clf=True, **kwargs):
     hues = n.linspace(0, 1, len(lines) + 1)[:-1]
     colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
     random.shuffle(colours)
+    i = 0
     for (line, colour) in zip(lines, colours):
+        vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
+               False)
+        i += 1
         for segment in line:
             plot_line(segment, clf=False, color=colour, **kwargs)
     
     if boundary is not None:
-        if isinstance(boundary, (float, int)):
-            boundary = ensure_shape_tuple(boundary)
-        if len(boundary) == 3:
-            boundary = (0, boundary[0], 0, boundary[1], 0, boundary[2])
+        draw_bounding_box_mayavi(boundary)
+                
+
+def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False):
+    if shape is not None:
+        if isinstance(shape, (float, int)):
+            shape = ensure_shape_tuple(shape)
+        if len(shape) == 3:
+            shape = (0, shape[0], 0, shape[1], 0, shape[2])
+    import mayavi.mlab as may
+
+    xmin, xmax, ymin, ymax, zmin, zmax = shape
+    ls = []
+    ls.append(n.array([[xmax, ymax, zmin],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmax, ymin, zmin],[xmax, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmin],[xmin, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmin, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmax],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmax],[xmax, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmin],[xmax, ymax, zmin]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmax, ymin, zmin]]))
+    ls.append(n.array([[xmax, ymin, zmax],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmax],[xmin, ymax, zmax]]))
+    ls.append(n.array([[xmax, ymin, zmin],[xmax, ymax, zmin]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmin, ymax, zmin]]))
+
+    for line in ls:
+        may.plot3d(line[:, 0], line[:, 1], line[:, 2],
+                   color=colour, tube_radius=tube_radius)
+
+
+def cell_to_povray(filen, lines, shape):
+    from jinja2 import Environment, FileSystemLoader
+    env = Environment(loader=FileSystemLoader(
+        '/home/asandy/devel/pyknot2/pyknot2/templates'))
+    template = env.get_template('cell.pov')
+
+    colours = n.linspace(0, 1, len(lines) + 1)[:-1]
+    colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
+
+    coloured_segments = []
+    for line, colour in zip(lines, colours):
+        for segment in line:
+            if len(segment) > 3:
+                coloured_segments.append((segment, colour))
+
+    with open(filen, 'w') as fileh:
+        fileh.write(template.render(lines=coloured_segments))
+    
