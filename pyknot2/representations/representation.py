@@ -204,18 +204,16 @@ class Representation(GaussCode):
         crossing_counter = 1
         virtual = False
         
-        while (not virtual and crossing_counter < total_crossings + 1): 
-            occurences = n.where(gauss_code == crossing_counter)[0]
+        for crossing_number in self.crossing_numbers:
+            occurences = n.where(gauss_code == crossing_number)[0]
+            print('occurences are', occurences)
             first_occurence = occurences[0]
             second_occurence = occurences[1]
             crossing_difference = second_occurence - first_occurence        
                   
             if(crossing_difference % 2 == 0):
-                virtual = True
-                  
-            crossing_counter += 1
-                
-        return virtual   
+                return True
+        return False
 
     def self_linking(self):
         '''Returns the self linking number J(K) of the Gauss code, an

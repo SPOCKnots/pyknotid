@@ -1015,8 +1015,8 @@ def self_linking(representation):
     crossing_counter = 1
     slink_counter = 0        
 
-    for i in range(0, total_crossings):
-        occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
+    for crossing_number in representation.crossing_numbers:
+        occurences = n.where(gauss_code[0][:, 0] == crossing_number)[0]
         first_occurence = occurences[0]
         second_occurence = occurences[1]
         crossing_difference = second_occurence - first_occurence        
