@@ -210,7 +210,7 @@ class Representation(GaussCode):
             second_occurence = occurences[1]
             crossing_difference = second_occurence - first_occurence        
                   
-            if(crossing_difference % 2 == 0):
+            if crossing_difference % 2 == 0:
                 return True
         return False
 
