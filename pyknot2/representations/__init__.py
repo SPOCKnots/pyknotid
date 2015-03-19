@@ -13,5 +13,6 @@ representations, and to simplify via Reidemeister moves.
 
 from pyknot2.representations.gausscode import GaussCode
 from pyknot2.representations.planardiagram import PlanarDiagram
-__all__ = ['GaussCode', 'PlanarDiagram']
+from pyknot2.representations.representation import Representation
+__all__ = ['GaussCode', 'PlanarDiagram', 'Representation', ]
 

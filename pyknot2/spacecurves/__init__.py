@@ -15,6 +15,7 @@ knots.
 
 from pyknot2.spacecurves.knot import Knot
 from pyknot2.spacecurves.link import Link
-from pyknot2.periodiccell import Cell
-__all__ = ('Knot', 'Link', )
+from pyknot2.spacecurves.openknot import OpenKnot
+from pyknot2.spacecurves.periodiccell import Cell
+__all__ = ('Knot', 'Link', 'OpenKnot', 'Cell', )
 
