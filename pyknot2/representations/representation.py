@@ -206,7 +206,6 @@ class Representation(GaussCode):
         
         for crossing_number in self.crossing_numbers:
             occurences = n.where(gauss_code == crossing_number)[0]
-            print('occurences are', occurences)
             first_occurence = occurences[0]
             second_occurence = occurences[1]
             crossing_difference = second_occurence - first_occurence        
