@@ -1024,6 +1024,4 @@ def self_linking(representation):
         if(crossing_difference % 2 == 0):
             slink_counter += 2 * gauss_code[0][occurences[0],2]
 
-        crossing_counter += 1          
-
     return slink_counter   
