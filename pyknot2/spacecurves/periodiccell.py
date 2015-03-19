@@ -20,9 +20,11 @@ class Cell(object):
         'nth' or 'loop' in self.line_types. Defaults to True.
     '''
 
-    def __init__(self, lines, shape, periodic=True, cram=False):
+    def __init__(self, lines, shape, periodic=True, cram=False, downsample=None):
         self.shape = ensure_shape_tuple(shape)
         lines = [l for l in lines if len(l) > 1]
+        if downsample is not None:
+            lines = [l[::downsample] for l in lines]
         lines = map(_interpret_line, lines)
         if cram:
             lines = [_cram_into_cell(l, self.shape) for l in lines]
@@ -51,7 +53,8 @@ class Cell(object):
             line = _cram_into_cell(line)
         self.lines.append(line)
 
-    def plot(self, boundary=True, clf=True, **kwargs):
+    def plot(self, boundary=True, clf=True, tube_radius=0.5,
+             **kwargs):
         from pyknot2.visualise import plot_cell
         boundary = self.shape if boundary else None
         plot_cell(self.lines, boundary, clf, **kwargs)
@@ -70,7 +73,11 @@ class Cell(object):
                     new_segments.append(segment)
             new_lines.append(new_segments)
         self.lines = new_lines
-                
+
+    def to_povray(self, filen, spline='cubic_spline'):
+        from pyknot2.visualise import cell_to_povray
+        cell_to_povray(filen, self.lines, self.shape)
+
 
                 
 
