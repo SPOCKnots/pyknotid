@@ -20,7 +20,8 @@ def knot(p=3, q=4, num=100):
     Returns points in the p, q torus knot. If p and q are not coprime,
     returns only the first component.
     '''
-    return TorusKnot(p, q, num).first_component
+    return TorusKnot(p, q, num, minor_radius=1.5,
+                     major_radius=3).first_component
 
 
 def link(p=3, q=4, num=100):
