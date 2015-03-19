@@ -22,12 +22,14 @@ def knot(p=3, q=4, num=100):
     '''
     return TorusKnot(p, q, num).first_component
 
+
 def link(p=3, q=4, num=100):
     '''
     Returns points in the p, q torus link. The result is a list of arrays,
     with one array of points per link component.
     '''
     return TorusKnot(p, q, num).components
+
 
 class TorusKnot(object):
     """Representation of a torus knot or link.
