@@ -27,8 +27,6 @@ cpdef vassiliev_degree_3(long [:, :] arrows):
     cdef long representations_sum_2 = 0
     cdef tuple ordered_indices
     for i1 in range(num_arrows):
-        if i1 % 10 == 0:
-            vprint('\rCurrently comparing index {}    '.format(i1), False)
         arrow1 = arrows[i1]
         a1s = arrow1[0]
         a1e = arrow1[1]
