@@ -299,37 +299,6 @@ class GaussCode(object):
             print()
 
 
-class VirtualGaussCode(GaussCode):
-    def self_linking(self):
-        '''Returns the self linking number J(K) of the Gauss code, an
-        invariant of virtual knots. See Kauffman 2004 for more information.
-
-        Returns
-        -------
-        : slink_counter : int
-            The self linking number of the open curve
-        '''
-
-        gauss_code = self.gauss_code()._gauss_code
-        l = len(gauss_code[0][:,0])
-        total_crossings = l/2
-        crossing_counter = 1
-        slink_counter = 0        
-        
-        for i in range(0, total_crossings):
-            occurences = n.where(gauss_code[0][:,0] == crossing_counter)[0]
-            firstoccurence = occurences[0]
-            secondoccurence = occurences[1]
-            crossingdifference = secondoccurence - firstoccurence        
-                  
-            if(crossingdifference%2 == 0):
-                slink_counter += 2 * gauss_code[0][occurences[0],2]
-                
-            crossing_counter += 1          
-            
-        return slink_counter   
-
-
 def _get_crossing_numbers(gc):
     '''
     Given GaussCode internal data, returns a list of all
