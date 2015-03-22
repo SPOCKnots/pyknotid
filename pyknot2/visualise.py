@@ -11,6 +11,8 @@ from colorsys import hsv_to_rgb
 from pyknot2.utils import ensure_shape_tuple, vprint
 import random
 
+vispy_canvas = None
+
 def plot_line(points, mode='auto', clf=True, **kwargs):
     '''
     Plots the given line, using the toolkit given by mode.
@@ -32,6 +34,12 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
     '''
     if mode == 'auto':
         try:
+            import vispy
+            mode = 'vispy'
+        except ImportError:
+            pass
+    if mode == 'auto':
+        try:
             import mayavi.mlab as may
             mode = 'mayavi'
         except ImportError:
@@ -44,12 +52,6 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
             ax = fig.add_subplot(111, projection='3d')
             mode = 'matplotlib'
         except (ImportError, ValueError):
-            pass
-    if mode == 'auto':
-        try:
-            import vispy
-            mode = 'vispy'
-        except ImportError:
             pass
     if mode == 'auto':
         raise ImportError('Couldn\'t import any of mayavi, vispy, '
@@ -84,22 +86,42 @@ def plot_line_matplotlib(points, **kwargs):
     ax.plot(points[:, 0], points[:, 1], points[:, 2])
     fig.show()
 
-def plot_line_vispy(points, **kwargs):
-    from vispy import app, scene
-    canvas = scene.SceneCanvas(keys='interactive')
-    canvas.view = canvas.central_widget.add_view()
+def ensure_vispy_canvas():
+    global vispy_canvas
+    if vispy_canvas is None:
+        from vispy import app, scene
+        canvas = scene.SceneCanvas(keys='interactive')
+        canvas.view = canvas.central_widget.add_view()
+        vispy_canvas = canvas
 
-    from colorsys import hsv_to_rgb
-    colours = n.linspace(0, 1, len(points))
-    colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
-    
+def clear_vispy_canvas():
+    global vispy_canvas
+    if vispy_canvas is None:
+        return
+    vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
+    vispy_canvas.view = vispy_canvas.central_widget.add_view()
+
+def plot_line_vispy(points, clf=True, colour=None, **kwargs):
+    ensure_vispy_canvas()
+    if clf:
+        clear_vispy_canvas()
+    canvas = vispy_canvas
+    from vispy import app, scene, color
+
+    if colour is None:
+        from colorsys import hsv_to_rgb
+        colours = n.linspace(0, 1, len(points))
+        colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
+    else:
+        colours = color.Color(colour)
+
     l = scene.visuals.Tube(points, color=colours,
                            shading='smooth',
                            tube_points=8)
     
     canvas.view.add(l)
     canvas.view.set_camera('turntable', mode='perspective',
-                           up='z', distance=1.5*n.max(n.max(
+                           up='z', distance=3.*n.max(n.max(
                                points, axis=0)))
     l.transform = scene.transforms.AffineTransform()
     l.transform.translate(-1*n.average(points, axis=0))
@@ -152,8 +174,28 @@ def plot_projection(points, crossings=None, mark_start=False,
 
     return fig, ax
 
-def plot_cell(lines, boundary=None, clf=True, **kwargs):
-    mode = 'mayavi'
+def plot_cell(lines, mode='auto', **kwargs):
+    if mode == 'auto':
+        try:
+            import vispy
+            mode = 'vispy'
+        except ImportError:
+            pass
+    if mode == 'auto':
+        try:
+            import mayavi.mlab as may
+            mode = 'mayavi'
+        except ImportError:
+            pass
+
+    if mode == 'mayavi':
+        plot_cell_mayavi(lines, **kwargs)
+    elif mode == 'vispy':
+        plot_cell_vispy(lines, **kwargs)
+    else:
+        raise ValueError('invalid toolkit/mode')
+
+def plot_cell_mayavi(lines, boundary=None, clf=True, **kwargs):
     import mayavi.mlab as may
     may.clf()
 
@@ -166,10 +208,32 @@ def plot_cell(lines, boundary=None, clf=True, **kwargs):
                False)
         i += 1
         for segment in line:
-            plot_line(segment, clf=False, color=colour, **kwargs)
+            plot_line(segment, mode='mayavi',
+                      clf=False, color=colour, **kwargs)
     
     if boundary is not None:
         draw_bounding_box_mayavi(boundary)
+
+def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
+    if clf:
+        clear_vispy_canvas()
+    
+    hues = n.linspace(0, 1, len(lines) + 1)[:-1]
+    colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
+    random.shuffle(colours)
+    i = 0
+    for (line, colour) in zip(lines, colours):
+        vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
+               False)
+        i += 1
+        for segment in line:
+            if len(segment) < 4:
+                continue
+            plot_line_vispy(segment,
+                            clf=False, colour=colour, **kwargs)
+    
+    # if boundary is not None:
+    #     draw_bounding_box_vispy(boundary)
                 
 
 def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False):
@@ -198,6 +262,33 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
     for line in ls:
         may.plot3d(line[:, 0], line[:, 1], line[:, 2],
                    color=colour, tube_radius=tube_radius)
+
+def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
+    if shape is not None:
+        if isinstance(shape, (float, int)):
+            shape = ensure_shape_tuple(shape)
+        if len(shape) == 3:
+            shape = (0, shape[0], 0, shape[1], 0, shape[2])
+
+    xmin, xmax, ymin, ymax, zmin, zmax = shape
+    ls = []
+    ls.append(n.array([[xmax, ymax, zmin],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmax, ymin, zmin],[xmax, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmin],[xmin, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmin, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmax],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmax],[xmax, ymin, zmax]]))
+    ls.append(n.array([[xmin, ymax, zmin],[xmax, ymax, zmin]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmax, ymin, zmin]]))
+    ls.append(n.array([[xmax, ymin, zmax],[xmax, ymax, zmax]]))
+    ls.append(n.array([[xmin, ymin, zmax],[xmin, ymax, zmax]]))
+    ls.append(n.array([[xmax, ymin, zmin],[xmax, ymax, zmin]]))
+    ls.append(n.array([[xmin, ymin, zmin],[xmin, ymax, zmin]]))
+
+    for line in ls:
+        print 'plotting vispy line'
+        print line
+        plot_line_vispy(line, clf=False, colour='white')
 
 
 def cell_to_povray(filen, lines, shape):
