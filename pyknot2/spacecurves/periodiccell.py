@@ -57,7 +57,8 @@ class Cell(object):
              **kwargs):
         from pyknot2.visualise import plot_cell
         boundary = self.shape if boundary else None
-        plot_cell(self.lines, boundary, clf, **kwargs)
+        plot_cell(self.lines, boundary=boundary, clf=clf,
+                  tube_radius=tube_radius, **kwargs)
 
     def smooth(self, repeats=1, window_len=10):
         from pyknot2.spacecurves import Knot
@@ -67,7 +68,7 @@ class Cell(object):
             for segment in line:
                 if len(segment) > window_len:
                     k = Knot(segment)
-                    k.smooth(repeats)
+                    k.smooth(repeats, periodic=False)
                     new_segments.append(k.points)
                 else:
                     new_segments.append(segment)

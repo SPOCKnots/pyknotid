@@ -295,7 +295,7 @@ class Link(object):
         for i, line in enumerate(lines[1:]):
             if colours is not None:
                 kwargs.update({'color': colours[i+1]})
-            line.plot(mode=mode, clf=False, **kwargs)
+            line.plot(mode=mode, clf=False, zero_centroid=False, **kwargs)
 
     def plot_projection(self, with_crossings=True, mark_start=False,
                         include_self_crossings=False):
@@ -458,3 +458,12 @@ class Link(object):
         '''
         for line in self.lines:
             line.smooth(**kwargs)
+
+    def multivariate_alexander(self, variables=-1., **kwargs):
+
+        from ..invariants import multivariate_alexander_numpy
+        gc = self.gauss_code(**kwargs)
+        gc.simplify(verbose=self.verbose)
+        return multivariate_alexander(gc, variables)
+
+        

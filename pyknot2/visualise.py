@@ -90,7 +90,7 @@ def ensure_vispy_canvas():
     global vispy_canvas
     if vispy_canvas is None:
         from vispy import app, scene
-        canvas = scene.SceneCanvas(keys='interactive')
+        canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
         canvas.view = canvas.central_widget.add_view()
         vispy_canvas = canvas
 
@@ -101,7 +101,8 @@ def clear_vispy_canvas():
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
-def plot_line_vispy(points, clf=True, colour=None, **kwargs):
+def plot_line_vispy(points, clf=True, tube_radius=0.5,
+                    colour=None, zero_centroid=True, **kwargs):
     ensure_vispy_canvas()
     if clf:
         clear_vispy_canvas()
@@ -123,10 +124,13 @@ def plot_line_vispy(points, clf=True, colour=None, **kwargs):
     canvas.view.set_camera('turntable', mode='perspective',
                            up='z', distance=3.*n.max(n.max(
                                points, axis=0)))
-    l.transform = scene.transforms.AffineTransform()
-    l.transform.translate(-1*n.average(points, axis=0))
+    if zero_centroid:
+        l.transform = scene.transforms.AffineTransform()
+        l.transform.translate(-1*n.average(points, axis=0))
 
     canvas.show()
+    # import ipdb
+    # ipdb.set_trace()
     return canvas
     
 
@@ -191,7 +195,7 @@ def plot_cell(lines, mode='auto', **kwargs):
     if mode == 'mayavi':
         plot_cell_mayavi(lines, **kwargs)
     elif mode == 'vispy':
-        plot_cell_vispy(lines, **kwargs)
+        plot_cell_vispy(lines, zero_centroid=False, **kwargs)
     else:
         raise ValueError('invalid toolkit/mode')
 
@@ -232,8 +236,8 @@ def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
             plot_line_vispy(segment,
                             clf=False, colour=colour, **kwargs)
     
-    # if boundary is not None:
-    #     draw_bounding_box_vispy(boundary)
+    if boundary is not None:
+        draw_bounding_box_vispy(boundary)
                 
 
 def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False):
@@ -258,6 +262,8 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
     ls.append(n.array([[xmin, ymin, zmax],[xmin, ymax, zmax]]))
     ls.append(n.array([[xmax, ymin, zmin],[xmax, ymax, zmin]]))
     ls.append(n.array([[xmin, ymin, zmin],[xmin, ymax, zmin]]))
+
+    ls = [interpolate(p) for p in ls]
 
     for line in ls:
         may.plot3d(line[:, 0], line[:, 1], line[:, 2],
@@ -285,11 +291,20 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
     ls.append(n.array([[xmax, ymin, zmin],[xmax, ymax, zmin]]))
     ls.append(n.array([[xmin, ymin, zmin],[xmin, ymax, zmin]]))
 
-    for line in ls:
-        print 'plotting vispy line'
-        print line
-        plot_line_vispy(line, clf=False, colour='white')
+    ls = [interpolate(p) for p in ls]
 
+    for line in ls:
+        plot_line_vispy(line, clf=False, colour='black',
+                        zero_centroid=False)
+
+    global vispy_canvas
+    print 'setting center', shape[1] / 2.
+    vispy_canvas.central_widget.children[0].camera.center = (
+        -shape[1] / 2., -shape[1] / 2., -shape[1] / 2.)
+
+def interpolate(p, num=10):
+    p1, p2 = p
+    return n.array([n.linspace(i, j, num) for i, j in zip(p1, p2)]).T
 
 def cell_to_povray(filen, lines, shape):
     from jinja2 import Environment, FileSystemLoader
