@@ -118,6 +118,7 @@ def plot_line_vispy(points, clf=True, tube_radius=0.5,
 
     l = scene.visuals.Tube(points, color=colours,
                            shading='smooth',
+                           radius=tube_radius,
                            tube_points=8)
     
     canvas.view.add(l)
