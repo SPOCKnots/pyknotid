@@ -13,6 +13,7 @@ representations, and to simplify via Reidemeister moves.
 
 from pyknot2.representations.gausscode import GaussCode
 from pyknot2.representations.planardiagram import PlanarDiagram
+from pyknot2.representations.dtnotation import DTNotation
 from pyknot2.representations.representation import Representation
 __all__ = ['GaussCode', 'PlanarDiagram', 'Representation', ]
 
