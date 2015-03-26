@@ -178,12 +178,10 @@ class Representation(GaussCode):
             poly = self.alexander_polynomial(**alexander)
             identify_kwargs['alexander'] = poly
 
-        from pyknot2.catalogue.identify import from_invariants
-        from pyknot2.catalogue.database import Knot as DBKnot
         if min_crossings and len(self.gauss_code()) < 16:
-            identify_kwargs['other'] = (
-                DBKnot.min_crossings <= len(self.gauss_code()), )
+            identify_kwargs['max_crossings'] = len(self.gauss_code())
 
+        from pyknot2.catalogue.identify import from_invariants
         return from_invariants(**identify_kwargs)
 
     def is_virtual(self):
