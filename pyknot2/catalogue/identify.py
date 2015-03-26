@@ -27,6 +27,10 @@ def from_invariants(return_query=False, **kwargs):
         The name of the knot following knot atlas conventions, e.g. '3_1'
     min_crossings : int
         The minimal crossing number of the knot.
+    max_crossings : int
+        The maximal known crossing number of the knot. This may be higher
+        than its actual crossing number, it serves only to prune the
+        results list.
     signature : int
         The signature invariant.
     unknotting_number : int
@@ -73,6 +77,8 @@ def from_invariants(return_query=False, **kwargs):
             conditions.append(Knot.identifier == value)
         elif invariant == 'min_crossings':
             conditions.append(Knot.min_crossings == value)
+        elif invariant == 'max_crossings':
+            conditions.append(Knot.min_crossings <= value)
         elif invariant == 'signature':
             conditions.append(Knot.signature == value)
         elif invariant in ['determinant', 'alexander_imag_2',
