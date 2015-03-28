@@ -457,7 +457,8 @@ class Link(object):
         :meth:`pyknot2.spacecurves.spacecurve.SpaceCurve.smooth`.
         '''
         for line in self.lines:
-            line.smooth(**kwargs)
+            if len(line) > 5:
+                line.smooth(**kwargs)
 
     def multivariate_alexander(self, variables=-1., **kwargs):
 
