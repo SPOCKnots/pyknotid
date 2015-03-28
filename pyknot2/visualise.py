@@ -302,7 +302,6 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
                         zero_centroid=False)
 
     global vispy_canvas
-    print 'setting center', shape[1] / 2.
     vispy_canvas.central_widget.children[0].camera.center = (
         shape[1] / 2., shape[1] / 2., shape[1] / 2.)
     vispy_canvas.update()
