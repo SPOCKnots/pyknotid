@@ -196,6 +196,10 @@ class Representation(GaussCode):
             True if the Gauss code corresponds to a virtual knot. False
             otherwise.
         '''
+        if len(self._gauss_code) == 0:
+            return False
+        if len(self._gauss_code[0]) == 0:
+            return False
         gauss_code = self._gauss_code[0][:, 0]
         l = len(gauss_code)
         total_crossings = l / 2
