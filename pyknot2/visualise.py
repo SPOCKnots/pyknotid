@@ -68,6 +68,7 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
 
     
 def plot_line_mayavi(points, clf=True, tube_radius=1., colormap='hsv',
+                     zero_centroid=False,
                      mus=None,
                      **kwargs):
     import mayavi.mlab as may
@@ -101,7 +102,7 @@ def clear_vispy_canvas():
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
-def plot_line_vispy(points, clf=True, tube_radius=0.5,
+def plot_line_vispy(points, clf=True, tube_radius=1.,
                     colour=None, zero_centroid=True, **kwargs):
     ensure_vispy_canvas()
     if clf:
@@ -122,9 +123,9 @@ def plot_line_vispy(points, clf=True, tube_radius=0.5,
                            tube_points=8)
     
     canvas.view.add(l)
-    canvas.view.set_camera('turntable', mode='perspective',
-                           up='z', distance=3.*n.max(n.max(
-                               points, axis=0)))
+    canvas.view.camera = scene.TurntableCamera(
+        fov=90, up='z', distance=1.2*n.max(n.max(
+            points, axis=0)))
     if zero_centroid:
         l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
@@ -200,7 +201,8 @@ def plot_cell(lines, mode='auto', **kwargs):
     else:
         raise ValueError('invalid toolkit/mode')
 
-def plot_cell_mayavi(lines, boundary=None, clf=True, **kwargs):
+def plot_cell_mayavi(lines, boundary=None, clf=True, smooth=True,
+                     min_seg_length=5, **kwargs):
     import mayavi.mlab as may
     may.clf()
 
@@ -213,33 +215,13 @@ def plot_cell_mayavi(lines, boundary=None, clf=True, **kwargs):
                False)
         i += 1
         for segment in line:
+            if len(segment) < min_seg_length:
+                continue
             plot_line(segment, mode='mayavi',
                       clf=False, color=colour, **kwargs)
     
     if boundary is not None:
-        draw_bounding_box_mayavi(boundary)
-
-def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
-    if clf:
-        clear_vispy_canvas()
-    
-    hues = n.linspace(0, 1, len(lines) + 1)[:-1]
-    colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
-    random.shuffle(colours)
-    i = 0
-    for (line, colour) in zip(lines, colours):
-        vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
-               False)
-        i += 1
-        for segment in line:
-            if len(segment) < 4:
-                continue
-            plot_line_vispy(segment,
-                            clf=False, colour=colour, **kwargs)
-    
-    if boundary is not None:
-        draw_bounding_box_vispy(boundary)
-                
+        draw_bounding_box_mayavi(boundary, **kwargs)
 
 def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False):
     if shape is not None:
@@ -270,6 +252,27 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
         may.plot3d(line[:, 0], line[:, 1], line[:, 2],
                    color=colour, tube_radius=tube_radius)
 
+def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
+    if clf:
+        clear_vispy_canvas()
+    
+    hues = n.linspace(0, 1, len(lines) + 1)[:-1]
+    colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
+    random.shuffle(colours)
+    i = 0
+    for (line, colour) in zip(lines, colours):
+        vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
+               False)
+        i += 1
+        for segment in line:
+            if len(segment) < 4:
+                continue
+            plot_line_vispy(segment,
+                            clf=False, colour=colour, **kwargs)
+    
+    if boundary is not None:
+        draw_bounding_box_vispy(boundary)
+                
 def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
     if shape is not None:
         if isinstance(shape, (float, int)):
@@ -301,7 +304,8 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
     global vispy_canvas
     print 'setting center', shape[1] / 2.
     vispy_canvas.central_widget.children[0].camera.center = (
-        -shape[1] / 2., -shape[1] / 2., -shape[1] / 2.)
+        shape[1] / 2., shape[1] / 2., shape[1] / 2.)
+    vispy_canvas.update()
 
 def interpolate(p, num=10):
     p1, p2 = p

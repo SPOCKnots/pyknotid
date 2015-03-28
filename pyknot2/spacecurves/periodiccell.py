@@ -53,7 +53,7 @@ class Cell(object):
             line = _cram_into_cell(line)
         self.lines.append(line)
 
-    def plot(self, boundary=True, clf=True, tube_radius=0.5,
+    def plot(self, boundary=True, clf=True, tube_radius=1.0,
              **kwargs):
         from pyknot2.visualise import plot_cell
         boundary = self.shape if boundary else None
