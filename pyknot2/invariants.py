@@ -1003,12 +1003,18 @@ def self_linking(representation):
     '''Returns the self linking number J(K) of the Gauss code, an
     invariant of virtual knots. See Kauffman 2004 for more
     information.
+
+    Currently only works for knots.
     '''
 
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
 
+    if len(representation) == 0:
+        return 0
+    if len(representation._gauss_code[0]) == 0:
+        return 0
     gauss_code = representation._gauss_code
     l = len(gauss_code[0][:,0])
     total_crossings = l/2
