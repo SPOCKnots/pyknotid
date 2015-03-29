@@ -298,6 +298,30 @@ class GaussCode(object):
         if self.verbose:
             print()
 
+    def reindex_crossings(self):
+        '''Replaces the indices of the crossings in the Gauss code with the
+        integers from 1 to its length.
+
+        Note that this modifier the Gauss code in place, the previous indices
+        are not recorded.
+        '''
+        num_crossings = len(self)
+
+        new_number = 1
+        numbers_dict = {}
+
+        for line in self._gauss_code:
+            for i, row in enumerate(line):
+                number = row[0]
+                if number in numbers_dict:
+                    row[0] = numbers_dict.pop(number)
+                else:
+                    numbers_dict[row[0]] = new_number
+                    row[0] = new_number
+                    new_number += 1
+
+        self.crossing_numbers = set(range(1, num_crossings + 1))
+
 
 def _get_crossing_numbers(gc):
     '''
