@@ -58,6 +58,13 @@ def from_invariants(return_query=False, **kwargs):
     hyperbolic_volume or hyp_vol or hypvol : float or str
         The hyperbolic volume of the knot complement. The lookup is a
         string comparison based on the given number of significant digits.
+    vassiliev_order_2 or vassiliev_2 or v_2 or v2 : int
+        The Vassiliev invariant of order 2.
+    vassiliev_order_3 or vassiliev_3 or v_3 or v3 : int
+        The Vassiliev invariant of order 3.
+    symmetry : string
+        The symmetry of the knot, one of 'reversible',
+        'positive amphicheiral', 'negative amphicheiral', 'chiral'.
     other : iterable
         A list of other peewee terms that can be chained in ``where()``
         calls, e.g. ``database.Knot.min_crossings < 5``. This provides
@@ -109,6 +116,12 @@ def from_invariants(return_query=False, **kwargs):
             conditions.append(Knot.homfly << [val, chiral_val])
         elif invariant in ['hypvol', 'hyp_vol', 'hyperbolic_volume']:
             conditions.append(Knot.hyperbolic_volume % '{}*'.format(str(value)))
+        elif invariant in ['vassiliev_order_2', 'vassiliev_2', 'v_2', 'v2']:
+            conditions.append(Knot.vassiliev_2 == value)
+        elif invariant in ['vassiliev_order_3', 'vassiliev_3', 'v_3', 'v3']:
+            conditions.append((Knot.vassiliev_3 == value) | (Knot.vassiliev_3 == -1*value))
+        elif invariant == 'symmetry':
+            conditions.append(Knot.symmetry == value.lower())
         elif invariant == 'other':
             for condition in value:
                 conditions.append(condition)
@@ -116,6 +129,7 @@ def from_invariants(return_query=False, **kwargs):
     selection = Knot.select()
     for condition in conditions:
         selection = selection.where(condition)
+    selection = selection.order_by(Knot.min_crossings)
     if return_query:
         return selection
     return list(selection)
