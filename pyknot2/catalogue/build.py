@@ -26,6 +26,11 @@ rdfconway = URIRef('invariant:ConwayNotation')
 rdfpd = URIRef('invariant:PD_Presentation')
 rdfdtcode = URIRef('invariant:DT_Code')
 
+rdfv2 = URIRef('invariant:V_2')
+rdfv3 = URIRef('invariant:V_3')
+
+rdfsymmetry = URIRef('invariant:Symmetry_Type')
+
 # RDFLib arrangement is subject/predicate/object
 
 db.db.connect()
@@ -126,6 +131,19 @@ def add_knots_from(filen):
         if dt_code is not None:
             dt_code = str(dt_code)
 
+        v2 = get_rdf_object(g, subject, rdfv2)
+        if v2 is not None:
+            v2 = int(v2)
+
+        v3 = get_rdf_object(g, subject, rdfv3)
+        if v3 is not None:
+            v3 = int(v3)
+
+        symmetry = get_rdf_object(g, subject, rdfsymmetry)
+        if symmetry is not None:
+            symmetry = symmetry.lower()
+        
+
         k = Knot(identifier=identifier,
                  min_crossings=crossings,
                  determinant=determinant,
@@ -138,7 +156,10 @@ def add_knots_from(filen):
                  conway_notation=conway,
                  gauss_code=gauss_code,
                  planar_diagram=planar_diagram,
-                 dt_code=dt_code
+                 dt_code=dt_code,
+                 vassiliev_2=v2,
+                 vassiliev_3=v3,
+                 symmetry=symmetry,
                  )
         knots.append(k)
     sys.stdout.write('\n')
