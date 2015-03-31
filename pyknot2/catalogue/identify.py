@@ -14,6 +14,20 @@ root_to_attr = {2: Knot.determinant,
                   3: Knot.alexander_imag_3,
                   4: Knot.alexander_imag_4}
 
+
+def first_from_invariants(**kwargs):
+    '''Returns the first Knot by crossing number (and arbitrary
+    ordering within that) with the given invariant conditions.
+
+    Parameters
+    ----------
+    **kwargs :
+        Any set of invariant conditions. The accepted arguments are
+        the same as for :func:`from_invariants`.
+    '''
+    return from_invariants(return_query=True, **kwargs).first()
+
+
 def from_invariants(return_query=False, **kwargs):
     '''Takes invariants as kwargs, and does the appropriate conversion to
     return a list of database objects matching all the given criteria.
@@ -23,7 +37,7 @@ def from_invariants(return_query=False, **kwargs):
 
     Parameters
     ----------
-    identifier : str
+    identifier or name or id : str
         The name of the knot following knot atlas conventions, e.g. '3_1'
     min_crossings : int
         The minimal crossing number of the knot.
@@ -80,11 +94,10 @@ def from_invariants(return_query=False, **kwargs):
         for most searches.
     '''
 
-    return_query = False
     conditions = []
     for invariant, value in kwargs.items():
         invariant = invariant.lower()
-        if invariant == 'identifier':
+        if invariant in ['name', 'id', 'identifier']:
             conditions.append(Knot.identifier == value)
         elif invariant == 'min_crossings':
             conditions.append(Knot.min_crossings == value)
