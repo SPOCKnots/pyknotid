@@ -124,7 +124,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     
     canvas.view.add(l)
     canvas.view.camera = scene.TurntableCamera(
-        fov=90, up='z', distance=1.2*n.max(n.max(
+        fov=30, up='z', distance=1.2*n.max(n.max(
             points, axis=0)))
     if zero_centroid:
         l.transform = scene.transforms.AffineTransform()
@@ -133,6 +133,40 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     canvas.show()
     # import ipdb
     # ipdb.set_trace()
+    return canvas
+    
+def plot_lines_vispy(lines, clf=True, tube_radius=1.,
+                     colours=None, zero_centroid=True, **kwargs):
+    ensure_vispy_canvas()
+    if clf:
+        clear_vispy_canvas()
+    canvas = vispy_canvas
+    from vispy import app, scene, color
+
+    if colours is None:
+        colours = ['purple' for line in lines]
+
+    tubes = []
+    for colour, points in zip(colours, lines):
+
+        l = scene.visuals.Tube(points, color=colour,
+                               shading='smooth',
+                               radius=tube_radius,
+                               tube_points=8)
+        tubes.append(l)
+    
+    from visualcollection import MeshCollection
+    collection = MeshCollection(tubes)
+    canvas.view.add(collection)
+    canvas.view.camera = scene.TurntableCamera(
+        fov=90, up='z', distance=1.2*n.max(n.max(
+            points, axis=0)))
+
+    if zero_centroid:
+        l.transform = scene.transforms.AffineTransform()
+        l.transform.translate(-1*n.average(points, axis=0))
+
+    canvas.show()
     return canvas
     
 
@@ -260,6 +294,8 @@ def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
     colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
     random.shuffle(colours)
     i = 0
+    segments = []
+    segment_colours = []
     for (line, colour) in zip(lines, colours):
         vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
                False)
@@ -267,8 +303,11 @@ def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
         for segment in line:
             if len(segment) < 4:
                 continue
-            plot_line_vispy(segment,
-                            clf=False, colour=colour, **kwargs)
+            segments.append(segment)
+            segment_colours.append(colour)
+            # plot_line_vispy(segment,
+            #                 clf=False, colour=colour, **kwargs)
+    plot_lines_vispy(segments, colours=segment_colours)
     
     if boundary is not None:
         draw_bounding_box_vispy(boundary)
