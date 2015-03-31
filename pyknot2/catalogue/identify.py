@@ -59,9 +59,13 @@ def from_invariants(return_query=False, **kwargs):
         The hyperbolic volume of the knot complement. The lookup is a
         string comparison based on the given number of significant digits.
     vassiliev_order_2 or vassiliev_2 or v_2 or v2 : int
-        The Vassiliev invariant of order 2.
+        The Vassiliev invariant of order 2. This will not prune knots
+        where this invariant is not known (specifically, those with 12 or
+        more crossings).
     vassiliev_order_3 or vassiliev_3 or v_3 or v3 : int
-        The Vassiliev invariant of order 3.
+        The Vassiliev invariant of order 3. This will not prune knots
+        where this invariant is not known (specifically, those with 12 or
+        more crossings).
     symmetry : string
         The symmetry of the knot, one of 'reversible',
         'positive amphicheiral', 'negative amphicheiral', 'chiral'.
@@ -117,9 +121,12 @@ def from_invariants(return_query=False, **kwargs):
         elif invariant in ['hypvol', 'hyp_vol', 'hyperbolic_volume']:
             conditions.append(Knot.hyperbolic_volume % '{}*'.format(str(value)))
         elif invariant in ['vassiliev_order_2', 'vassiliev_2', 'v_2', 'v2']:
-            conditions.append(Knot.vassiliev_2 == value)
+            conditions.append((Knot.vassiliev_2 == value) |
+                              (Knot.vassiliev_2 >> None))
         elif invariant in ['vassiliev_order_3', 'vassiliev_3', 'v_3', 'v3']:
-            conditions.append((Knot.vassiliev_3 == value) | (Knot.vassiliev_3 == -1*value))
+            conditions.append((Knot.vassiliev_3 == value) |
+                              (Knot.vassiliev_3 == -1*value) |
+                              (Knot.vassiliev_3 >> None))
         elif invariant == 'symmetry':
             conditions.append(Knot.symmetry == value.lower())
         elif invariant == 'other':
