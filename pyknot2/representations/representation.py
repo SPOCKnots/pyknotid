@@ -130,7 +130,8 @@ class Representation(GaussCode):
         '''
         return self.planar_diagram().as_spherogram().exterior()
 
-    def identify(self, determinant=True, alexander=False, roots=(2, 3, 4),
+    def identify(self, determinant=True, vassiliev_2=True,
+                 vassiliev_3=None, alexander=False, roots=(2, 3, 4),
                  min_crossings=True):
         '''
         Provides a simple interface to
@@ -159,6 +160,12 @@ class Representation(GaussCode):
             only reason to turn this off is to see what other knots have
             the same invariants, it is never not useful for direct
             identification.
+        vassiliev_2 : bool
+            If True, uses the Vassiliev invariant of order 2. Defaults to True.
+        vassiliev_3 : bool
+            If True, uses the Vassiliev invariant of order 3. Defaults to None,
+            which means the invariant is used only if the representation has
+            less than 30 crossings.
         '''
         if not roots:
             roots = []
@@ -166,10 +173,18 @@ class Representation(GaussCode):
         if determinant:
             roots.add(2)
 
+        if len(self) < 30 and vassiliev_3 is None:
+            vassiliev_3 = True
+
         identify_kwargs = {}
         for root in roots:
             identify_kwargs[
                 'alex_imag_{}'.format(root)] = self.alexander_at_root(root)
+
+        if vassiliev_2:
+            identify_kwargs['v2'] = self.vassiliev_degree_2()
+        if vassiliev_3:
+            identify_kwargs['v3'] = self.vassiliev_degree_3()
 
         if alexander:
             if not isinstance(alexander, dict):
