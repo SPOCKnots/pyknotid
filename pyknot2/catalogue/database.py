@@ -87,6 +87,17 @@ class Knot(BaseModel):
     fibered = BooleanField(null=True)
     '''Whether the knot is fibered or not.'''
 
+    vassiliev_2 = IntegerField(null=True)
+    '''The Vassiliev invariant of order 2.'''
+
+    vassiliev_3 = IntegerField(null=True)
+    '''The Vassiliev invariant of order 3.'''
+
+    symmetry = CharField(null=True, max_length=25)
+    '''The symmetry type of the knot; reversible,
+    positive amphichiral, negative amphichiral fully
+    amphichiral or chiral.'''
+
     def __str__(self):
         if self.name:
             return '<Knot {} ({})>'.format(self.identifier, self.name)
