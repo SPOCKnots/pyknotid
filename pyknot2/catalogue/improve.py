@@ -4,6 +4,7 @@ the HOMFLY polynomials provided in the high-crossing data.'''
 
 from database import Knot, db
 from converters import homfly_to_jones, db2py_homfly, py2db_jones
+from build import get_rdf_object
 
 import csv
 import json
@@ -131,6 +132,51 @@ def add_fiberedness():
     with db.transaction():
         for knot in output_knots:
             knot.save()
+
+def add_vassilievs_and_symmetry_from_rdf(filen):
+    '''Adds Vassiliev 2 and 3 from RDF files. This is only necessary for
+    pre-existing databases, these invariants are now added by
+    build.py.
+    '''
+
+    from rdflib import URIRef, Graph
+    rdfv2 = URIRef('invariant:V_2')
+    rdfv3 = URIRef('invariant:V_3')
+    rdfsymmetry = URIRef('invariant:Symmetry_Type')
+
+    g = Graph()
+    g.parse(filen, format='nt')
+
+    subjects = list(set(g.subjects(None, None)))
+
+    output_knots = []
+    for subject in subjects:
+        identifier = str(subject.toPython().split(':')[1])
+
+        knots = Knot.select().where(Knot.identifier == identifier)
+        first = knots.first()
+        if first is not None:
+            v2 = get_rdf_object(g, subject, rdfv2)
+            if v2 is not None:
+                v2 = int(v2)
+            v3 = get_rdf_object(g, subject, rdfv3)
+            if v3 is not None:
+                v3 = int(v3)
+            symmetry = get_rdf_object(g, subject, rdfsymmetry)
+            if symmetry is not None:
+                symmetry = symmetry.lower()
+            first.vassiliev_2 = v2
+            first.vassiliev_3 = v3
+            first.symmetry = symmetry
+            output_knots.append(first)
+            print 'Added {}; {}, {}, {}'.format(identifier, v2, v3, symmetry)
+        else:
+            print 'Failed to find {} in db'.format(identifier)
+                
+    print 'Attempting to save'
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
         
 def add_two_bridgeness():
     '''Adds two-bridge information to any knots where the information is
@@ -174,4 +220,3 @@ def add_two_bridgeness():
         
 
     
-        
