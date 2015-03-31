@@ -106,7 +106,7 @@ class Knot(BaseModel):
     def __repr__(self):
         return str(self)
 
-    def pprint(self):
+    def pretty_print(self):
         '''Pretty print all information contained about self.'''
         if self.name:
             print('Name: {}'.format(self.name))
@@ -120,6 +120,8 @@ class Knot(BaseModel):
             print('Gauss code: {}'.format(self.gauss_code))
         if self.planar_diagram:
             print('Planar diagram: {}'.format(self.planar_diagram))
+        if self.dt_code:
+            print('DT code: {}'.format(self.dt_code))
         if self.determinant:
             print('Determinant: {}'.format(self.determinant))
         if self.signature:
@@ -134,5 +136,13 @@ class Knot(BaseModel):
             print('HOMFLY: {}'.format(
                 converters.json_to_homfly(self.homfly)))
         if self.hyperbolic_volume:
-            print('Hyperbolic voolume: {}'.format(self.hyperbolic_volume))
+            print('Hyperbolic volume: {}'.format(self.hyperbolic_volume))
+        if self.vassiliev_2 is not None:
+            print('Vassiliev order 2: {}'.format(self.vassiliev_2))
+        if self.vassiliev_3 is not None:
+            print('Vassiliev order 3: {}'.format(self.vassiliev_3))
+        if self.symmetry is not None:
+            print('Symmetry: {}'.format(self.symmetry))
+                
+                
 
