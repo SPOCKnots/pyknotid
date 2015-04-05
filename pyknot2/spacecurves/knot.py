@@ -45,6 +45,9 @@ class Knot(SpaceCurve):
         preserved.'''
         return Knot(self.points.copy(), verbose=self.verbose)
 
+    def plot(self, **kwargs):
+        super(Knot, self).plot(closed=True, **kwargs)
+
     def alexander_polynomial(self, variable=-1, quadrant='lr',
                              mode='python', **kwargs):
         '''
