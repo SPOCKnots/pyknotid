@@ -495,12 +495,14 @@ class SpaceCurve(object):
             gc.simplify()
         return GaussDiagram(gc)
 
-    def plot(self, mode='auto', clf=True, **kwargs):
+    def plot(self, mode='auto', clf=True, closed=True,
+             **kwargs):
         '''
         Plots the line. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
         '''
-        plot_line(self.points, mode=mode, clf=clf, **kwargs)
+        plot_line(self.points, mode=mode, clf=clf,
+                  closed=closed, **kwargs)
 
     def plot_projection(self, with_crossings=True, mark_start=False,
                         fig_ax=None, show=True):
