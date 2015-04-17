@@ -92,6 +92,13 @@ class Knot(SpaceCurve):
             value = int(n.round(value))
         return value
 
+    def determinant(self):
+        '''
+        Returns the determinant of the knot. This is the Alexander
+        polynomial evaluated at -1.
+        '''
+        return self.alexander_at_root(2)
+
     def vassiliev_degree_2(self, simplify=True, **kwargs):
         '''
         Returns the Vassiliev invariant of degree 2 for the Knot.
