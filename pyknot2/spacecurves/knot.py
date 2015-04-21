@@ -6,6 +6,8 @@ Class for dealing with knots; a single space-curve, which may be
 topologically trivial.
 '''
 
+from __future__ import division
+
 import numpy as n
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve
@@ -270,3 +272,86 @@ class Knot(SpaceCurve):
         fig.show()
 
         return fig, ax
+
+    def isolate_knot(self):
+        '''Return indices of self.points within which the knot (if any)
+        appears to lie, according to a simple closure algorithm.
+
+        This method is experimental and may not provide very good results.
+        '''
+        determinant = self.determinant()
+
+        from pyknot2.spacecurves import OpenKnot
+
+        k1 = OpenKnot(self.points, verbose=False)
+        start, end = _isolate_open_knot(k1, determinant, 0, len(k1))[1:]
+
+        if end - start < 0.6 * len(k1):
+            return start, end
+
+        roll_dist = int(0.25*len(self.points))
+        k2 = OpenKnot(n.roll(self.points, roll_dist, axis=0), verbose=False)
+        start, end = _isolate_open_knot(k2, determinant, 0, len(k2))[1:]
+        print('se', start, end)
+        start -= roll_dist
+        start %= len(self)
+        end -= roll_dist
+        end %= len(self)
+        print('now', start, end)
+        return start, end
+
+    def plot_isolated(self, **kwargs):
+        '''
+        Plots the curve in red, except for the isolated local knot which
+        is coloured blue. The local knot is found with self.isolate_knot,
+        which may not be reliable or have good resolution.
+
+        Parameters
+        ==========
+        **kwargs :
+            kwargs are passed directly to :meth:`Knot.plot`.
+        '''
+        start, end = self.isolate_knot()
+        mus = n.zeros(len(self.points))
+        mus[start:end+1] = 0.5
+        if end - start > 0.6*len(self):
+            mus = 1.0 - mus
+        self.plot(mus=mus, **kwargs)
+        
+
+def _isolate_open_knot(k, det, start, end):
+    from pyknot2.spacecurves import OpenKnot
+    if len(k.points) < 10:  
+        return (False, None, None)
+
+    alexanders = k.alexander_fractions()
+    main_det, main_frac = alexanders[-1]
+
+
+    if main_det != det:
+        return (False, None, None)
+
+    half_len = len(k.points) // 2
+    k1 = OpenKnot(k.points[:half_len], verbose=False)
+    k1_knotted, k1_start, k1_end = _isolate_open_knot(
+        k1, det, start, start + half_len - 1)
+    if k1_knotted:
+        return (True, k1_start, k1_end)
+
+    k2 = OpenKnot(k.points[half_len:], verbose=False)
+    k2_knotted, k2_start, k2_end = _isolate_open_knot(
+        k2, det, start + half_len, end)
+    if k2_knotted:
+        return (True, k2_start, k2_end)
+
+    quarter_len = len(k.points) // 4
+    k3 = OpenKnot(k.points[quarter_len:(quarter_len + half_len)], verbose=False)
+    k3_knotted, k3_start, k3_end = _isolate_open_knot(
+        k3, det, start + quarter_len, start + quarter_len + half_len)
+    if k3_knotted:
+        return (True, k3_start, k3_end)
+
+    return (True, start, end)
+    
+
+
