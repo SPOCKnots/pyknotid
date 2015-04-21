@@ -41,6 +41,15 @@ class Knot(SpaceCurve):
         so that it will appear visually to close when plotted.
     '''
 
+    @property
+    def points(self):
+        return super(Knot, self).points
+
+    @points.setter
+    def points(self, points):
+        super(Knot, self.__class__).points.fset(self, points)
+        self._cached_isolated = None
+
     def copy(self):
         '''Returns another knot with the same points and verbosity
         as self. Other attributes (e.g. cached crossings) are not
@@ -279,6 +288,8 @@ class Knot(SpaceCurve):
 
         This method is experimental and may not provide very good results.
         '''
+        if self._cached_isolated is not None:
+            return self._cached_isolated
         determinant = self.determinant()
 
         from pyknot2.spacecurves import OpenKnot
@@ -287,6 +298,7 @@ class Knot(SpaceCurve):
         start, end = _isolate_open_knot(k1, determinant, 0, len(k1))[1:]
 
         if end - start < 0.6 * len(k1):
+            self._cached_isolated = (start, end)
             return start, end
 
         roll_dist = int(0.25*len(self.points))
@@ -298,6 +310,7 @@ class Knot(SpaceCurve):
         end -= roll_dist
         end %= len(self)
         print('now', start, end)
+        self._cached_isolated = (start, end)
         return start, end
 
     def plot_isolated(self, **kwargs):
@@ -313,9 +326,9 @@ class Knot(SpaceCurve):
         '''
         start, end = self.isolate_knot()
         mus = n.zeros(len(self.points))
-        mus[start:end+1] = 0.5
+        mus[start:end+1] = 0.4
         if end - start > 0.6*len(self):
-            mus = 1.0 - mus
+            mus = 0.4 - mus
         self.plot(mus=mus, **kwargs)
         
 
