@@ -325,6 +325,8 @@ class Knot(SpaceCurve):
             kwargs are passed directly to :meth:`Knot.plot`.
         '''
         start, end = self.isolate_knot()
+        if end < start:
+            end, start = start, end
         mus = n.zeros(len(self.points))
         mus[start:end+1] = 0.4
         if end - start > 0.6*len(self):
