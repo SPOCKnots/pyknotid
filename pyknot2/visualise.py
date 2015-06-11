@@ -13,6 +13,20 @@ import random
 
 vispy_canvas = None
 
+def plot_vispy_cube():
+    ensure_vispy_canvas()
+    clear_vispy_canvas()
+    canvas = vispy_canvas
+
+    from vispy import app, scene, color
+
+    c = scene.visuals.Cube((5, 2, 10),
+                           color='blue',
+                           edge_color='red')
+    canvas.view.add(c)
+    canvas.view.camera = scene.ArcballCamera(fov=30, distance=20)
+    canvas.show()
+
 def plot_line(points, mode='auto', clf=True, **kwargs):
     '''
     Plots the given line, using the toolkit given by mode.
@@ -68,6 +82,7 @@ def plot_line(points, mode='auto', clf=True, **kwargs):
 
     
 def plot_line_mayavi(points, clf=True, tube_radius=1., colormap='hsv',
+                     closed=True,
                      zero_centroid=False,
                      mus=None,
                      **kwargs):
@@ -102,8 +117,10 @@ def clear_vispy_canvas():
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
+
 def plot_line_vispy(points, clf=True, tube_radius=1.,
-                    colour=None, zero_centroid=True, **kwargs):
+                    colour=None, zero_centroid=True,
+                    closed=False, mus=None, **kwargs):
     ensure_vispy_canvas()
     if clf:
         clear_vispy_canvas()
@@ -117,15 +134,21 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     else:
         colours = color.Color(colour)
 
+    if mus is not None:
+        colours = n.array([hsv_to_rgb(c, 1, 1) for c in mus])
+            
+
     l = scene.visuals.Tube(points, color=colours,
                            shading='smooth',
                            radius=tube_radius,
-                           tube_points=8)
+                           tube_points=8,
+                           closed=closed)
     
     canvas.view.add(l)
-    canvas.view.camera = scene.TurntableCamera(
-        fov=30, up='z', distance=1.2*n.max(n.max(
-            points, axis=0)))
+    # canvas.view.camera = 'arcball'
+    canvas.view.camera = scene.ArcballCamera(fov=30, distance=7.5*n.max(
+        n.abs(points)))
+    #canvas.view.camera = scene.TurntableCamera(fov=30)
     if zero_centroid:
         l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
@@ -158,9 +181,10 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
     from visualcollection import MeshCollection
     collection = MeshCollection(tubes)
     canvas.view.add(collection)
-    canvas.view.camera = scene.TurntableCamera(
-        fov=90, up='z', distance=1.2*n.max(n.max(
-            points, axis=0)))
+    canvas.view.camera = 'arcball'
+    # canvas.view.camera = scene.TurntableCamera(
+    #     fov=90, up='z', distance=1.2*n.max(n.max(
+    #         points, axis=0)))
 
     if zero_centroid:
         l.transform = scene.transforms.AffineTransform()
@@ -286,7 +310,7 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
         may.plot3d(line[:, 0], line[:, 1], line[:, 2],
                    color=colour, tube_radius=tube_radius)
 
-def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
+def plot_cell_vispy(lines, boundary=None, clf=True, colours=None, **kwargs):
     if clf:
         clear_vispy_canvas()
     
@@ -307,12 +331,12 @@ def plot_cell_vispy(lines, boundary=None, clf=True, **kwargs):
             segment_colours.append(colour)
             # plot_line_vispy(segment,
             #                 clf=False, colour=colour, **kwargs)
-    plot_lines_vispy(segments, colours=segment_colours)
+    plot_lines_vispy(segments, colours=segment_colours, **kwargs)
     
     if boundary is not None:
-        draw_bounding_box_vispy(boundary)
+        draw_bounding_box_vispy(boundary, tube_radius=kwargs.get('tube_radius', 1.))
                 
-def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
+def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1.):
     if shape is not None:
         if isinstance(shape, (float, int)):
             shape = ensure_shape_tuple(shape)
@@ -336,9 +360,11 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1):
 
     ls = [interpolate(p) for p in ls]
 
+    # plot_lines_vispy(ls, colours=['black' for _ in ls],
+    #                  tube_radius=tube_radius, zero_centroid=False)
     for line in ls:
         plot_line_vispy(line, clf=False, colour='black',
-                        zero_centroid=False)
+                        zero_centroid=False, tube_radius=tube_radius)
 
     global vispy_canvas
     vispy_canvas.central_widget.children[0].camera.center = (
@@ -367,3 +393,8 @@ def cell_to_povray(filen, lines, shape):
     with open(filen, 'w') as fileh:
         fileh.write(template.render(lines=coloured_segments))
     
+
+def vispy_save_png(filename):
+    img = vispy_canvas.render()
+    import vispy.io as io
+    io.write_png(filename, img)
