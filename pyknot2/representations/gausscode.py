@@ -322,6 +322,14 @@ class GaussCode(object):
 
         self.crossing_numbers = set(range(1, num_crossings + 1))
 
+    def _remove_crossing(self, number):
+        gc = self._gauss_code
+        new_gc = []
+        for row in gc:
+            new_gc.append(row[row[:, 0] != number])
+        self._gauss_code = new_gc
+        self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
+
 
 def _get_crossing_numbers(gc):
     '''
