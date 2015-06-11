@@ -242,3 +242,44 @@ class Representation(GaussCode):
         '''
         from ..invariants import self_linking
         return self_linking(self)
+
+    def slip_triangle(self, func):
+
+        code = self._gauss_code[0]
+
+        length = len(self)
+        array = n.ones((len(self) + 1, len(self) + 1)) * -0
+        
+        for i in range(length + 1):
+            for j in range(length + 1):
+                if i + j > length:
+                    continue
+                new_gc = Representation(self)
+
+                for _ in range(i):
+                    new_gc._remove_crossing(new_gc._gauss_code[0][0, 0])
+                for _ in range(j):
+                    new_gc._remove_crossing(new_gc._gauss_code[0][-1, 0])
+
+                invariant = func(new_gc)
+
+                array[-1*(i + 1), j] = invariant
+
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.imshow(array, interpolation='none', cmap='jet')
+
+        ticks = range(length + 1)
+        ax.set_xticks(ticks)
+        ax.set_yticks(ticks)
+        ax.set_xticklabels([str(t) for t in ticks])
+        ax.set_yticklabels([str(t) for t in ticks])
+
+        ax.plot([0, length+1], [0, length+1], color='black', linewidth=2)
+        ax.set_xlim(-0.5, length+0.5)
+        ax.set_ylim(length+0.5, -0.5)
+
+        
+        fig.show()
+
+        return array, fig, ax
