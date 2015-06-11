@@ -150,6 +150,45 @@ class SpaceCurve(object):
         self.points = points
 
     @classmethod
+    def closing_on_sphere(cls, line, com=(0., 0., 0.)):
+        '''Adds new vertices to close the line at its maximum radius,
+        returning a SpaceCurve representing the result.
+
+        Parameters
+        ----------
+        line : ndarray
+            The points of the line.
+        com : iterable
+            Optional additional centre of mass to shift by before closing
+
+        '''
+
+        points = line - n.array(com)
+
+        start = points[0]
+        end = points[-1]
+
+        start_r = mag(start)
+        end_r = mag(end)
+
+        start_theta = n.arccos(start[2] / start_r)
+        end_theta = n.arccos(end[2] / end_r)
+
+        start_phi = n.arctan2(start[1], start[0])
+        end_phi = n.arctan2(end[1], end[0])
+
+        rs = n.linspace(end_r, start_r, 100)
+        thetas = n.linspace(end_theta, start_theta, 100)
+        phis = n.linspace(end_phi, start_phi, 100)
+
+        join_points = n.zeros((100, 3))
+        join_points[:, 2] = rs * n.cos(thetas)
+        join_points[:, 0] = rs * n.sin(thetas) * n.cos(phis)
+        join_points[:, 1] = rs * n.sin(thetas) * n.sin(phis)
+
+        return cls(n.vstack((points, join_points[1:-1])) + n.array(com))
+
+    @classmethod
     def from_periodic_line(cls, line, shape, perturb=True, **kwargs):
         '''Returns a :class:`SpaceCurve` instance in which the line has been
         unwrapped through
