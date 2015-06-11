@@ -329,7 +329,7 @@ class Knot(SpaceCurve):
             end, start = start, end
         mus = n.zeros(len(self.points))
         mus[start:end+1] = 0.4
-        if end - start > 0.6*len(self):
+        if end - start > 0.6*len(self) or end == start:
             mus = 0.4 - mus
         self.plot(mus=mus, **kwargs)
         
@@ -365,6 +365,18 @@ def _isolate_open_knot(k, det, start, end):
         k3, det, start + quarter_len, start + quarter_len + half_len)
     if k3_knotted:
         return (True, k3_start, k3_end)
+
+    k4 = OpenKnot(k.points[quarter_len:], verbose=False)
+    k4_knotted, k4_start, k4_end = _isolate_open_knot(
+        k4, det, start + quarter_len, end)
+    if k4_knotted:
+        return (True, k4_start, k4_end)
+
+    k5 = OpenKnot(k.points[:-quarter_len], verbose=False)
+    k5_knotted, k5_start, k5_end = _isolate_open_knot(
+        k5, det, start, end - quarter_len)
+    if k5_knotted:
+        return (True, k5_start, k5_end)
 
     return (True, start, end)
     
