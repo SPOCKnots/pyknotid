@@ -282,12 +282,19 @@ class Link(object):
             line.rotate(angles)
         self._reset_cache()
 
-    def plot(self, mode='mayavi', clf=True, colours=None, **kwargs):
+    def plot(self, mode='vispy', clf=True, colours=None, **kwargs):
         '''
         Plots all the lines. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
         '''
+        from pyknot2.visualise import plot_cell
         lines = self.lines
+
+        if mode =='vispy':
+            points = [k.points for k in lines]
+            print('plotting cell')
+            plot_cell([[p] for p in points], boundary=None)
+            return
 
         if colours is not None:
             kwargs.update({'color': colours[0]})
