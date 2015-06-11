@@ -332,6 +332,81 @@ class Knot(SpaceCurve):
         if end - start > 0.6*len(self) or end == start:
             mus = 0.4 - mus
         self.plot(mus=mus, **kwargs)
+
+    def slip_triangle(self, func):
+
+        from pyknot2.representations import Representation
+        r = self.representation()
+
+        length = len(r)
+
+        cs = self.raw_crossings()
+
+        results = {}
+
+        invs = {}
+        
+        for i in range(length + 1):
+            for j in range(length + 1):
+                if i + j >= length:
+                    continue
+
+                new_r = Representation(r)
+
+                points = self.points.copy()
+
+                new_cs = cs.copy()
+
+                new_start = 0
+                new_end = -1
+                for _ in range(i):
+                    new_start = new_cs[0, 0] + 0.5*(new_cs[1, 0] - new_cs[0, 0])
+                    new_cs = new_cs[new_cs[:, 1] != new_cs[0, 0]]
+                    new_cs = new_cs[new_cs[:, 0] != new_cs[0, 0]]
+                    new_r._remove_crossing(new_r._gauss_code[0][0, 0])
+                for _ in range(j):
+                    new_end = new_cs[-2, 0] + 0.5*(new_cs[-1, 0] - new_cs[-2, 0])
+                    new_cs = new_cs[new_cs[:, 1] != new_cs[-1, 0]]
+                    new_cs = new_cs[new_cs[:, 0] != new_cs[-1, 0]]
+                    new_r._remove_crossing(new_r._gauss_code[0][-1, 0])
+
+                results[(i, j)] = points[int(new_start):int(new_end)]
+                invs[(i, j)] = func(new_r)
+
+        import matplotlib.pyplot as plt
+        from matplotlib.gridspec import GridSpec
+
+        points = self.points
+        mins = n.min(self.points, axis=0)
+        maxs = n.max(self.points, axis=0)
+        span = max((maxs - mins)[:2])
+        size = span * 1.16
+
+        xmin = mins[0] - 0.08*span
+        xmax = maxs[0] + 0.08*span
+        ymin = mins[1] - 0.08*span
+        ymax = maxs[1] + 0.08*span
+
+        fig = plt.figure()
+        grid = GridSpec(length, length)
+        for coords, points in results.items():
+            print('coords are', coords)
+            print length
+            ax = plt.subplot(grid[length - 1 - coords[0], coords[1]])
+            ax.plot(points[:, 0], points[:, 1], linewidth=2)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
+
+            inv = invs[coords]
+            colour = 'red' if inv != 0 else 'green'
+            ax.patch.set_facecolor(colour)
+            ax.patch.set_alpha(0.1)
+
+        fig.tight_layout()
+        fig.show()
+        return fig, ax
         
 
 def _isolate_open_knot(k, det, start, end):
