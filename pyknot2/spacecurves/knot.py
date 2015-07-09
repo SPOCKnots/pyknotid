@@ -370,7 +370,15 @@ class Knot(SpaceCurve):
                     new_cs = new_cs[new_cs[:, 0] != new_cs[-1, 0]]
                     new_r._remove_crossing(new_r._gauss_code[0][-1, 0])
 
-                results[(i, j)] = points[int(new_start):int(new_end)]
+                new_points = points[int(n.ceil(new_start)):int(new_end)]
+                new_start_remainder = new_start % 1
+                new_end_remainder = new_end % 1
+
+                new_points = n.vstack((points[int(new_start)] + new_start_remainder * (points[int(new_start) + 1] - points[int(new_start)]),
+                                       new_points,
+                                       points[int(new_end)] + new_end_remainder * (points[int(new_end) + 1] - points[int(new_end)])))
+                # results[(i, j)] = points[int(new_start):int(new_end)]
+                results[(i, j)] = new_points
                 invs[(i, j)] = func(new_r)
 
         import matplotlib.pyplot as plt
@@ -393,7 +401,7 @@ class Knot(SpaceCurve):
             print('coords are', coords)
             print length
             ax = plt.subplot(grid[length - 1 - coords[0], coords[1]])
-            ax.plot(points[:, 0], points[:, 1], linewidth=2)
+            ax.plot(points[:, 0], points[:, 1])
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_xlim(xmin, xmax)
