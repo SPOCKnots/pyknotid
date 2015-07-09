@@ -14,8 +14,12 @@ ext_modules = [
         ]
 
 setup(
-  name = 'pyknot2',
-  cmdclass = {'build_ext': build_ext},
-  include_dirs = [numpy.get_include()],
-  ext_modules = ext_modules
+    name='pyknot2',
+    description='Tools for analysing knots',
+    author='Alexander Taylor',
+    author_email='alexander.taylor@bristol.ac.uk',
+    install_requires=['numpy'],
+    cmdclass={'build_ext': build_ext},
+    include_dirs=[numpy.get_include()],
+    ext_modules=ext_modules
 )
