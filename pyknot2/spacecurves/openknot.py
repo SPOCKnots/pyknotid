@@ -37,6 +37,12 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self.__class__).points.fset(self, points)
         self._cached_alexanders = None
 
+    def closing_distance(self):
+        '''
+        Returns the distance between the first and last points.
+        '''
+        return n.linalg.norm(self.points[-1] - self.points[0])
+
     def raw_crossings(self, mode='use_max_jump',
                       recalculate=False, try_cython=False):
         '''
@@ -186,8 +192,8 @@ class OpenKnot(SpaceCurve):
                     indices = closure_cs.flatten()
                     for index in indices:
                         cs[index, 2:] *= -1
-                gc = GaussCode(cs)
-                gc.simplify(verbose=False)
+                gc = GaussCode(cs, verbose=self.verbose)
+                gc.simplify()
                 polys.append([angs[0], angs[1], alexander(gc, simplify=False)])
 
             else:
@@ -311,7 +317,41 @@ class OpenKnot(SpaceCurve):
         in the line from the origin.
         '''
 
-        self.plot()
+        self.plot(mode='mayavi')
+
+        positions, values = self._alexander_map_values(
+            number_of_samples, radius=None, zero_centroid=False)
+
+        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+        phis = n.linspace(0, 2*n.pi, 157)
+
+        thetas, phis = n.meshgrid(thetas, phis)
+
+        r = sphere_radius_factor*n.max(self.points)
+        zs = r*n.cos(thetas)
+        xs = r*n.sin(thetas)*n.cos(phis)
+        ys = r*n.sin(thetas)*n.sin(phis)
+
+        import mayavi.mlab as may
+        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
+
+    def plot_alexander_shell_vispy(self, number_of_samples=10, radius=None,
+                                   zero_centroid=False,
+                                   sphere_radius_factor=2.,
+                                   opacity=0.3, **kwargs):
+        '''
+        Plots the curve in 3d via self.plot(), along with a translucent
+        sphere coloured by the type of knot obtained by closing on each
+        point.
+
+        Parameters are all passed to :meth:`OpenKnot.alexander_polynomials`,
+        except opacity and kwargs which are given to mayavi.mesh, and
+        sphere_radius_factor which gives the radius of the enclosing
+        sphere in terms of the maximum Cartesian distance of any point
+        in the line from the origin.
+        '''
+
+        self.plot(mode='vispy')
 
         positions, values = self._alexander_map_values(
             number_of_samples, radius=None, zero_centroid=False)
@@ -690,6 +730,60 @@ class OpenKnot(SpaceCurve):
         import mayavi.mlab as may
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
         
+    def plot_self_linking_shell_vispy(self, number_of_samples=10,
+                                      zero_centroid=False,
+                                      sphere_radius_factor=2.,
+                                      opacity=0.3, **kwargs):
+        '''
+        Plots the curve in 3d via self.plot(), along with a translucent
+        sphere coloured by the self linking number obtained by projecting from 
+        this point.
+
+        Parameters are all passed to 
+        :meth:`OpenKnot.virtual_checks`, except opacity and kwargs 
+        which are given to mayavi.mesh, and sphere_radius_factor which gives 
+        the radius of the enclosing sphere in terms of the maximum Cartesian
+        distance of any point in the line from the origin.
+        '''
+
+        import pyknot2.visualise as pvis
+        pvis.clear_vispy_canvas()
+
+        self.plot()
+
+        positions, scalars = self._self_linking_map_values(
+            number_of_samples, zero_centroid=False)
+
+        print('scalars are', scalars)
+
+        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+        phis = n.linspace(0, 2*n.pi, 157)
+
+        thetas, phis = n.meshgrid(thetas, phis)
+
+        r = sphere_radius_factor*n.max(self.points)
+        zs = r*n.cos(thetas)
+        xs = r*n.sin(thetas)*n.cos(phis)
+        ys = r*n.sin(thetas)*n.sin(phis)
+
+        # import mayavi.mlab as may
+        # may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
+        from vispy import scene
+        from colorsys import hsv_to_rgb
+        from vispy import color as vc
+        scalars -= n.min(scalars)
+        scalars /= n.max(scalars)
+        colours = vc.get_colormap('hot')[scalars.reshape(scalars.shape[0] * scalars.shape[1])].rgba
+        colours[:, -1] = 0.1
+        print('colours are', colours)
+        print('ready to make shell')
+        shell = scene.visuals.GridMesh(xs, ys, zs, colors=n.array(colours).reshape(list(xs.shape) + [4]))
+        print('made shell')
+        # shell = scene.visuals.GridMesh(xs, ys, zs, colors=n.random.random(list(xs.shape) + [3]))
+        # print(shell._xs.shape, shell.__colors.shape)
+        pvis.vispy_canvas.view.add(shell)
+        pvis.vispy_canvas.camera = 'arcball'
+
         
 def gall_peters(theta, phi):
     '''
