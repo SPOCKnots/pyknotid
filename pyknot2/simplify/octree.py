@@ -37,13 +37,15 @@ class OctreeCell(object):
       It may be 'regular' (8 equally sized octants), 'uniform' (values
       selected from a uniform distribution in each axis), or 'com' (values
       selected to pass through the line centre of mass of the cell).
+    - is_knotted_func is an optional function to test for knotting.
 
     The Handle system is used to ensure correct behaviour (with simple code!)
     even for non-continuous segments etc.
     '''
     def __init__(self, lines, shape, depth=0, top_level=True,
                  state=None, min_cell=1., max_depth=100,
-                 handles=None, cut_selection='regular'):
+                 handles=None, cut_selection='regular',
+                 is_knotted_func=None):
 
         self.depth = depth
         self.shape = shape
@@ -63,6 +65,8 @@ class OctreeCell(object):
         if state is None:
             state = {}
         self.state = state
+
+        self.is_knotted_func = is_knotted_func
 
         if 'boundaries' not in state:
             state['boundaries'] = []
@@ -226,8 +230,6 @@ class OctreeCell(object):
                     new_segment.next.prev = new_segment
                     self.segments = segments = [new_segment]
 
-        # First, immediately simplify if not following topology
-
         if (len(segments) == 0 or self.depth >= self.max_depth or
             any([span < self.min_cell for span in size])):
             # If any of these are True, no simplification is possible
@@ -246,9 +248,13 @@ class OctreeCell(object):
             if not obey_knotting:
                 segment.replace_with_straight_line()
                 return
-            elif not angle_exceeds_func(segment.points, 2.*n.pi, False):
+            if not angle_exceeds_func(segment.points, 2.*n.pi, False):
                 segment.replace_with_straight_line()
-                return  # No need to do more simplification if this happens
+                return
+            if (self.is_knotted_func is not None and
+                not self.is_knotted_func(segment.points)):
+                segment.replace_with_straight_line()
+                return
 
         # If we get here, the cell is too complex to simplify topologically,
         # but we are allowed to split into octants
@@ -823,3 +829,11 @@ angle_exceeds_func = angle_exceeds
 line_to_segments_func = line_to_segments
 # line_to_segments_func = (cline_to_segments if cline_to_segments is not None
 #                       else line_to_segments)
+
+def determinant_indicates_knot(points):
+    if len(points) > 500:
+        return True
+    from pyknot2.spacecurves import Knot
+    k = Knot(points)
+    return (k.determinant() > 1)
+        
