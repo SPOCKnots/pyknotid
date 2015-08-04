@@ -120,7 +120,8 @@ def clear_vispy_canvas():
 
 def plot_line_vispy(points, clf=True, tube_radius=1.,
                     colour=None, zero_centroid=True,
-                    closed=False, mus=None, **kwargs):
+                    closed=False, mus=None,
+                    tube_points=8, **kwargs):
     ensure_vispy_canvas()
     if clf:
         clear_vispy_canvas()
@@ -132,7 +133,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
         colours = n.linspace(0, 1, len(points))
         colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
     else:
-        colours = color.Color(colour)
+        colours = color.ColorArray(colour)
 
     if mus is not None:
         colours = n.array([hsv_to_rgb(c, 1, 1) for c in mus])
@@ -141,7 +142,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     l = scene.visuals.Tube(points, color=colours,
                            shading='smooth',
                            radius=tube_radius,
-                           tube_points=8,
+                           tube_points=tube_points,
                            closed=closed)
     
     canvas.view.add(l)
@@ -159,7 +160,9 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     return canvas
     
 def plot_lines_vispy(lines, clf=True, tube_radius=1.,
-                     colours=None, zero_centroid=True, **kwargs):
+                     colours=None, zero_centroid=True, tube_points=8,
+                     closed=False,
+                     **kwargs):
     ensure_vispy_canvas()
     if clf:
         clear_vispy_canvas()
@@ -175,7 +178,8 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
         l = scene.visuals.Tube(points, color=colour,
                                shading='smooth',
                                radius=tube_radius,
-                               tube_points=8)
+                               closed=closed,
+                               tube_points=tube_points)
         tubes.append(l)
     
     from visualcollection import MeshCollection
@@ -310,13 +314,15 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
         may.plot3d(line[:, 0], line[:, 1], line[:, 2],
                    color=colour, tube_radius=tube_radius)
 
-def plot_cell_vispy(lines, boundary=None, clf=True, colours=None, **kwargs):
+def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
+                    randomise_colours=True, **kwargs):
     if clf:
         clear_vispy_canvas()
     
     hues = n.linspace(0, 1, len(lines) + 1)[:-1]
     colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
-    random.shuffle(colours)
+    if randomise_colours:
+        random.shuffle(colours)
     i = 0
     segments = []
     segment_colours = []
