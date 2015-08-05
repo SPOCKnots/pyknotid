@@ -293,7 +293,7 @@ class Link(object):
         if mode =='vispy':
             points = [k.points for k in lines]
             print('plotting cell')
-            plot_cell([[p] for p in points], boundary=None)
+            plot_cell([[p] for p in points], boundary=None, **kwargs)
             return
 
         if colours is not None:
@@ -455,7 +455,7 @@ class Link(object):
                 number += n.sum(line[:, 3])
         return int(n.abs(number / 2))
 
-    def smooth(self, **kwargs):
+    def smooth(self, *args, **kwargs):
         '''
         Smooths each of the x, y and z components of each of self.lines
         by convolving with a window of the given type and size.
@@ -465,7 +465,7 @@ class Link(object):
         '''
         for line in self.lines:
             if len(line) > 5:
-                line.smooth(**kwargs)
+                line.smooth(*args, **kwargs)
 
     def multivariate_alexander(self, variables=-1., **kwargs):
 
