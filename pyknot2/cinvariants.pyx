@@ -66,8 +66,6 @@ cpdef vassiliev_degree_3(long [:, :] arrows):
                     used_sets.add(ordered_indices)
 
                     
-    
-    vprint()
     return representations_sum_1 / 2. + representations_sum_2
 
     
