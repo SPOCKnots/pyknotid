@@ -1033,7 +1033,18 @@ def self_linking(representation):
     return slink_counter   
 
 def virtual_vassiliev_degree_3(representation):
-    ## See Polyak and Viro
+    '''Calculates the virtual Vassiliev invariant of degree 3 (for
+    non-long-knots) of the given representation, as described in
+    'Finite type invariants of classical and virtual knots' by
+    Goussarov, Polyak and Viro.
+
+    Parameters
+    ----------
+    representation : :class:`~pyknot2.representations.representation.Representation`
+        A representation class, or anything convertible to one
+        (in principle).
+    '''
+    ## See Polyak and Viro and Goussarov
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
         representation = GaussCode(representation)
