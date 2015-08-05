@@ -32,6 +32,10 @@ class OpenKnot(SpaceCurve):
     many projections of the knot, unless indicated otherwise.
     '''
 
+    def __init__(self, *args, **kwargs):
+        super(OpenKnot, self).__init__(*args, **kwargs)
+        self._cached_v2 = {}
+
     @property
     def points(self):
         return super(OpenKnot, self).points
@@ -976,6 +980,47 @@ class OpenKnot(SpaceCurve):
             return(['c'], alexander(self.gauss_code(), variable=-1,
                                     quadrant='lr',
                                     mode='python', simplify=False))
+
+    def vassiliev_degree_2_average(self, samples, recalculate=False, **kwargs):
+        '''Returns the average Vassliev degree 2 invariant calculated by
+        averaging its combinatorial value over many different
+        projection directions.
+
+        Parameters
+        ----------
+        samples : int
+            The number of directions to average over. Defaults to 10.
+        recalculate : bool
+            Whether to recalculate the writhe even if a cached result
+            is available. Defaults to False.
+        **kwargs :
+            These are passed directly to :meth:`raw_crossings`.
+        '''
+        if (self._cached_v2 and
+            samples in self._cached_v2 and
+            not recalculate):
+            return self._cached_v2[samples]
+
+        from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top            
+        from pyknot2.spacecurves import Knot
+        angles = get_rotation_angles(samples)
+    
+        v2s = []
+        for theta, phi in angles:
+            k = OpenKnot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(theta, phi))
+            v2 = k._vassiliev_degree_2_projection()
+            v2s.append(v2)
+
+        result = n.average(v2s)
+        self._cached_v2[samples] = result
+        return result
+
+    def _vassiliev_degree_2_projection(self):
+        from pyknot2.spacecurves import Knot
+        k = Knot(self.points, verbose=False)
+        return k.vassiliev_degree_2(simplify=False, include_closure=False)
+
 
 def gall_peters(theta, phi):
     '''
