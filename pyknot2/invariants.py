@@ -1031,3 +1031,102 @@ def self_linking(representation):
             slink_counter += 2 * gauss_code[0][occurences[0],2]
 
     return slink_counter   
+
+def virtual_vassiliev_degree_3(representation):
+    ## See Polyak and Viro
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+    
+    crossing_numbers = list(representation.crossing_numbers)
+    used_sets = set()
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        if index % 10 == 0:
+            vprint('\rCurrently comparing index {}'.format(index), False)
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        a1e = (a1e - a1s) % len(gc)
+        for i2 in crossing_numbers:
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+            a2s = (a2s - a1s) % len(gc)
+            a2e = (a2e - a1s) % len(gc)
+
+            # For the virtual Vassilev of order f, there are still
+            # some diagrams with just 2 arrows:
+            first_two_ordered_indices = tuple(sorted((i1, i2)))
+            if (a2s < a1e and a2e > a1e and
+                signs[i1] == signs[i2] and
+                first_two_ordered_indices not in used_sets):
+                if signs[i1] > 0:
+                    representations_sum -= 1
+                else:
+                    representations_sum += 1
+                used_sets.add(first_two_ordered_indices)
+           
+            for i3 in crossing_numbers:
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+                a3s = (a3s - a1s) % len(gc)
+                a3e = (a3e - a1s) % len(gc)
+
+                ordered_indices = tuple(sorted((i1, i2, i3)))
+                if ordered_indices in used_sets:
+                    continue
+
+                # These checks are for the diagrams of Polyak, Viro
+                # and Goussarov in 'Finite type invariants of
+                # classical and virtual knots' (page 13)
+
+                if (a2e < a1e and a3s < a1e and a3s > a2e and
+                    a2s > a1e and a3e > a2s):
+                    representations_sum += 3*(signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+                if (a2s < a1e and a3s < a1e and a2s < a3s and
+                    a2e < a3e and a2e > a1e):
+                    representations_sum -= (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+                if (a2s < a1e and a3e < a1e and a3e > a2s and
+                    a3s > a1e and a2e > a3s):
+                    representations_sum += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+                if (a2e < a1e and a3s < a1e and a3s > a2e and
+                    a3e > a1e and a2s > a3e):
+                    representations_sum += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+                if (a2e < a1e and a3e < a1e and a3s < a2s and
+                    a3s > a1e):
+                    representations_sum -= (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+                if (a2s < a1e and a3s < a1e and a3e < a2e and
+                    a3e > a1e):
+                    representations_sum -= (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    used_sets.add(ordered_indices)
+
+    print()
+
+    return representations_sum
+    return int(round(representations_sum))

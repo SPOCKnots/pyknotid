@@ -112,6 +112,14 @@ class Representation(GaussCode):
             self.simplify()
         return vassiliev_degree_3(self, try_cython=try_cython)
 
+    def virtual_vassiliev_degree_3(self):
+        '''Returns the virtual Vassiliev invariant of degree 3 for the
+        representation.
+
+        '''
+        from ..invariants import virtual_vassiliev_degree_3
+        return virtual_vassiliev_degree_3(self)
+
     def hyperbolic_volume(self):
         '''
         Returns the hyperbolic volume at the given point, via

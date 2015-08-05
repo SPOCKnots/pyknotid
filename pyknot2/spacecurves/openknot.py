@@ -1019,7 +1019,12 @@ class OpenKnot(SpaceCurve):
     def _vassiliev_degree_2_projection(self):
         from pyknot2.spacecurves import Knot
         k = Knot(self.points, verbose=False)
-        return k.vassiliev_degree_2(simplify=False, include_closure=False)
+        return k.vassiliev_degree_2(simplify=False,
+                                    include_closure=False)
+
+    def virtual_vassiliev_degree_3(self):
+        from pyknot2.invariants import virtual_vassiliev_degree_3
+        return virtual_vassiliev_degree_3(self.gauss_code())
 
 
 def gall_peters(theta, phi):
