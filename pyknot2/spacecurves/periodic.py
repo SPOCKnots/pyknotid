@@ -207,6 +207,10 @@ class PeriodicKnot(object):
             equivalent_crossing_indices, gc._gauss_code[0])
 
         return gc, equivalent_crossing_numbers
+
+    def periodic_vassiliev_degree_2(self, num_translations=3):
+        gc, equivalencies = self.gauss_code(num_translations)
+        return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies)
     
 
 def get_equivalent_crossing_indices(crossings, span):
@@ -624,16 +628,16 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
                 
                 representations_sum += signs[i1] * signs[i2]
 
-                print('vass with', i1, i2, signs[i1] * signs[i2], 'indices',
-                      translation_indices[i1], translation_indices[i2])
+                # print('vass with', i1, i2, signs[i1] * signs[i2], 'indices',
+                #       translation_indices[i1], translation_indices[i2])
                 for i1other in equivalent_crossing_numbers[i1].union({i1}):
                     for i2other in equivalent_crossing_numbers[i2].union({i2}):
                         crossings_already_done.add(tuple(sorted([i1other, i2other])))
             elif a1s > a2s and a1e < a2s and a2e > a1s:
                 representations_sum += signs[i1] * signs[i2]
 
-                print('vass with', i1, i2, '...', signs[i1] * signs[i2], 'indices',
-                      translation_indices[i1], translation_indices[i2])
+                # print('vass with', i1, i2, '...', signs[i1] * signs[i2], 'indices',
+                #       translation_indices[i1], translation_indices[i2])
                 for i1other in equivalent_crossing_numbers[i1].union({i1}):
                     for i2other in equivalent_crossing_numbers[i2].union({i2}):
                         crossings_already_done.add(tuple(sorted([i1other, i2other])))
