@@ -12,7 +12,7 @@ try:
 except ImportError:
     from pyknot2.spacecurves import helpers as chelpers
 
-ROTATION_MAGIC_NUMBERS = (1., 0.)
+ROTATION_MAGIC_NUMBERS = (1.0, 0.)
 
 class PeriodicKnot(object):
     def __init__(self, points, period_vector=None):
@@ -208,9 +208,13 @@ class PeriodicKnot(object):
 
         return gc, equivalent_crossing_numbers
 
-    def periodic_vassiliev_degree_2(self, num_translations=3):
+    def vassiliev_degree_2(self, num_translations=3):
         gc, equivalencies = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies)
+
+    def vassiliev_degree_3(self, num_translations=3):
+        gc, equivalencies = self.gauss_code(num_translations)
+        return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies)
     
 
 def get_equivalent_crossing_indices(crossings, span):
@@ -659,6 +663,7 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
                         'for something with more than 1 component')
 
     gc = gc[0]
+    from pyknot2.invariants import _crossing_arrows_and_signs
     arrows, signs = _crossing_arrows_and_signs(
         gc, representation.crossing_numbers)
     
@@ -680,6 +685,9 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
             a2s = (a2s - a1s) % len(gc)
             a2e = (a2e - a1s) % len(gc)
             for i3 in crossing_numbers:
+                if tuple(sorted([i1, i2, i3])) in crossings_already_done:
+                    continue
+                
                 arrow3 = arrows[i3]
                 a3s, a3e = arrow3
                 a3s = (a3s - a1s) % len(gc)
@@ -694,13 +702,24 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
                     representations_sum_1 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+
+                    for i1other in equivalent_crossing_numbers[i1].union({i1}):
+                        for i2other in equivalent_crossing_numbers[i2].union({i2}):
+                            for i3other in equivalent_crossing_numbers[i3].union({i3}):
+                                crossings_already_done.add(tuple(sorted([i1other, i2other, i3other])))
+
                 if (a2e < a1e and a3s < a1e and a3s > a2e and
                     a2s > a1e and a3e > a2s):
                     representations_sum_2 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
 
-    print 
+                    for i1other in equivalent_crossing_numbers[i1].union({i1}):
+                        for i2other in equivalent_crossing_numbers[i2].union({i2}):
+                            for i3other in equivalent_crossing_numbers[i3].union({i3}):
+                                crossings_already_done.add(tuple(sorted([i1other, i2other, i3other])))
+
+    print()
     
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
