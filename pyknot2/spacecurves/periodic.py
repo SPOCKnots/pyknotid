@@ -5,12 +5,14 @@ import numpy as n
 from pyknot2.utils import ensure_shape_tuple, vprint
 from periodiccell import _cram_into_cell, _cut_line_at_jumps, _interpret_line
 
+from collections import defaultdict
+
 try:
     from pyknot2.spacecurves import chelpers
 except ImportError:
     from pyknot2.spacecurves import helpers as chelpers
 
-ROTATION_MAGIC_NUMBERS = (1.0, 0.0)
+ROTATION_MAGIC_NUMBERS = (0.3, 0.0)
 
 class PeriodicKnot(object):
     def __init__(self, points, period_vector=None):
@@ -129,6 +131,91 @@ class PeriodicKnot(object):
                     admissible_indices.add(gauss_index)
         return gc, list(admissible_indices)
 
+    def periodic_vassiliev_degree_2(self, num_translations=3,
+                                    number_of_samples=100):
+        from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top            
+        angles = get_rotation_angles(number_of_samples)
+        v2s = []
+        v2_arrs = []
+        for translations in range(-1*num_translations, num_translations + 1):
+            vprint('Checking translation {}'.format(translations), False)
+            v2s_cur = []
+            for theta, phi in angles:
+                matrix = rotate_to_top(theta + 0.13, phi + 0.43)
+                gc, numbers = self.gauss_code_with(
+                    num_translations=translations,
+                    mat=matrix)
+                v2s_cur.append(periodic_vassiliev_degree_2(gc, numbers))
+            print()
+            print('translation {:03}, v2s_cur {}'.format(translations, v2s_cur))
+            v2s.append(n.average(v2s_cur))
+            v2_arrs.append(v2s_cur)
+        vprint()
+        print('totals are', n.sum(v2_arrs, axis=0))
+        return n.sum(v2s)
+
+    def with_translations(self, num_translations=3):
+        new_points = []
+        for i in range(-num_translations, num_translations+1):
+            new_points.append(self.translation(i).points[:-1])
+        new_points.append(self.translation(num_translations).points)
+        points = n.vstack(new_points)
+        return points
+
+    def raw_crossings_with_translations(self, num_translations=3):
+        from pyknot2.spacecurves.rotation import rotate_to_top
+        points = self.unfolded_points_with_translations(
+            num_translations, rotate_to_top(*ROTATION_MAGIC_NUMBERS))
+
+        num_points = len(points)
+        core_num = len(self.unfolded_points())
+        core_index = num_translations * core_num + shift
+
+        segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
+        segment_lengths = n.sqrt(n.sum(segment_lengths**2, axis=1))
+        max_segment_length = n.max(segment_lengths[:-1])
+        jump_mode = 2
+
+        core_points = points[(core_index):(core_index + core_num + 1)]
+        core_segment_lengths = segment_lengths[(core_index + shift):(core_index + shift + core_num + 1)]
+
+        first_block = points[:(core_index + 1)]
+        first_block_lengths = segment_lengths[:(core_index + 1)]
+
+        second_block = points[(core_index + core_num + 1):]
+        second_block_lengths = segment_lengths[(core_index + core_num + 1):]
+        
+        crossings = []
+        for i in range(len(core_points) - 1):
+            v0 = core_points[i]
+            dv = core_points[i+1] - v0
+
+            vnum = core_index + i
+
+            compnum = 0
+            crossings.extend(chelpers.find_crossings(
+                v0, dv, first_block, first_block_lengths,
+                vnum, compnum,
+                max_segment_length,
+                jump_mode))
+
+            compnum = core_index + core_num + 1
+            crossings.extend(chelpers.find_crossings(
+                v0, dv, second_block, second_block_lengths,
+                vnum, compnum,
+                max_segment_length,
+                jump_mode))
+
+            compnum = core_index + i + 2
+            crossings.extend(chelpers.find_crossings(
+                v0, dv, core_points[i+2:], core_segment_lengths[i+2:],
+                vnum, compnum,
+                max_segment_length,
+                jump_mode))
+
+        crossings.sort(key=lambda j: j[0])
+        return n.array(crossings), core_num, core_index
+
 class CellKnot(object):
     def __init__(self, points, shape, period=None):
         # points will automatically be folded
@@ -224,8 +311,8 @@ class CellKnot(object):
         first_block = points[:(core_index + 1)]
         first_block_lengths = segment_lengths[:(core_index + 1)]
 
-        second_block = points[(core_index + core_num + 1):]
-        second_block_lengths = segment_lengths[(core_index + core_num + 1):]
+        second_block = points[(core_index + core_num):]
+        second_block_lengths = segment_lengths[(core_index + core_num):]
         
         crossings = []
         for i in range(len(core_points) - 1):
@@ -241,7 +328,7 @@ class CellKnot(object):
                 max_segment_length,
                 jump_mode))
 
-            compnum = core_index + core_num + 1
+            compnum = core_index + core_num
             crossings.extend(chelpers.find_crossings(
                 v0, dv, second_block, second_block_lengths,
                 vnum, compnum,
@@ -286,16 +373,50 @@ class CellKnot(object):
         crossings of the non-translated curve with the translated one.'''
         crossings, core_num, core_index = self.raw_crossings_by_unfolding(
             num_translations=num_translations, shift=shift)
+
+        equivalent_crossing_indices = defaultdict(set)
+        length = len(self.points)
+        for i, row1 in enumerate(crossings):
+            for j, row2 in enumerate(crossings[i+1:], i+1):
+                # print(i, j, n.abs((row1[0] - row2[0]) % 40))
+                if n.abs((row1[0] - row2[0]) % 40) < 0.000001:
+                    equivalent_crossing_indices[i].add(j)
+                    for val in equivalent_crossing_indices[i]:
+                        equivalent_crossing_indices[val].add(j)
+                        equivalent_crossing_indices[j].add(val)
+                    equivalent_crossing_indices[j].add(i)
+        for key, value in equivalent_crossing_indices.items():
+            try:
+                value.remove(key)
+            except KeyError:
+                pass
+        
         from pyknot2.representations import GaussCode
         gc = GaussCode(crossings)
         if num_translations == 0:
-            return gc, gc.crossing_numbers
+            return gc, defaultdict(set)
 
-        admissible_indices = set()
-        for line_index, gauss_index in zip(crossings[:, 0], gc._gauss_code[0][:, 0]):
-            if core_index < line_index < core_index + core_num + 1:
-                admissible_indices.add(gauss_index)
-        return gc, list(admissible_indices)
+        equivalent_crossing_numbers = defaultdict(set)
+        code = gc._gauss_code[0]
+        for key, values in equivalent_crossing_indices.items():
+            number = code[key][0]
+            equivalent_crossing_numbers[number] = set([int(code[value][0]) for value in values])
+            equivalent_crossing_numbers[number].add(number)
+
+        translation_numbers = {}
+        if shift is None:
+            shift = 0
+        centre_start = num_translations * len(self.unfolded_points()) + shift
+        for i, row in enumerate(crossings):
+            crossing_number = code[i][0]
+            if crossing_number not in translation_numbers:
+                position1 = row[0]
+                translation1 = int(n.floor((position1 - centre_start) / len(self.unfolded_points())))
+                position2 = row[1]
+                translation2 = int(n.floor((position2 - centre_start) / len(self.unfolded_points())))
+                translation_numbers[crossing_number] = (translation1, translation2)
+                
+        return gc, equivalent_crossing_numbers, translation_numbers
         
 
     def raw_crossings(self, num_translations=0, mat=None, shift=0):
@@ -430,14 +551,68 @@ class CellKnot(object):
         return n.sum(v2s)
 
     def periodic_vassiliev_degree_2_by_unfolding(self, num_translations=3, shift=0):
-        gc = self.gauss_code_by_unfolding(num_translations, shift=shift)[0]
+        gc, equivalencies, translation_indices = self.gauss_code_by_unfolding(num_translations, shift=shift)
         from pyknot2.invariants import vassiliev_degree_2
-        return vassiliev_degree_2(gc)
+        return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies, translation_indices)
         
     def periodic_vassiliev_degree_3_by_unfolding(self, num_translations=3, shift=0):
         gc = self.gauss_code_by_unfolding(num_translations, shift=shift)[0]
         from pyknot2.invariants import vassiliev_degree_3
         return vassiliev_degree_3(gc)
+
+def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_crossing_numbers={},
+                                                     translation_indices={}):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    # print('gc is', representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate alexander polynomial'
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_already_done = set()
+    
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers[index+1:]:
+            # if (i1 not in relevant_crossing_numbers and
+            #     i2 not in relevant_crossing_numbers):
+            #     continue
+            if tuple(sorted([i1, i2])) in crossings_already_done:
+                continue
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            if a2s > a1s and a2e < a1s and a1e > a2s:
+                representations_sum += signs[i1] * signs[i2]
+
+                # print('vass with', i1, i2, signs[i1] * signs[i2], 'indices',
+                      # translation_indices[i1], translation_indices[i2])
+                for i1other in equivalent_crossing_numbers[i1].union({i1}):
+                    for i2other in equivalent_crossing_numbers[i2].union({i2}):
+                        crossings_already_done.add(tuple(sorted([i1other, i2other])))
+            elif a1s > a2s and a1e < a2s and a2e > a1s:
+                representations_sum += signs[i1] * signs[i2]
+
+                # print('vass with', i1, i2, '...', signs[i1] * signs[i2], 'indices',
+                      # translation_indices[i1], translation_indices[i2])
+                for i1other in equivalent_crossing_numbers[i1].union({i1}):
+                    for i2other in equivalent_crossing_numbers[i2].union({i2}):
+                        crossings_already_done.add(tuple(sorted([i1other, i2other])))
+
+    return representations_sum
 
 def periodic_vassiliev_degree_2(representation, relevant_crossing_numbers=[]):
     # Hacky periodic version of the vassiliev function in
