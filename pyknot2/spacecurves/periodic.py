@@ -12,12 +12,12 @@ try:
 except ImportError:
     from pyknot2.spacecurves import helpers as chelpers
 
-ROTATION_MAGIC_NUMBERS = (1.0, 0.)
+ROTATION_MAGIC_NUMBERS = (0.02, 0.1)
 
 class PeriodicKnot(object):
     def __init__(self, points, period_vector=None):
         self.points = points
-        self._period_vector = n.array(period_vector)
+        self._period_vector = period_vector
 
         from pyknot2.spacecurves.rotation import rotate_to_top
         self._apply_matrix(rotate_to_top(*ROTATION_MAGIC_NUMBERS))
@@ -28,19 +28,49 @@ class PeriodicKnot(object):
     @property
     def period_vector(self):
         if self._period_vector is not None:
-            return self._period_vector
+            return n.array(self._period_vector)
         return self.points[-1] - self.points[0]
 
+    def interpolate(self, factor=2):
+        if factor == 1:
+            return
+        new_points = []
+        for i in range(len(self.points) - 1):
+            v1 = self.points[i]
+            v2 = self.points[i+1]
+            interpolated_points = n.zeros((factor, 3))
+            interpolated_points[:, 0] = n.linspace(v1[0], v2[0], factor + 1)[:-1]
+            interpolated_points[:, 1] = n.linspace(v1[1], v2[1], factor + 1)[:-1]
+            interpolated_points[:, 2] = n.linspace(v1[2], v2[2], factor + 1)[:-1]
+            new_points.append(interpolated_points)
+        self.points = n.vstack(new_points)
+
+    def nearest_non_overlapping_translation(self):
+        '''Returns the minimal number of translations that can be used in
+        raw_crossings to ensure no crossings are missed.'''
+
+        points = self.points[:, :2]
+        end_end_distance = mag(points[-1] - self.translated_points(1)[-1, :2])
+
+        max_dist_from_start = n.max(n.apply_along_axis(mag, 1, points - points[0]))
+        max_dist_from_end = n.max(n.apply_along_axis(mag, 1, points - points[-1]))
+        largest_possible_distance = n.max([max_dist_from_start, max_dist_from_end])
+
+        # print('largest possible distance', largest_possible_distance)
+        # print('end_end', end_end_distance)
+
+        return int(n.ceil(largest_possible_distance / end_end_distance) + 2)
+
+
     def roll(self, num):
-        if n.abs(num) > 1:
-            raise Exception('roll does not work properly for rolls bigger than 1 yet')
         pv = self.period_vector
         ps = self.points
 
-        if num > 0:
-            ps = n.vstack((ps[1:], [ps[1] + pv]))
-        elif num < 0:
-            ps = n.vstack(([ps[-2] - pv], ps[:-1]))
+        for _ in range(abs(num)):
+            if num > 0:
+                ps = n.vstack((ps[1:], [ps[1] + pv]))
+            elif num < 0:
+                ps = n.vstack(([ps[-2] - pv], ps[:-1]))
         self.points = ps
 
     def plot_with_translation(self, with_translation=0, **kwargs):
@@ -105,11 +135,15 @@ class PeriodicKnot(object):
             The rotation angles about x, y and z. If None, random
             angles are used. Defaults to None.
         '''
+        from pyknot2.utils import get_rotation_matrix
         if angles is None:
-            angles = n.random.random(3)
+            angles = n.random.random(3) * 2*n.pi
         phi, theta, psi = angles
         rot_mat = get_rotation_matrix(angles)
         self._apply_matrix(rot_mat)
+
+        if self._period_vector is not None:
+            self._period_vector = rot_mat.dot(self._period_vector)
 
     def _apply_matrix(self, mat):
         '''
@@ -117,8 +151,11 @@ class PeriodicKnot(object):
         '''
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
-    def plot_projection(self, num_translations=3):
+    def plot_projection(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
         from pyknot2.visualise import plot_line, plot_projection
+        import matplotlib.pyplot as plt
         points = self.points_with_translations(num_translations)
         crossings, core_num, core_index = self.raw_crossings(num_translations)
         plot_crossings = []
@@ -128,9 +165,13 @@ class PeriodicKnot(object):
             r = points[xint]
             dr = points[(xint+1) % len(points)] - r
             plot_crossings.append(r + (x-xint) * dr)
+        fig, ax = plt.subplots()
+        prev_points = self.translated_points(-1)
+        ax.plot(prev_points[:, 0], prev_points[:, 1], color='orange', linewidth=1.5)
         fig, ax = plot_projection(points,
                                   crossings=n.array(plot_crossings),
                                   mark_start=True,
+                                  fig_ax = (fig, ax),
                                   show=True)
         core_points = points[num_translations * (len(self.points) - 1):
                              num_translations * (len(self.points) - 1) + len(self.points)]
@@ -138,7 +179,9 @@ class PeriodicKnot(object):
         ax.plot(core_points[:, 0], core_points[:, 1], color='purple', linewidth=1.5)
         return fig, ax
 
-    def raw_crossings(self, num_translations=3):
+    def raw_crossings(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
         from pyknot2.spacecurves.rotation import rotate_to_top
 
         points = self.points_with_translations(num_translations)
@@ -192,7 +235,9 @@ class PeriodicKnot(object):
         crossings.sort(key=lambda j: j[0])
         return n.array(crossings), core_num, core_index
 
-    def gauss_code(self, num_translations=3):
+    def gauss_code(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
         crossings, core_num, core_index = self.raw_crossings(num_translations)
 
         equivalent_crossing_indices = get_equivalent_crossing_indices(
@@ -206,22 +251,87 @@ class PeriodicKnot(object):
         equivalent_crossing_numbers = get_equivalent_crossing_numbers(
             equivalent_crossing_indices, gc._gauss_code[0])
 
-        return gc, equivalent_crossing_numbers
+        translation_numbers = {}
+        centre_start = core_index
+        code = gc._gauss_code[0]
+        for i, row in enumerate(crossings):
+            crossing_number = code[i][0]
+            if crossing_number not in translation_numbers:
+                position1 = row[0]
+                # translation1 = int(n.floor((position1 - centre_start) / (len(self.points - 1))))
+                translation1 = int(position1 / (len(self.points) - 1)) - num_translations
 
-    def vassiliev_degree_2(self, num_translations=3):
-        gc, equivalencies = self.gauss_code(num_translations)
-        return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies)
+                position2 = row[1]
+                # translation2 = int(n.floor((position2 - centre_start) / (len(self.points - 1))))
 
-    def vassiliev_degree_3(self, num_translations=3):
-        gc, equivalencies = self.gauss_code(num_translations)
-        return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies)
+                translation2 = int(position2 / (len(self.points) - 1)) - num_translations
+
+
+                translation_numbers[crossing_number] = (translation1, translation2)
+
+        return gc, equivalent_crossing_numbers, translation_numbers
+
+    def vassiliev_degree_2(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, equivalencies, translations = self.gauss_code(num_translations)
+        return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies, translations)
+
+    def vassiliev_degree_3(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, equivalencies, translations = self.gauss_code(num_translations)
+        return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies, translations)
+
+    def vassiliev_degree_2_integral(self, num_translations=3):
+        ps = self.points_with_translations(num_translations)
+
+        core_num = len(self.points) - 1
+        core_index = num_translations * core_num 
+        core_end_num = core_index + core_num
+
+        total = 0.
+        for i in range(len(ps) - 1):
+            vi = ps[i]
+            dvi = ps[i+1] - ps[i]
+            for j in range(i+1, len(ps) - 1):
+                print('ij', i, j)
+                vj = ps[j]
+                dvj = ps[j+1] - ps[j]
+                for k in range(j+1, len(ps) - 1):
+                    vk = ps[k]
+                    dvk = ps[k+1] - ps[k]
+                    for l in range(k+1, len(ps) - 1):
+                        vl = ps[l]
+                        dvl = ps[l+1] - ps[l]
+
+                        if (not (core_num < i < core_end_num or core_num < k < core_end_num) or
+                            not (core_num < j < core_end_num or core_num < l < core_end_num)):
+                            continue
+                        total += (writhe_contribution(vi, dvi, vk, dvk) *
+                                  writhe_contribution(vj, dvj, vl, dvl))
+        return total
+
+
+def mag(v):
+    return n.sqrt(v.dot(v))
+
+prefactor = 1 / (4*n.pi)
+def writhe_contribution(v0, dv0, v1, dv1):
+    diff = v1 - v0
+    return (mag(dv0) * mag(dv1) * prefactor *
+            n.cross(dv0, dv1).dot(diff) /
+            (mag(diff)**3))
     
 
 def get_equivalent_crossing_indices(crossings, span):
     equivalencies = defaultdict(set)
     for i, row1 in enumerate(crossings):
         for j, row2 in enumerate(crossings[i+1:], i+1):
-            if n.abs((row1[0] - row2[0])) % span < 0.000001:
+            proximity = n.abs(row1[0] - row2[0]) % span
+            if proximity < 0.00000001 or proximity > (span - 0.00000001):
+            # if ((n.abs((row1[0] - row2[0])) % span < 0.000001) or
+            #     (span - (n.abs((row1[0] - row2[0])) % span) > (span - 0.000001))):
                 equivalencies[i].add(j)
                 for val in equivalencies[i]:
                     equivalencies[val].add(j)
@@ -620,8 +730,16 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
             # if (i1 not in relevant_crossing_numbers and
             #     i2 not in relevant_crossing_numbers):
             #     continue
+
             if tuple(sorted([i1, i2])) in crossings_already_done:
                 continue
+
+           # t1 = translation_indices[i1]
+            # t2 = translation_indices[i2]
+            # non_zero_translations = [t for t in [t1, t2] if t[0] != 0 or t[1] != 0]
+            # if len(set(non_zero_translations)) > 1:
+            #     continue
+            
             arrow2 = arrows[i2]
             a2s, a2e = arrow2
 
@@ -649,7 +767,8 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
     return representations_sum
 
 def periodic_vassiliev_degree_3_without_double_count(representation,
-                                                     equivalent_crossing_numbers):
+                                                     equivalent_crossing_numbers,
+                                                     translations):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
     if not isinstance(representation, GaussCode):
@@ -674,8 +793,8 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
     representations_sum_1 = 0
     representations_sum_2 = 0
     for index, i1 in enumerate(crossing_numbers):
-        if index % 10 == 0:
-            vprint('\rCurrently comparing index {}'.format(index), False)
+        # if index % 10 == 0:
+        #     vprint('\rCurrently comparing index {}'.format(index), False)
         arrow1 = arrows[i1]
         a1s, a1e = arrow1
         a1e = (a1e - a1s) % len(gc)
@@ -693,6 +812,14 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
                 a3s = (a3s - a1s) % len(gc)
                 a3e = (a3e - a1s) % len(gc)
 
+                # t1 = translations[i1]
+                # t2 = translations[i2]
+                # t3 = translations[i3]
+                # non_zero_translations = [t for t in [t1, t2, t3] if t[0] != 0 or t[1] != 0]
+                # if len(set(non_zero_translations)) > 1:
+                #     # print('translations invalid', t1, t2, t3)
+                #     continue
+
                 ordered_indices = tuple(sorted((i1, i2, i3)))
                 if ordered_indices in used_sets:
                     continue
@@ -702,6 +829,9 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
                     representations_sum_1 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+
+                    # print('vass 1 with', i1, i2, i3, '...', signs[i1] * signs[i2] * signs[i3], 'indices',
+                    #       translations[i1], translations[i2], translations[i3])
 
                     for i1other in equivalent_crossing_numbers[i1].union({i1}):
                         for i2other in equivalent_crossing_numbers[i2].union({i2}):
@@ -714,14 +844,17 @@ def periodic_vassiliev_degree_3_without_double_count(representation,
                                               signs[i3])
                     used_sets.add(ordered_indices)
 
+                    # print('vass 2 with', i1, i2, i3, '...', signs[i1] * signs[i2] * signs[i3], 'indices',
+                    #       translations[i1], translations[i2], translations[i3])
+
                     for i1other in equivalent_crossing_numbers[i1].union({i1}):
                         for i2other in equivalent_crossing_numbers[i2].union({i2}):
                             for i3other in equivalent_crossing_numbers[i3].union({i3}):
                                 crossings_already_done.add(tuple(sorted([i1other, i2other, i3other])))
 
-    print()
+    # print()
     
-    return int(round(representations_sum_1 / 2.)) + representations_sum_2
+    return representations_sum_1 / 2. + representations_sum_2
 
 def periodic_vassiliev_degree_2(representation, relevant_crossing_numbers=[]):
     # Hacky periodic version of the vassiliev function in
