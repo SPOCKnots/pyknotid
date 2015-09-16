@@ -8,6 +8,7 @@ the calculation of topological invariants.
 
 from __future__ import print_function, division
 from pyknot2.representations.gausscode import GaussCode
+from collections import defaultdict
 import numpy as n
 
 
@@ -293,7 +294,7 @@ class Representation(GaussCode):
 
         return array, fig, ax
 
-    def space_curve(self):
+    def draw_planar_graph(self):
         pd = self.planar_diagram()
         g, duplicates = pd.as_networkx()
 
@@ -314,6 +315,7 @@ class Representation(GaussCode):
 
         nodes_by_height = {}
         node_xs_by_y = {}
+        node_xs_ys = {}
         node_lefts_rights = {}
 
         for node, data in g.nodes(data=True):
@@ -328,6 +330,7 @@ class Representation(GaussCode):
 
             nodes_by_height[data['pos']] = node
             node_xs_by_y[data['pos']] = x
+            node_xs_ys[node] = (x, y)
             node_lefts_rights[node] = (xb, xe)
 
             patches += [Circle((x, y), 0.25)]
@@ -336,10 +339,10 @@ class Representation(GaussCode):
         print('node labels are', node_labels)
 
         lines = []
-        widths = []
 
         rightmost_x = n.max(xs)
         leftmost_x = n.min(xs)
+        x_span = rightmost_x - leftmost_x
         
         for n1, n2, data in g.edges(data=True):
             x = data['pos']
@@ -385,9 +388,30 @@ class Representation(GaussCode):
             lines.append(line)
 
             if sorted((n1, n2)) in duplicates:
-                widths.append(4)
-            else:
-                widths.append(1)
+                print('duplicate', n1, n2)
+                line = line.copy()
+                n1x, n1y = node_xs_ys[n1]
+                n2x, n2y = node_xs_ys[n2]
+
+                ly, hy = sorted([n1y, n2y])
+                if n.all((line[1:-1, 0] > n1x) & (line[1:-1, 0] < n2x)):
+                    line[1:-1, 0] -= 0.1
+                    if end_node_x > start_node_x:
+                        line[1:-1, 1] += 1. / x_span
+                    else:
+                        line[1:-1, 1] -= 1. / x_span
+                    print('a')
+                elif line[1, 0] < n1x:
+                    line[1:-1, 0] += 0.1
+                    line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
+                                      (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
+                    print('b')
+                else:
+                    line[1:-1, 0] -= 0.1
+                    line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
+                                      (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
+                    print('c')
+                lines.append(line)
         
         plt.ion()
 
@@ -401,13 +425,58 @@ class Representation(GaussCode):
                      horizontalalignment='center',
                      verticalalignment='center')
 
-        for line, width in zip(lines, widths):
-            ax.plot(line[:, 0], line[:, 1], linewidth=width)
+        for line in lines:
+            ax.plot(line[:, 0], line[:, 1], linewidth=1)
         
         ax.set_xlim(leftmost_x - 1, rightmost_x + 1)
         fig.show()
+        
+
+        cg = CrossingGraph()
+        for line in lines:
+            start_node = nodes_by_height[n.int(n.round(line[0, 1]))]
+            end_node = nodes_by_height[n.int(n.round(line[-1, 1]))]
+            cl = CrossingLine(start_node, end_node, line)
+            cg[start_node].append(cl)
+            cg[end_node].append(cl.reversed())
+
+        cg.assert_four_valency()
+        print('is 4-valent!')
+        return cg
         
         # p.embed_drawplanar()
         # planarity.draw(p)
         return fig, ax
         
+    def space_curve(self):
+        return self.draw_planar_graph()
+
+
+class CrossingLine(object):
+    def __init__(self, start, end, points):
+        self.start = start
+        self.end = end
+        self.points = points
+
+    def reversed(self):
+        return CrossingLine(self.end, self.start, self.points[::-1])
+
+    def __str__(self):
+        return '<CrossingLine joining {} with {}>'.format(
+            self.start, self.end)
+
+    def __repr__(self):
+        return '<CrossingLine joining {} with {}>'.format(
+            self.start, self.end)
+
+class CrossingGraph(defaultdict):
+    def __init__(self):
+        super(CrossingGraph, self).__init__(list)
+        
+    def assert_four_valency(self):
+        for key, value in self.items():
+            if len(value) != 4:
+                raise ValueError('CrossingGraph is not 4-valent')
+
+    def retrieve_space_curve(self, heights):
+        pass
