@@ -78,6 +78,33 @@ class PlanarDiagram(list):
                     indices[number] = (i, j)
         return Link(scs)
 
+    def as_networkx(self):
+        import networkx as nx
+        edges = []
+        cache = {}
+        for i, crossing in enumerate(self):
+            for index in crossing:
+                if index in cache:
+                    edges.append([cache[index], i])
+                else:
+                    cache[index] = i
+        g = nx.Graph()
+        g.add_nodes_from(range(len(self)))
+        g.add_edges_from(edges)
+        print('edges are', edges)
+
+        seen = set()
+        duplicates = list()
+        for edge in edges:
+            edge = tuple(edge)
+            if edge in seen:
+                duplicates.append(sorted(edge))
+            seen.add(edge)
+        
+        print('duplicates are', duplicates)
+        return g, duplicates
+            
+
 
 class Crossing(list):
     '''

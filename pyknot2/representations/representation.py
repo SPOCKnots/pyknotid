@@ -6,6 +6,7 @@ An abstract representation of a Knot, providing methods for
 the calculation of topological invariants.
 '''
 
+from __future__ import print_function, division
 from pyknot2.representations.gausscode import GaussCode
 import numpy as n
 
@@ -291,3 +292,122 @@ class Representation(GaussCode):
         fig.show()
 
         return array, fig, ax
+
+    def space_curve(self):
+        pd = self.planar_diagram()
+        g, duplicates = pd.as_networkx()
+
+        import planarity
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Circle
+        from matplotlib.collections import PatchCollection
+
+        pg = planarity.PGraph(g)
+        pg.embed_drawplanar()
+        g = planarity.networkx_graph(pg)
+
+
+        node_labels = {}
+        xs = []
+        ys = []
+        patches = []
+
+        nodes_by_height = {}
+        node_xs_by_y = {}
+        node_lefts_rights = {}
+
+        for node, data in g.nodes(data=True):
+            y = data['pos']
+            xb = data['start']
+            xe = data['end']
+            x = int((xe + xb) / 2.)
+
+            node_labels[node] = (x, y)
+            xs.extend([xb, xe])
+            ys.append(y)
+
+            nodes_by_height[data['pos']] = node
+            node_xs_by_y[data['pos']] = x
+            node_lefts_rights[node] = (xb, xe)
+
+            patches += [Circle((x, y), 0.25)]
+
+        print('nodes_by_height are', nodes_by_height)
+        print('node labels are', node_labels)
+
+        lines = []
+        widths = []
+
+        rightmost_x = n.max(xs)
+        leftmost_x = n.min(xs)
+        
+        for n1, n2, data in g.edges(data=True):
+            x = data['pos']
+            yb = data['start']
+            ye = data['end']
+
+            start_node = nodes_by_height[yb]
+            end_node = nodes_by_height[ye]
+
+            start_left, start_right = node_lefts_rights[start_node]
+            end_left, end_right = node_lefts_rights[end_node]
+
+            start_frac = n.abs((x - start_left) / (start_right - start_left) - 0.5)
+            start_frac = 0.5 - start_frac
+            if ye < ys:
+                start_frac *= -1
+            start_shift = start_frac
+            # start_shift = 0.5 - start_frac if start_frac > 0 else -0.5 - start_frac
+
+            end_frac = n.abs((x - end_left) / (end_right - end_left) - 0.5)
+            end_frac = 0.5 - end_frac
+            if ye > ys:
+                end_frac *= -1
+            end_shift = end_frac
+            # end_shift = 0.5 - end_frac if end_frac > 0 else -0.5 - end_frac
+
+            start_node_x = node_xs_by_y[yb]
+            start_node_y = yb
+            
+            end_node_x = node_xs_by_y[ye]
+            end_node_y = ye
+
+            line = n.array([[start_node_x, start_node_y],
+                            [x, start_node_y - start_shift],
+                            [x, end_node_y - end_shift],
+                            [end_node_x, end_node_y]])
+            if x == start_node_x:
+                line = line[1:]
+                line[0, 1] = start_node_y
+            if x == end_node_x:
+                line = line[:-1]
+                line[-1, 1] = end_node_y
+            lines.append(line)
+
+            if sorted((n1, n2)) in duplicates:
+                widths.append(4)
+            else:
+                widths.append(1)
+        
+        plt.ion()
+
+        fig, ax = plt.subplots()
+        p = PatchCollection(patches, facecolor='none')
+        ax.add_collection(p)
+        # plt.axis('equal')
+
+        for node, (x, y) in node_labels.items():
+            plt.text(x, y, node,
+                     horizontalalignment='center',
+                     verticalalignment='center')
+
+        for line, width in zip(lines, widths):
+            ax.plot(line[:, 0], line[:, 1], linewidth=width)
+        
+        ax.set_xlim(leftmost_x - 1, rightmost_x + 1)
+        fig.show()
+        
+        # p.embed_drawplanar()
+        # planarity.draw(p)
+        return fig, ax
+        
