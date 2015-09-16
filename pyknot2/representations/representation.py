@@ -441,6 +441,13 @@ class Representation(GaussCode):
             cg[end_node].append(cl.reversed())
 
         cg.assert_four_valency()
+
+        cg.align_nodes()
+        first_node = 0
+        next_node = 1
+        heights = self._gauss_code[0][:, 1]
+        return cg.retrieve_space_curve(first_node, next_node, heights)
+        
         print('is 4-valent!')
         return cg
         
@@ -478,5 +485,62 @@ class CrossingGraph(defaultdict):
             if len(value) != 4:
                 raise ValueError('CrossingGraph is not 4-valent')
 
-    def retrieve_space_curve(self, heights):
-        pass
+    def align_nodes(self):
+        '''Orders the lines of each node to be in order, clockwise, depending
+        on their incoming angle.
+        '''
+        for key, value in self.items():
+            self[key] = sorted(
+                value, key=lambda l: n.arctan2(l.points[1, 1] - l.points[0, 1],
+                                               l.points[1, 0] - l.points[0, 0]))
+
+    def retrieve_space_curve(self, first, next, heights):
+        first_node_lines = self[first]
+        print('first', first_node_lines)
+        for line in first_node_lines:
+            if line.end == next:
+                break
+        else:
+            raise ValueError('Node 0 is not connected to node 1')
+
+        current_line = line
+        segments = []
+        for height in heights:
+            print('\n')
+            print('current line joins {} with {}'.format(current_line.start, current_line.end))
+            current_points = current_line.points.copy()
+            ps = n.zeros((len(current_points), 3))
+            ps[:, :-1] = current_points
+            ps[0, -1] = height
+
+            segments.append(ps[:-1])
+
+            next_lines = self[current_line.end]
+            print('next lines\n', next_lines)
+            incoming_angle = n.arctan2(current_points[-2, 1] - current_points[-1, 1],
+                                       current_points[-2, 0] - current_points[-1, 0])
+
+            other_incoming_angles = [
+                n.arctan2(l.points[1, 1] - l.points[0, 1],
+                          l.points[1, 0] - l.points[0, 0]) for l in next_lines]
+
+            print('other_incoming_angles', other_incoming_angles)
+
+            angle_distances = [
+                angle_distance(angle, incoming_angle)
+                for angle in other_incoming_angles]
+            print('angle_distances', angle_distances)
+
+            incoming_index = n.argmin(angle_distances)
+            outgoing_index = (incoming_index + 2) % 4
+            print('incoming_index is', incoming_index, 'outgoing', outgoing_index)
+            current_line = next_lines[outgoing_index]
+
+        return n.vstack(segments) * 5
+
+def angle_distance(a1, a2):
+    dist = n.abs(a2 - a1)
+    if dist > n.pi:
+        dist = 2*n.pi - dist
+    return dist
+
