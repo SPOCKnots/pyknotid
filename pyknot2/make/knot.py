@@ -4,6 +4,13 @@ Functions for making knots, returning a set of points.
 
 import numpy as n
 
+def unknot(num=100):
+    data = n.zeros((num, 3), dtype=n.float64)
+    ts = n.linspace(0, 2*n.pi, num)
+    data[:, 0] = 3*n.sin(ts)
+    data[:, 1] = 3*n.cos(ts)
+    data[:, 2] = n.sin(3*ts)
+    return data
 
 def trefoil(num=100):
     data = n.zeros((num, 3), dtype=n.float64)
@@ -21,7 +28,7 @@ def figure_eight(num=100):
     data[:, 1] = (2+n.cos(2*ts))*n.sin(3*ts)
     data[:, 2] = n.sin(4*ts)
     return data
-    
+
 
 def torus_knot(p=3, q=4, num=100):
     '''
@@ -37,7 +44,7 @@ def torus_knot(p=3, q=4, num=100):
     data[:, 1] = rs*n.sin(p*ts)
     data[:, 2] = -1*n.sin(q*ts)
     return data
-    
+
 
 def lissajous(nx=3, ny=2, nz=7, px=0.7, py=0.2, pz=0., num=100):
     data = n.zeros((num, 3), dtype=n.float64)
