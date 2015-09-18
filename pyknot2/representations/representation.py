@@ -298,6 +298,7 @@ class Representation(GaussCode):
         pd = self.planar_diagram()
         g, duplicates, heights, first_edge = pd.as_networkx()
 
+        print('first_edge is', first_edge)
         import planarity
         import matplotlib.pyplot as plt
         from matplotlib.patches import Circle
@@ -391,24 +392,45 @@ class Representation(GaussCode):
                 n1x, n1y = node_xs_ys[n1]
                 n2x, n2y = node_xs_ys[n2]
 
+                lx, hx = sorted([n1x, n2x])
                 ly, hy = sorted([n1y, n2y])
-                if n.all((line[1:-1, 0] > n1x) & (line[1:-1, 0] < n2x)):
-                    line[1:-1, 0] -= 0.1
-                    if end_node_x > start_node_x:
-                        line[1:-1, 1] += 1. / x_span
-                    else:
-                        line[1:-1, 1] -= 1. / x_span
-                    print('a')
-                elif line[1, 0] < n1x:
-                    line[1:-1, 0] += 0.1
-                    line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
-                                      (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
-                    print('b')
-                else:
-                    line[1:-1, 0] -= 0.1
-                    line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
-                                      (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
-                    print('c')
+                # if len(line) == 4:
+                # if n.all((line[1:-1, 0] > n1x) & (line[1:-1, 0] < n2x)):
+                #     line[1:-1, 0] -= 0.1
+                #     if end_node_x > start_node_x:
+                #         line[1:-1, 1] += 1. / x_span
+                #     else:
+                #         line[1:-1, 1] -= 1. / x_span
+                #     print('a')
+                # elif line[1, 0] < n1x:
+                #     line[1:-1, 0] += 0.1
+                #     line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
+                #                       (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
+                #     print('b')
+                # else:
+                #     line[1:-1, 0] -= 0.1
+                #     line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
+                #                       (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
+                #     print('c')
+                if len(line) == 4:
+                    join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= n.linalg.norm(normal_1)
+
+                    join_2 = n.array([line[3, 0], line[3, 1], 0]) - n.array([line[1, 0], line[1, 1], 0])
+                    normal_2 = n.cross(join_2, [0, 0, 1])[:2]
+                    normal_2 /= n.linalg.norm(normal_2)
+
+                    line[1] += 0.03*normal_1
+                    line[2] += 0.03*normal_2
+                elif len(line) == 3:
+                    join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= n.linalg.norm(normal_1)
+
+                    line[1] += 0.03*normal_1
+                
+                    
                 lines.append(line)
         
         plt.ion()

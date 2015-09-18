@@ -141,6 +141,7 @@ class PlanarDiagram(list):
         print('heights are', heights)
         for key in sorted(heights.keys()):
             print(key, heights[key])
+        print('edge directions', sorted(edge_directions))
         return g, duplicates, heights, sorted(edge_directions)[0]
             
 def index_height(index):
