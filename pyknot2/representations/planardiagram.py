@@ -7,6 +7,7 @@ Classes for working with planar diagram notation of knot diagrams.
 See individual class documentation for more details.
 '''
 
+from __future__ import print_function
 
 import numpy as n
 
@@ -79,15 +80,50 @@ class PlanarDiagram(list):
         return Link(scs)
 
     def as_networkx(self):
+        '''Get a networkx graph representing the planar diagram, where
+        each node is a crossing and each edge is an arc. This is a
+        non-directed non-multi graph; where two arcs join the same crossing,
+        they are represented as a single edge, but information about
+        duplicates is returned alongside the graph.
+
+        Returns
+        -------
+        g : Graph
+            The networkx graph
+        duplicates : list
+            A list of tuples representing nodes joined by multiple edges.
+
+        '''
         import networkx as nx
         edges = []
         cache = {}
-        for i, crossing in enumerate(self):
-            for index in crossing:
-                if index in cache:
-                    edges.append([cache[index], i])
+        heights = {}
+        edge_directions = []
+        for node_index, crossing in enumerate(self):
+            for crossing_index, arc_number in enumerate(crossing):
+                if arc_number in cache:
+                    other_node_index, other_height = cache[arc_number]
+                    edges.append([other_node_index, node_index])
+
+                    print('\nfound with', node_index, other_node_index, 'arc', arc_number)
+
+                    height = index_height(crossing_index)
+                    # heights[other_node_index, node_index] = (other_height, height)
+                    # heights[node_index, other_node_index] = (height, other_height)
+
+                    print('crossing is', crossing)
+                    if crossing.is_outgoing(arc_number):
+                        print('{} is outgoing'.format(arc_number))
+                        heights[node_index, other_node_index] = (height, other_height)
+                        edge_directions.append((node_index, other_node_index))
+                    else:
+                        print('{} is incoming'.format(arc_number))
+                        heights[other_node_index, node_index] = (other_height, height)
+                        edge_directions.append((other_node_index, node_index))
+                    
                 else:
-                    cache[index] = i
+                    cache[arc_number] = node_index, index_height(crossing_index)
+
         g = nx.Graph()
         g.add_nodes_from(range(len(self)))
         g.add_edges_from(edges)
@@ -100,11 +136,22 @@ class PlanarDiagram(list):
             if edge in seen:
                 duplicates.append(sorted(edge))
             seen.add(edge)
-        
-        print('duplicates are', duplicates)
-        return g, duplicates
-            
 
+        print('duplicates are', duplicates)
+        print('heights are', heights)
+        for key in sorted(heights.keys()):
+            print(key, heights[key])
+        return g, duplicates, heights, sorted(edge_directions)[0]
+            
+def index_height(index):
+    '''Returns the height based on the index of the crossing in an entry
+    of a planar diagram; the 0th and 2nd indices are under crossings,
+    and the 1st and 3rd are over crossings.
+
+    '''
+    if index in (0, 2):
+        return -1.
+    return 1.
 
 class Crossing(list):
     '''
@@ -180,6 +227,21 @@ class Crossing(list):
             if self[i] == old:
                 self[i] = new
 
+    def is_incoming(self, index):
+        if index not in self:
+            raise ValueError('arc index doesn\'t intersect crossing')
+        other_index = self[(self.index(index) + 2) % 4]
+        print('indices are', index, other_index)
+        if other_index == 1 and index != 2:  # => index is the final arc
+            return True
+        if index == 1 and other_index != 2:  # => other_index is the final arc
+            return False
+        if other_index > index:
+            return True
+        return False
+
+    def is_outgoing(self, index):
+        return not self.is_incoming(index)
 
 def shorthand_to_crossings(s):
     '''

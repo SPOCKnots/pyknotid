@@ -296,7 +296,7 @@ class Representation(GaussCode):
 
     def draw_planar_graph(self):
         pd = self.planar_diagram()
-        g, duplicates = pd.as_networkx()
+        g, duplicates, heights, first_edge = pd.as_networkx()
 
         import planarity
         import matplotlib.pyplot as plt
@@ -360,14 +360,12 @@ class Representation(GaussCode):
             if ye < ys:
                 start_frac *= -1
             start_shift = start_frac
-            # start_shift = 0.5 - start_frac if start_frac > 0 else -0.5 - start_frac
 
             end_frac = n.abs((x - end_left) / (end_right - end_left) - 0.5)
             end_frac = 0.5 - end_frac
             if ye > ys:
                 end_frac *= -1
             end_shift = end_frac
-            # end_shift = 0.5 - end_frac if end_frac > 0 else -0.5 - end_frac
 
             start_node_x = node_xs_by_y[yb]
             start_node_y = yb
@@ -445,8 +443,7 @@ class Representation(GaussCode):
         cg.align_nodes()
         first_node = 0
         next_node = 1
-        heights = self._gauss_code[0][:, 1]
-        return cg.retrieve_space_curve(first_node, next_node, heights)
+        return cg.retrieve_space_curve(first_edge[0], first_edge[1], heights)
         
         print('is 4-valent!')
         return cg
@@ -505,13 +502,18 @@ class CrossingGraph(defaultdict):
 
         current_line = line
         segments = []
-        for height in heights:
+        print('num heights', len(heights))
+        h = 1.
+        for _ in range(len(self)*2):
             print('\n')
             print('current line joins {} with {}'.format(current_line.start, current_line.end))
             current_points = current_line.points.copy()
             ps = n.zeros((len(current_points), 3))
             ps[:, :-1] = current_points
-            ps[0, -1] = height
+
+            height = heights[(current_line.start, current_line.end)]
+            ps[0, -1] = height[0] # height
+            # ps[0, -1] = h; h *= -1.
 
             segments.append(ps[:-1])
 
@@ -535,6 +537,14 @@ class CrossingGraph(defaultdict):
             outgoing_index = (incoming_index + 2) % 4
             print('incoming_index is', incoming_index, 'outgoing', outgoing_index)
             current_line = next_lines[outgoing_index]
+
+        # current_points = current_line.points.copy()
+        # ps = n.zeros((len(current_points), 3))
+        # ps[:, :-1] = current_points
+        # ps[0, -1] = height[0] # height
+        # ps[0, -1] = h; h *= -1.
+        # height = heights[(current_line.start, current_line.end)]
+        # segments.append(ps[:-1])
 
         return n.vstack(segments) * 5
 
