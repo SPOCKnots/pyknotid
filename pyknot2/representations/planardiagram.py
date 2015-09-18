@@ -108,18 +108,16 @@ class PlanarDiagram(list):
                     print('\nfound with', node_index, other_node_index, 'arc', arc_number)
 
                     height = index_height(crossing_index)
-                    # heights[other_node_index, node_index] = (other_height, height)
-                    # heights[node_index, other_node_index] = (height, other_height)
 
                     print('crossing is', crossing)
                     if crossing.is_outgoing(arc_number):
                         print('{} is outgoing'.format(arc_number))
-                        heights[node_index, other_node_index] = (height, other_height)
-                        edge_directions.append((node_index, other_node_index))
+                        heights[node_index, other_node_index, arc_number] = (height, other_height)
+                        edge_directions.append((node_index, other_node_index, arc_number))
                     else:
                         print('{} is incoming'.format(arc_number))
-                        heights[other_node_index, node_index] = (other_height, height)
-                        edge_directions.append((other_node_index, node_index))
+                        heights[other_node_index, node_index, arc_number] = (other_height, height)
+                        edge_directions.append((other_node_index, node_index, arc_number))
                     
                 else:
                     cache[arc_number] = node_index, index_height(crossing_index)

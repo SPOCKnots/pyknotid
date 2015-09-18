@@ -394,24 +394,6 @@ class Representation(GaussCode):
 
                 lx, hx = sorted([n1x, n2x])
                 ly, hy = sorted([n1y, n2y])
-                # if len(line) == 4:
-                # if n.all((line[1:-1, 0] > n1x) & (line[1:-1, 0] < n2x)):
-                #     line[1:-1, 0] -= 0.1
-                #     if end_node_x > start_node_x:
-                #         line[1:-1, 1] += 1. / x_span
-                #     else:
-                #         line[1:-1, 1] -= 1. / x_span
-                #     print('a')
-                # elif line[1, 0] < n1x:
-                #     line[1:-1, 0] += 0.1
-                #     line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
-                #                       (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
-                #     print('b')
-                # else:
-                #     line[1:-1, 0] -= 0.1
-                #     line[1:-1, 1] = (((line[1:-1, 1] - (ly + 0.5*(hy - ly))) /
-                #                       (hy - ly)) * 0.98) * (hy - ly) + ly + 0.5*(hy - ly)
-                #     print('c')
                 if len(line) == 4:
                     join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
@@ -421,14 +403,14 @@ class Representation(GaussCode):
                     normal_2 = n.cross(join_2, [0, 0, 1])[:2]
                     normal_2 /= n.linalg.norm(normal_2)
 
-                    line[1] += 0.03*normal_1
-                    line[2] += 0.03*normal_2
+                    line[1] += 0.06*normal_1
+                    line[2] += 0.06*normal_2
                 elif len(line) == 3:
                     join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
                     normal_1 /= n.linalg.norm(normal_1)
 
-                    line[1] += 0.03*normal_1
+                    line[1] += 0.06*normal_1
                 
                     
                 lines.append(line)
@@ -465,7 +447,7 @@ class Representation(GaussCode):
         cg.align_nodes()
         first_node = 0
         next_node = 1
-        return cg.retrieve_space_curve(first_edge[0], first_edge[1], heights)
+        return cg.retrieve_space_curve(first_edge[0], first_edge[1], first_edge[2], heights)
         
         print('is 4-valent!')
         return cg
@@ -513,19 +495,23 @@ class CrossingGraph(defaultdict):
                 value, key=lambda l: n.arctan2(l.points[1, 1] - l.points[0, 1],
                                                l.points[1, 0] - l.points[0, 0]))
 
-    def retrieve_space_curve(self, first, next, heights):
+    def retrieve_space_curve(self, first, next, initial_arc_number, heights):
         first_node_lines = self[first]
         print('first', first_node_lines)
+        possible_start_lines = []
         for line in first_node_lines:
             if line.end == next:
                 break
         else:
-            raise ValueError('Node 0 is not connected to node 1')
+            raise ValueError('Node {} is not connected to node {}'.format(first, next))
+
+        print('initial arc number', initial_arc_number)
 
         current_line = line
         segments = []
         print('num heights', len(heights))
         h = 1.
+        arc_number = initial_arc_number
         for _ in range(len(self)*2):
             print('\n')
             print('current line joins {} with {}'.format(current_line.start, current_line.end))
@@ -533,7 +519,7 @@ class CrossingGraph(defaultdict):
             ps = n.zeros((len(current_points), 3))
             ps[:, :-1] = current_points
 
-            height = heights[(current_line.start, current_line.end)]
+            height = heights[(current_line.start, current_line.end, arc_number)]
             ps[0, -1] = height[0] # height
             # ps[0, -1] = h; h *= -1.
 
@@ -560,13 +546,7 @@ class CrossingGraph(defaultdict):
             print('incoming_index is', incoming_index, 'outgoing', outgoing_index)
             current_line = next_lines[outgoing_index]
 
-        # current_points = current_line.points.copy()
-        # ps = n.zeros((len(current_points), 3))
-        # ps[:, :-1] = current_points
-        # ps[0, -1] = height[0] # height
-        # ps[0, -1] = h; h *= -1.
-        # height = heights[(current_line.start, current_line.end)]
-        # segments.append(ps[:-1])
+            arc_number = (arc_number % (len(self) * 2)) + 1
 
         return n.vstack(segments) * 5
 
