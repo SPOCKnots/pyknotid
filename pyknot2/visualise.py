@@ -122,6 +122,10 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
                     colour=None, zero_centroid=True,
                     closed=False, mus=None,
                     tube_points=8, **kwargs):
+    # Add an extra point to fix tube drawing bug
+    last_tangent = points[-1] - points[-2]
+    points = n.vstack([points, points[-1] + 0.0001 * last_tangent])
+    
     ensure_vispy_canvas()
     if clf:
         clear_vispy_canvas()
