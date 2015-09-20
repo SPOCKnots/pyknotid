@@ -150,6 +150,19 @@ class SpaceCurve(object):
         self.points = points
 
     @classmethod
+    def from_gauss_code(cls, code):
+        '''Creates a Knot from the given code, which must be provided as a
+        string and may optionally include crossing orientations (these are
+        actually ignored).'''
+        from pyknot2.representations import Representation
+        if 'a' in code or 'c' in code:
+            k = cls(Representation(code).space_curve())
+        else:
+            k = cls(Representation.calculating_orientations(code).space_curve())
+        k.rotate((0.05, 0.03, 0.02))
+        return k
+
+    @classmethod
     def closing_on_sphere(cls, line, com=(0., 0., 0.)):
         '''Adds new vertices to close the line at its maximum radius,
         returning a SpaceCurve representing the result.
