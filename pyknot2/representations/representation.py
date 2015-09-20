@@ -468,6 +468,8 @@ class Representation(GaussCode):
         fig.show()
         
     def space_curve(self):
+        self.simplify()
+        
         g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
 
