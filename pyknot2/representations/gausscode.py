@@ -57,6 +57,27 @@ class GaussCode(object):
         self.crossing_numbers = _get_crossing_numbers(self._gauss_code)
         self.verbose = verbose
 
+    @classmethod
+    def calculating_orientations(cls, code):
+        '''Takes a Gauss code without crossing orientations and returns an
+        equivalent Gauss code (though not necessarily of the same length).
+
+        This works by generating a valid space curve and 
+        '''
+        code = code.replace(',', 'c,')
+        code = code.replace(' ', 'c ')
+        code = code.replace('\n', 'c\n')
+        code = ''.join([code, 'c'])
+
+        gc = GaussCode(code)
+        from pyknot2.representations import representation
+        rep = representation.Representation(gc)
+        sp = rep.space_curve()
+        sp.rotate()
+        return sp.gauss_code()
+
+
+
     def __len__(self):
         return int(sum([len(c) for c in self._gauss_code]) / 2)
 

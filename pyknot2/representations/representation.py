@@ -19,6 +19,11 @@ class Representation(GaussCode):
     and may in future be refactored to work differently.
     '''
 
+    @classmethod
+    def calculating_orientations(cls, code):
+        gc = super(Representation, cls).calculating_orientations(code)
+        return Representation(gc)
+
     def gauss_code(self):
         return GaussCode(self)
     
@@ -294,15 +299,12 @@ class Representation(GaussCode):
 
         return array, fig, ax
 
-    def draw_planar_graph(self):
+    def _construct_planar_graph(self):
         pd = self.planar_diagram()
         g, duplicates, heights, first_edge = pd.as_networkx()
 
         print('first_edge is', first_edge)
         import planarity
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Circle
-        from matplotlib.collections import PatchCollection
 
         pg = planarity.PGraph(g)
         pg.embed_drawplanar()
@@ -312,7 +314,6 @@ class Representation(GaussCode):
         node_labels = {}
         xs = []
         ys = []
-        patches = []
 
         nodes_by_height = {}
         node_xs_by_y = {}
@@ -333,8 +334,6 @@ class Representation(GaussCode):
             node_xs_by_y[data['pos']] = x
             node_xs_ys[node] = (x, y)
             node_lefts_rights[node] = (xb, xe)
-
-            patches += [Circle((x, y), 0.25)]
 
         print('nodes_by_height are', nodes_by_height)
         print('node labels are', node_labels)
@@ -403,17 +402,40 @@ class Representation(GaussCode):
                     normal_2 = n.cross(join_2, [0, 0, 1])[:2]
                     normal_2 /= n.linalg.norm(normal_2)
 
-                    line[1] += 0.06*normal_1
-                    line[2] += 0.06*normal_2
+                    line[1] += 0.01*normal_1
+                    line[2] += 0.01*normal_2
                 elif len(line) == 3:
                     join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
                     normal_1 /= n.linalg.norm(normal_1)
 
-                    line[1] += 0.06*normal_1
+                    line[1] += 0.01*normal_1
+                elif len(line) == 2:
+                    join_1 = n.array([line[1, 0], line[1, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= n.linalg.norm(normal_1)
+                    line = n.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.03*normal_1, line[1]])
                 
                     
                 lines.append(line)
+
+        return g, lines, node_labels, nodes_by_height, (leftmost_x, rightmost_x), first_edge, heights
+
+    def draw_planar_graph(self):
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Circle
+        from matplotlib.collections import PatchCollection
+
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights = self._construct_planar_graph()
+        leftmost_x, rightmost_x = xlims
+
+        patches = []
+        for node, data in g.nodes(data=True):
+            y = data['pos']
+            xb = data['start']
+            xe = data['end']
+            x = int((xe + xb) / 2.)
+            patches.append(Circle((x, y), 0.25))
         
         plt.ion()
 
@@ -433,6 +455,9 @@ class Representation(GaussCode):
         ax.set_xlim(leftmost_x - 1, rightmost_x + 1)
         fig.show()
         
+    def space_curve(self):
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights = self._construct_planar_graph()
+        leftmost_x, rightmost_x = xlims
 
         cg = CrossingGraph()
         for line in lines:
@@ -447,17 +472,9 @@ class Representation(GaussCode):
         cg.align_nodes()
         first_node = 0
         next_node = 1
-        return cg.retrieve_space_curve(first_edge[0], first_edge[1], first_edge[2], heights)
-        
-        print('is 4-valent!')
-        return cg
-        
-        # p.embed_drawplanar()
-        # planarity.draw(p)
-        return fig, ax
-        
-    def space_curve(self):
-        return self.draw_planar_graph()
+        from pyknot2.spacecurves import Knot
+        return Knot(cg.retrieve_space_curve(
+            first_edge[0], first_edge[1], first_edge[2], heights))
 
 
 class CrossingLine(object):
@@ -498,15 +515,36 @@ class CrossingGraph(defaultdict):
     def retrieve_space_curve(self, first, next, initial_arc_number, heights):
         first_node_lines = self[first]
         print('first', first_node_lines)
-        possible_start_lines = []
         for line in first_node_lines:
             if line.end == next:
                 break
         else:
             raise ValueError('Node {} is not connected to node {}'.format(first, next))
 
+        print('matching_lines', [l for l in first_node_lines if (l.end == next)])
+
         print('initial arc number', initial_arc_number)
 
+        possible_start_lines = [l for l in first_node_lines if (l.end == next)]
+        if len(possible_start_lines) not in (1, 2):
+            raise ValueError('Invalid number of start lines: {}'.format(
+                len(possible_start_lines)))
+
+        if len(possible_start_lines) == 1:
+            return self._retrieve_space_curve(possible_start_lines[0],
+                                              initial_arc_number,
+                                              heights)
+        else:
+            try:
+                return self._retrieve_space_curve(possible_start_lines[0],
+                                                  initial_arc_number,
+                                                  heights)
+            except KeyError:
+                return self._retrieve_space_curve(possible_start_lines[1],
+                                                  initial_arc_number,
+                                                  heights)
+
+    def _retrieve_space_curve(self, line, initial_arc_number, heights):
         current_line = line
         segments = []
         print('num heights', len(heights))

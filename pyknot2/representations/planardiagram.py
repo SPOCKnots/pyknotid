@@ -92,7 +92,11 @@ class PlanarDiagram(list):
             The networkx graph
         duplicates : list
             A list of tuples representing nodes joined by multiple edges.
-
+        heights : dict
+            A dictionary of (start, end, arc_number) graph edges,
+            containing the start and end height of each edge.
+        first_edge : tuple
+            The first edge in the graph, including (start, end, arc_number).
         '''
         import networkx as nx
         edges = []
