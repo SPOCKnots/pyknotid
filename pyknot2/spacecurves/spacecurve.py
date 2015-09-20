@@ -547,6 +547,10 @@ class SpaceCurve(object):
             gc.simplify()
         return GaussDiagram(gc)
 
+    def reconstructed_space_curve(self):
+        r = self.representation()
+        return SpaceCurve(r.space_curve())
+
     def plot(self, mode='auto', clf=True, closed=False,
              **kwargs):
         '''

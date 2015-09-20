@@ -59,6 +59,12 @@ class Knot(SpaceCurve):
     def plot(self, **kwargs):
         super(Knot, self).plot(closed=True, **kwargs)
 
+    def reconstructed_space_curve(self):
+        r = self.representation()
+        k = Knot(r.space_curve())
+        k.zero_centroid()
+        return k
+
     def alexander_polynomial(self, variable=-1, quadrant='lr',
                              mode='python', **kwargs):
         '''
