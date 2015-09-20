@@ -343,6 +343,8 @@ class Representation(GaussCode):
         rightmost_x = n.max(xs)
         leftmost_x = n.min(xs)
         x_span = rightmost_x - leftmost_x
+
+        extra_shifts = []
         
         for n1, n2, data in g.edges(data=True):
             x = data['pos']
@@ -402,31 +404,41 @@ class Representation(GaussCode):
                     normal_2 = n.cross(join_2, [0, 0, 1])[:2]
                     normal_2 /= n.linalg.norm(normal_2)
 
+                    extra_shifts.append(line[1][0] + 0.005 * normal_1[0])
+
                     line[1] += 0.01*normal_1
                     line[2] += 0.01*normal_2
+
                 elif len(line) == 3:
                     join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
                     normal_1 /= n.linalg.norm(normal_1)
+
+                    extra_shifts.append(line[1][0] + 0.005 * normal_1[0])
 
                     line[1] += 0.01*normal_1
                 elif len(line) == 2:
                     join_1 = n.array([line[1, 0], line[1, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
                     normal_1 /= n.linalg.norm(normal_1)
-                    line = n.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.03*normal_1, line[1]])
+
+                    line = n.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.01*normal_1, line[1]])
+
+                    extra_shifts.append(line[1][0] - 0.005 * normal_1[0])
                 
                     
                 lines.append(line)
 
-        return g, lines, node_labels, nodes_by_height, (leftmost_x, rightmost_x), first_edge, heights
+        extra_shifts = sorted(extra_shifts)[::-1]
+
+        return g, lines, node_labels, nodes_by_height, (leftmost_x, rightmost_x), first_edge, heights, extra_shifts
 
     def draw_planar_graph(self):
         import matplotlib.pyplot as plt
         from matplotlib.patches import Circle
         from matplotlib.collections import PatchCollection
 
-        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights = self._construct_planar_graph()
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
 
         patches = []
@@ -456,8 +468,10 @@ class Representation(GaussCode):
         fig.show()
         
     def space_curve(self):
-        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights = self._construct_planar_graph()
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
+
+        print('probing g', g.nodes(), g.edges())
 
         cg = CrossingGraph()
         for line in lines:
@@ -473,8 +487,21 @@ class Representation(GaussCode):
         first_node = 0
         next_node = 1
         from pyknot2.spacecurves import Knot
-        return Knot(cg.retrieve_space_curve(
-            first_edge[0], first_edge[1], first_edge[2], heights))
+
+        points = cg.retrieve_space_curve(
+            first_edge[0], first_edge[1], first_edge[2], heights)
+
+        print('points', points)
+        print('extra_shifts are', extra_shifts)
+        for shift in extra_shifts:
+            for i in range(len(points)):
+                cur_x = points[i, 0]
+                if cur_x > shift:
+                    points[i, 0] += 1.
+
+        print('points are', points)
+
+        return Knot(points*5)
 
 
 class CrossingLine(object):
@@ -499,6 +526,8 @@ class CrossingGraph(defaultdict):
         super(CrossingGraph, self).__init__(list)
         
     def assert_four_valency(self):
+        print('asserting 4-valency')
+        print([c for c in self.items()])
         for key, value in self.items():
             if len(value) != 4:
                 raise ValueError('CrossingGraph is not 4-valent')
@@ -550,7 +579,8 @@ class CrossingGraph(defaultdict):
         print('num heights', len(heights))
         h = 1.
         arc_number = initial_arc_number
-        for _ in range(len(self)*2):
+        print('initial line is', current_line)
+        for _ in range(len(self)*2 + 1):
             print('\n')
             print('current line joins {} with {}'.format(current_line.start, current_line.end))
             current_points = current_line.points.copy()
@@ -586,7 +616,9 @@ class CrossingGraph(defaultdict):
 
             arc_number = (arc_number % (len(self) * 2)) + 1
 
-        return n.vstack(segments) * 5
+        print('final line is', current_line)
+
+        return n.vstack(segments)
 
 def angle_distance(a1, a2):
     dist = n.abs(a2 - a1)

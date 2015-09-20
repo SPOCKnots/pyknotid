@@ -98,6 +98,7 @@ class PlanarDiagram(list):
         first_edge : tuple
             The first edge in the graph, including (start, end, arc_number).
         '''
+        print('pd is', self)
         import networkx as nx
         edges = []
         cache = {}
@@ -140,6 +141,7 @@ class PlanarDiagram(list):
             seen.add(edge)
 
         print('duplicates are', duplicates)
+        print('kabloo!')
         print('heights are', heights)
         for key in sorted(heights.keys()):
             print(key, heights[key])
