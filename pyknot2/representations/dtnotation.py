@@ -47,6 +47,38 @@ class DTNotation(object):
 
         self._dt = dt
 
+    def gauss_code_string(self):
+        if len(self._dt) > 1:
+            raise ValueError('DTNotation -> GaussCode does not yet '
+                             'work with links')
+
+        dt = self._dt[0]
+        arr = n.zeros((len(dt) * 2, 2), dtype=n.int)
+
+
+        for index, even in enumerate(dt, 0):
+            odd = 2*index
+            sign = n.sign(even)
+            even = n.abs(even) - 1
+
+            arr[odd, 0] = index + 1
+            arr[odd, 1] = sign
+
+            arr[even, 0] = index + 1
+            arr[even, 1] = -1 * sign
+
+        str_entries = ['{}{}'.format(index, '+' if sign > 0 else '-')
+                       for index, sign in arr]
+
+        return ','.join(str_entries)
+
+    def representation(self):
+        from pyknot2.representations import Representation
+        return Representation.calculating_orientations(self.gauss_code_string())
+
+    # def space_curve(self):
+    #     gc = 
+
     def __str__(self):
         return repr(self)
 
