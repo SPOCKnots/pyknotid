@@ -144,5 +144,14 @@ class Knot(BaseModel):
         if self.symmetry is not None:
             print('Symmetry: {}'.format(self.symmetry))
                 
-                
+    def space_curve(self, **kwargs):
+        '''Returns a Knot object representing this knot.'''
+
+        if self.dt_code is None:
+            raise ValueError('No DT code is known, cannot create '
+                             'space curve.')
+        
+        from pyknot2.representations import DTNotation
+        d = DTNotation(self.dt_code)
+        return d.representation(**kwargs).space_curve()
 
