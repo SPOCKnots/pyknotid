@@ -12,8 +12,6 @@ import sympy as sym
 from pyknot2.spacecurves.spacecurve import SpaceCurve
 from pyknot2.spacecurves.knot import Knot
 from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top
-from pyknot2.catalogue.identify import from_invariants
-from pyknot2.catalogue.database import Knot as dbknot
 from collections import Counter
 
 from pyknot2.invariants import alexander
@@ -827,6 +825,9 @@ class OpenKnot(SpaceCurve):
             A number_of_samples by 3 array of angles and alexander
             polynomials.
         '''
+        from pyknot2.catalogue.identify import from_invariants
+        from pyknot2.catalogue.database import Knot as dbknot
+
         if zero_centroid:
             self.zero_centroid()
 
