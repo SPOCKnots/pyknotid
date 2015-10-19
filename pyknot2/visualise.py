@@ -107,6 +107,7 @@ def ensure_vispy_canvas():
     if vispy_canvas is None:
         from vispy import app, scene
         canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
+        canvas.unfreeze()
         canvas.view = canvas.central_widget.add_view()
         vispy_canvas = canvas
 
@@ -115,6 +116,7 @@ def clear_vispy_canvas():
     if vispy_canvas is None:
         return
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
+    vispy_canvas.unfreeze()
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
 
@@ -155,7 +157,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
         n.abs(points)))
     #canvas.view.camera = scene.TurntableCamera(fov=30)
     if zero_centroid:
-        l.transform = scene.transforms.AffineTransform()
+        l.transform = scene.transforms.MatrixTransform()
         l.transform.translate(-1*n.average(points, axis=0))
 
     canvas.show()
