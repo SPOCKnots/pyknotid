@@ -12,7 +12,8 @@ try:
 except ImportError:
     from pyknot2.spacecurves import helpers as chelpers
 
-ROTATION_MAGIC_NUMBERS = (0.02, 0.1)
+ROTATION_MAGIC_NUMBERS = (0.02, 1.1)
+ROTATION_MAGIC_NUMBERS = (0.53, 1.0)
 
 class PeriodicKnot(object):
     def __init__(self, points, period_vector=None):
@@ -30,6 +31,13 @@ class PeriodicKnot(object):
         if self._period_vector is not None:
             return n.array(self._period_vector)
         return self.points[-1] - self.points[0]
+
+    def rotate_period_vector_to_x(self):
+        v = self.period_vector
+        from pyknot2.spacecurves.rotation import (
+            rotate_vector_to_top, rotate_axis_angle)
+        self._apply_matrix(rotate_vector_to_top(v))
+        self._apply_matrix(rotate_axis_angle((0, 1., 0), n.pi/2.))
 
     def interpolate(self, factor=2):
         if factor == 1:
@@ -60,7 +68,6 @@ class PeriodicKnot(object):
         # print('end_end', end_end_distance)
 
         return int(n.ceil(largest_possible_distance / end_end_distance) + 2)
-
 
     def roll(self, num):
         pv = self.period_vector
@@ -166,8 +173,8 @@ class PeriodicKnot(object):
             dr = points[(xint+1) % len(points)] - r
             plot_crossings.append(r + (x-xint) * dr)
         fig, ax = plt.subplots()
-        prev_points = self.translated_points(-1)
-        ax.plot(prev_points[:, 0], prev_points[:, 1], color='orange', linewidth=1.5)
+        # prev_points = self.translated_points(-1)
+        # ax.plot(prev_points[:, 0], prev_points[:, 1], color='orange', linewidth=1.5)
         fig, ax = plot_projection(points,
                                   crossings=n.array(plot_crossings),
                                   mark_start=True,
@@ -277,11 +284,37 @@ class PeriodicKnot(object):
         gc, equivalencies, translations = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies, translations)
 
+    def vassiliev_degree_2s(self, number_of_samples=10):
+        v2s = []
+
+        from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top            
+        angles = get_rotation_angles(number_of_samples)
+
+        for i, angs in enumerate(angles):
+            k = PeriodicKnot(self.points.copy())
+            k._apply_matrix(rotate_to_top(*angs))
+            v2s.append([angs[0], angs[1], k.vassiliev_degree_2()])
+
+        return n.array(v2s)
+
     def vassiliev_degree_3(self, num_translations=None):
         if num_translations is None:
             num_translations = self.nearest_non_overlapping_translation()
         gc, equivalencies, translations = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies, translations)
+
+    def vassiliev_degree_3s(self, number_of_samples=10):
+        v3s = []
+
+        from pyknot2.spacecurves.rotation import get_rotation_angles, rotate_to_top            
+        angles = get_rotation_angles(number_of_samples)
+
+        for i, angs in enumerate(angles):
+            k = PeriodicKnot(self.points.copy())
+            k._apply_matrix(rotate_to_top(*angs))
+            v3s.append([angs[0], angs[1], k.vassiliev_degree_3()])
+
+        return n.array(v3s)
 
     def vassiliev_degree_2_integral(self, num_translations=3):
         ps = self.points_with_translations(num_translations)

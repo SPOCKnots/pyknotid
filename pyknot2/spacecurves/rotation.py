@@ -26,8 +26,22 @@ def get_rotation_angles(number):
 
     return angles
 
+def rotate_vector_to_top(vector):
+    '''Returns a rotation matrix that will rotate the given vector to
+    point upwards.
+
+    Parameters
+    ----------
+    vector : ndarray
+        The (3D) vector to rotate.
+    '''
+
+    theta = n.arccos(vector[2] / n.linalg.norm(vector))
+    phi = n.arctan2(vector[1], vector[0])
+    return rotate_to_top(theta, phi)
 
 def rotate_to_top(theta, phi):
+
     '''
     Returns a rotation matrix that will rotate a sphere such that
     the given positions are at the top.
@@ -55,3 +69,18 @@ def rotate_to_top(theta, phi):
                                [sa, 0, ca]])
 
     return second_rotation.dot(first_rotation)
+
+def rotate_axis_angle(axis, angle):
+    axis = n.array(axis) / n.linalg.norm(axis)
+    ux, uy, uz = axis
+
+    ct = n.cos(angle)
+    st = n.sin(angle)
+    
+    arr = n.array(
+        [[ct + ux**2*(1-ct), ux*uy*(1-ct) - uz*st, ux*uz*(1-ct) + uy*st],
+         [uy*ux*(1-ct) + uz*st, ct + uy**2*(1-ct), uy*ux*(1-ct) - ux*st],
+         [uz*ux*(1-ct) - uy*st, uz*uy*(1-ct) + ux*st, ct + uz**2*(1-ct)]])
+
+    return arr
+    
