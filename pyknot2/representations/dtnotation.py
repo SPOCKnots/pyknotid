@@ -21,7 +21,7 @@ class DTNotation(object):
     '''
 
     def __init__(self, code):
-        if isinstance(code, str):
+        if isinstance(code, (str, unicode)):
             self._init_from_string(code)
         elif isinstance(code, n.ndarray):
             code = [code]
@@ -72,9 +72,10 @@ class DTNotation(object):
 
         return ','.join(str_entries)
 
-    def representation(self):
+    def representation(self, **kwargs):
         from pyknot2.representations import Representation
-        return Representation.calculating_orientations(self.gauss_code_string())
+        return Representation.calculating_orientations(
+            self.gauss_code_string(), **kwargs)
 
     # def space_curve(self):
     #     gc = 
