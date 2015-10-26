@@ -1,6 +1,11 @@
 '''Contains functions for improving an existing database by filling in
 invariants. Original motivation was/is to get Jones polynomials from
-the HOMFLY polynomials provided in the high-crossing data.'''
+the HOMFLY polynomials provided in the high-crossing data, but now
+includes routines to get fiberedness etc from KnotInfo's database, and
+to calculate new invariants based on the DT notation.
+'''
+
+from __future__ import print_function
 
 from database import Knot, db
 from converters import homfly_to_jones, db2py_homfly, py2db_jones
@@ -20,7 +25,7 @@ def jones_from_homfly():
     i = 0
     for knot in knots:
         if i % 100 == 0:
-            print i, len(output_knots)
+            print(i, len(output_knots))
         i += 1
         if knot.jones is None and knot.homfly is not None:
             homfly = knot.homfly
@@ -32,13 +37,13 @@ def jones_from_homfly():
                 output_knots.append(knot)
 
         if i % 10000 == 0:
-            print 'Saving changes'
+            print('Saving changes')
             with db.transaction():
                 for knot in output_knots:
                     knot.save()
             output_knots = []
 
-    print 'Saving changes'
+    print('Saving changes')
     with db.transaction():
         for knot in output_knots:
             knot.save()
@@ -56,7 +61,7 @@ def alexander_imags_from_alexander(min_crossings=None):
     output_knots = []
     for i, knot in enumerate(knots):
         if i % 100 == 0:
-            print i, len(output_knots)
+            print(i, len(output_knots))
         if knot.alexander is not None:
             array = json.loads(knot.alexander)
 
@@ -122,13 +127,13 @@ def add_fiberedness():
             realname = '{}_{}'.format(crossings, number)
         knots = list(Knot.select().where(Knot.identifier==realname))
         if len(knots) != 1:
-            print 'Failed to find {} in db'.format(realname)
+            print('Failed to find {} in db'.format(realname))
         else:
             knot = knots[0]
             knot.fibered = fibered
             output_knots.append(knot)
 
-    print 'Attempting to save'
+    print('Attempting to save')
     with db.transaction():
         for knot in output_knots:
             knot.save()
@@ -169,11 +174,11 @@ def add_vassilievs_and_symmetry_from_rdf(filen):
             first.vassiliev_3 = v3
             first.symmetry = symmetry
             output_knots.append(first)
-            print 'Added {}; {}, {}, {}'.format(identifier, v2, v3, symmetry)
+            print('Added {}; {}, {}, {}'.format(identifier, v2, v3, symmetry))
         else:
-            print 'Failed to find {} in db'.format(identifier)
+            print('Failed to find {} in db'.format(identifier))
                 
-    print 'Attempting to save'
+    print('Attempting to save')
     with db.transaction():
         for knot in output_knots:
             knot.save()
@@ -207,16 +212,35 @@ def add_two_bridgeness():
             realname = '{}_{}'.format(crossings, number)
         knots = list(Knot.select().where(Knot.identifier==realname))
         if len(knots) != 1:
-            print 'Failed to find {} in db'.format(realname)
+            print('Failed to find {} in db'.format(realname))
         else:
             knot = knots[0]
             knot.two_bridge = twobridgenotation
             output_knots.append(knot)
 
-    print 'Attempting to save'
+    print('Attempting to save')
     with db.transaction():
         for knot in output_knots:
             knot.save()
         
 
     
+def check_determinants(**parameters):
+    from pyknot2.catalogue import from_invariants
+
+    knots = from_invariants(**parameters)
+
+    fails = []
+
+    for knot in knots:
+        k = knot.space_curve(verbose=False)
+        det = k.determinant()
+
+        if knot.determinant != det:
+            print('{}: FAIL, calculated {} vs {} in db'.format(
+                knot, det, knot.determinant))
+            fails.append(knot)
+        else:
+            print('{}: SUCCESS, {}'.format(knot, det))
+
+    return fails
