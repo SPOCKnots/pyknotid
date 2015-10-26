@@ -20,9 +20,9 @@ class Representation(GaussCode):
     '''
 
     @classmethod
-    def calculating_orientations(cls, code):
+    def calculating_orientations(cls, code, **kwargs):
         gc = super(Representation, cls).calculating_orientations(code)
-        return Representation(gc)
+        return Representation(gc, **kwargs)
 
     def gauss_code(self):
         return GaussCode(self)
@@ -303,7 +303,6 @@ class Representation(GaussCode):
         pd = self.planar_diagram()
         g, duplicates, heights, first_edge = pd.as_networkx()
 
-        print('first_edge is', first_edge)
         import planarity
 
         pg = planarity.PGraph(g)
@@ -335,14 +334,12 @@ class Representation(GaussCode):
             node_xs_ys[node] = (x, y)
             node_lefts_rights[node] = (xb, xe)
 
-        print('nodes_by_height are', nodes_by_height)
-        print('node labels are', node_labels)
-
         lines = []
 
         rightmost_x = n.max(xs)
         leftmost_x = n.min(xs)
         x_span = rightmost_x - leftmost_x
+        safe_yshift = 0.5 / x_span
 
         extra_shifts = []
         
@@ -388,7 +385,6 @@ class Representation(GaussCode):
             lines.append(line)
 
             if sorted((n1, n2)) in duplicates:
-                print('duplicate', n1, n2)
                 line = line.copy()
                 n1x, n1y = node_xs_ys[n1]
                 n2x, n2y = node_xs_ys[n2]
@@ -467,13 +463,11 @@ class Representation(GaussCode):
         ax.set_xlim(leftmost_x - 1, rightmost_x + 1)
         fig.show()
         
-    def space_curve(self):
+    def space_curve(self, **kwargs):
         self.simplify()
         
         g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
-
-        print('probing g', g.nodes(), g.edges())
 
         cg = CrossingGraph()
         for line in lines:
@@ -493,17 +487,16 @@ class Representation(GaussCode):
         points = cg.retrieve_space_curve(
             first_edge[0], first_edge[1], first_edge[2], heights)
 
-        print('points', points)
-        print('extra_shifts are', extra_shifts)
         for shift in extra_shifts:
             for i in range(len(points)):
                 cur_x = points[i, 0]
                 if cur_x > shift:
                     points[i, 0] += 1.
 
-        print('points are', points)
-
-        return Knot(points*5)
+        k = Knot(points*5, verbose=self.verbose)
+        k.zero_centroid()
+        k.rotate((0.05, 0.03, 0.02))
+        return k
 
 
 class CrossingLine(object):
@@ -528,8 +521,6 @@ class CrossingGraph(defaultdict):
         super(CrossingGraph, self).__init__(list)
         
     def assert_four_valency(self):
-        print('asserting 4-valency')
-        print([c for c in self.items()])
         for key, value in self.items():
             if len(value) != 4:
                 raise ValueError('CrossingGraph is not 4-valent')
@@ -545,16 +536,11 @@ class CrossingGraph(defaultdict):
 
     def retrieve_space_curve(self, first, next, initial_arc_number, heights):
         first_node_lines = self[first]
-        print('first', first_node_lines)
         for line in first_node_lines:
             if line.end == next:
                 break
         else:
             raise ValueError('Node {} is not connected to node {}'.format(first, next))
-
-        print('matching_lines', [l for l in first_node_lines if (l.end == next)])
-
-        print('initial arc number', initial_arc_number)
 
         possible_start_lines = [l for l in first_node_lines if (l.end == next)]
         if len(possible_start_lines) not in (1, 2):
@@ -566,11 +552,16 @@ class CrossingGraph(defaultdict):
                                               initial_arc_number,
                                               heights)
         else:
+
+            print('possible starts:')
+            for line in possible_start_lines:
+                print(line)
+            
             try:
                 return self._retrieve_space_curve(possible_start_lines[0],
                                                   initial_arc_number,
                                                   heights)
-            except KeyError:
+            except KeyError as err:
                 return self._retrieve_space_curve(possible_start_lines[1],
                                                   initial_arc_number,
                                                   heights)
@@ -578,13 +569,9 @@ class CrossingGraph(defaultdict):
     def _retrieve_space_curve(self, line, initial_arc_number, heights):
         current_line = line
         segments = []
-        print('num heights', len(heights))
         h = 1.
         arc_number = initial_arc_number
-        print('initial line is', current_line)
-        for _ in range(len(self)*2 + 1):
-            print('\n')
-            print('current line joins {} with {}'.format(current_line.start, current_line.end))
+        for _ in range(len(self)*2):
             current_points = current_line.points.copy()
             ps = n.zeros((len(current_points), 3))
             ps[:, :-1] = current_points
@@ -596,7 +583,6 @@ class CrossingGraph(defaultdict):
             segments.append(ps[:-1])
 
             next_lines = self[current_line.end]
-            print('next lines\n', next_lines)
             incoming_angle = n.arctan2(current_points[-2, 1] - current_points[-1, 1],
                                        current_points[-2, 0] - current_points[-1, 0])
 
@@ -604,21 +590,15 @@ class CrossingGraph(defaultdict):
                 n.arctan2(l.points[1, 1] - l.points[0, 1],
                           l.points[1, 0] - l.points[0, 0]) for l in next_lines]
 
-            print('other_incoming_angles', other_incoming_angles)
-
             angle_distances = [
                 angle_distance(angle, incoming_angle)
                 for angle in other_incoming_angles]
-            print('angle_distances', angle_distances)
 
             incoming_index = n.argmin(angle_distances)
             outgoing_index = (incoming_index + 2) % 4
-            print('incoming_index is', incoming_index, 'outgoing', outgoing_index)
             current_line = next_lines[outgoing_index]
 
             arc_number = (arc_number % (len(self) * 2)) + 1
-
-        print('final line is', current_line)
 
         return n.vstack(segments)
 
