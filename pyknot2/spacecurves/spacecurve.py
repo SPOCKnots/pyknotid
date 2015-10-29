@@ -809,16 +809,16 @@ class SpaceCurve(object):
                                points,
                                points[:(window_len + 1)]))
         else:
-            start = points[:window_len]
-            end = points[-window_len:]
-            points = points[window_len:-window_len]
-        if len(points):
+            start = points[0]
+            end = points[-1]
+        if len(points) > window_len:
             for i in range(repeats):
                 points[:, 0] = smooth(points[:, 0], window_len, window)
                 points[:, 1] = smooth(points[:, 1], window_len, window)
                 points[:, 2] = smooth(points[:, 2], window_len, window)
+                if not periodic:
+                    points[0] = start
+                    points[-1] = end
         if periodic:
             points = points[(window_len + 1):-(window_len + 1)]
-        else:
-            points = n.vstack((start, points, end))
         self.points = points

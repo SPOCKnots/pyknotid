@@ -2,7 +2,7 @@
 Tools for working with a periodic cell of spacecurves.
 '''
 from pyknot2.utils import ensure_shape_tuple
-from pyknot2.spacecurves import Knot
+from pyknot2.spacecurves import Knot, OpenKnot
 import numpy as n
 
 class Cell(object):
@@ -68,7 +68,7 @@ class Cell(object):
             for segment in line:
                 if len(segment) > window_len:
                     k = Knot(segment)
-                    k.smooth(repeats, periodic=False)
+                    k.smooth(repeats, periodic=False, window_len=window_len)
                     new_segments.append(k.points)
                 else:
                     new_segments.append(segment)
