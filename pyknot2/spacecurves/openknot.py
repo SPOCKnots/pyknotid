@@ -16,6 +16,7 @@ from collections import Counter
 
 from pyknot2.invariants import alexander
 from pyknot2.representations.gausscode import GaussCode
+from pyknot2.visualise import plot_shell
 
 
 class OpenKnot(SpaceCurve):
@@ -314,74 +315,7 @@ class OpenKnot(SpaceCurve):
         fig.show()
         return fig, ax
 
-    def plot_alexander_shell(self, number_of_samples=10, radius=None,
-                             zero_centroid=False,
-                             sphere_radius_factor=2.,
-                             opacity=0.3, **kwargs):
-        '''
-        Plots the curve in 3d via self.plot(), along with a translucent
-        sphere coloured by the type of knot obtained by closing on each
-        point.
 
-        Parameters are all passed to :meth:`OpenKnot.alexander_polynomials`,
-        except opacity and kwargs which are given to mayavi.mesh, and
-        sphere_radius_factor which gives the radius of the enclosing
-        sphere in terms of the maximum Cartesian distance of any point
-        in the line from the origin.
-        '''
-
-        self.plot(mode='mayavi')
-
-        positions, values = self._alexander_map_values(
-            number_of_samples, radius=None, zero_centroid=False)
-
-        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi / 2.
-        phis = n.linspace(0, 2 * n.pi, 157)
-
-        thetas, phis = n.meshgrid(thetas, phis)
-
-        r = sphere_radius_factor * n.max(self.points)
-        zs = r * n.cos(thetas)
-        xs = r * n.sin(thetas) * n.cos(phis)
-        ys = r * n.sin(thetas) * n.sin(phis)
-
-        import mayavi.mlab as may
-
-        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
-
-    def plot_alexander_shell_vispy(self, number_of_samples=10, radius=None,
-                                   zero_centroid=False,
-                                   sphere_radius_factor=2.,
-                                   opacity=0.3, **kwargs):
-        '''
-        Plots the curve in 3d via self.plot(), along with a translucent
-        sphere coloured by the type of knot obtained by closing on each
-        point.
-
-        Parameters are all passed to :meth:`OpenKnot.alexander_polynomials`,
-        except opacity and kwargs which are given to mayavi.mesh, and
-        sphere_radius_factor which gives the radius of the enclosing
-        sphere in terms of the maximum Cartesian distance of any point
-        in the line from the origin.
-        '''
-
-        self.plot(mode='vispy')
-
-        positions, values = self._alexander_map_values(
-            number_of_samples, radius=None, zero_centroid=False)
-
-        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
-        phis = n.linspace(0, 2*n.pi, 157)
-
-        thetas, phis = n.meshgrid(thetas, phis)
-
-        r = sphere_radius_factor*n.max(self.points)
-        zs = r*n.cos(thetas)
-        xs = r*n.sin(thetas)*n.cos(phis)
-        ys = r*n.sin(thetas)*n.sin(phis)
-
-        import mayavi.mlab as may
-        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
 
     def virtual_check(self):
         '''
@@ -562,7 +496,7 @@ class OpenKnot(SpaceCurve):
 
         may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
 
-    def self_linking(self):
+    def keith_self_linking(self):
         '''
         Takes an open curve, finds its Gauss code (for the default projection)
         and calculates its self linking number, J(K). See Kauffman 2004 for
@@ -589,8 +523,28 @@ class OpenKnot(SpaceCurve):
 
         return self_link_counter
 
+    def self_linking(self):
+        gausscode = self.gauss_code()._gauss_code[0]
+        l = len(gausscode)
+
+        self_linking_counter = 0
+
+        cache = {}
+
+        for index, row in enumerate(gausscode):
+            number, over_under, orientation = row
+            if number in cache:
+                if ((index - cache[number]) % 2) == 0:
+                    self_linking_counter += orientation
+            else:
+                cache[number] = index
+
+        return self_linking_counter
+                    
+                
+
     def self_linkings(self, number_of_samples=10,
-                      zero_centroid=False):
+                      zero_centroid=False, **kwargs):
         '''
         Returns a list of self linking numbers for the curve with a given
         number of projections taken from directions approximately evenly
@@ -629,19 +583,18 @@ class OpenKnot(SpaceCurve):
 
         return n.array(polys)
 
-
     def self_linking_fractions(self, number_of_samples=10, **kwargs):
         '''Returns each of the self linking numbers from
         self.virtual.self_link.projections, with the fraction of each type.
         '''
-        polys = self.self_linkings(
+        self_linkings = self.self_linkings(
             number_of_samples=number_of_samples, **kwargs)
-        alexs = n.round(polys[:, 2]).astype(n.int)
+        self_linkings = n.round(self_linkings[:, 2]).astype(n.int)
 
         fracs = []
-        length = float(len(alexs))
-        for alex in n.unique(alexs):
-            fracs.append((alex, n.sum(alexs == alex) / length))
+        length = float(len(self_linkings))
+        for alex in n.unique(self_linkings):
+            fracs.append((alex, n.sum(self_linkings == alex) / length))
         # fracs = n.array(fracs)
 
         return sorted(fracs, key=lambda j: j[1])
@@ -705,10 +658,7 @@ class OpenKnot(SpaceCurve):
 
         return fig, ax
 
-    def plot_self_linking_shell(self, number_of_samples=10,
-                                zero_centroid=False,
-                                sphere_radius_factor=2.,
-                                opacity=0.3, **kwargs):
+    def plot_self_linking_shell(self, number_of_samples=100, **kwargs):
         '''
         Plots the curve in 3d via self.plot(), along with a translucent
         sphere coloured by the self linking number obtained by projecting from
@@ -720,79 +670,29 @@ class OpenKnot(SpaceCurve):
         the radius of the enclosing sphere in terms of the maximum Cartesian
         distance of any point in the line from the origin.
         '''
+        self.plot(**kwargs)
+        plot_shell(self._self_linking_map_values, self.points,
+                   number_of_samples=number_of_samples,
+                   **kwargs)
 
-        self.plot()
-
-        positions, values = self._self_linking_map_values(
-            number_of_samples, zero_centroid=False)
-
-        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi / 2.
-        phis = n.linspace(0, 2 * n.pi, 157)
-
-        thetas, phis = n.meshgrid(thetas, phis)
-
-        r = sphere_radius_factor * n.max(self.points)
-        zs = r * n.cos(thetas)
-        xs = r * n.sin(thetas) * n.cos(phis)
-        ys = r * n.sin(thetas) * n.sin(phis)
-
-        import mayavi.mlab as may
-
-        may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
-        
-    def plot_self_linking_shell_vispy(self, number_of_samples=10,
-                                      zero_centroid=False,
-                                      sphere_radius_factor=2.,
-                                      opacity=0.3, **kwargs):
+    def plot_alexander_shell(self, number_of_samples=100, **kwargs):
         '''
         Plots the curve in 3d via self.plot(), along with a translucent
-        sphere coloured by the self linking number obtained by projecting from 
-        this point.
+        sphere coloured by the type of knot obtained by closing on each
+        point.
 
-        Parameters are all passed to 
-        :meth:`OpenKnot.virtual_checks`, except opacity and kwargs 
-        which are given to mayavi.mesh, and sphere_radius_factor which gives 
-        the radius of the enclosing sphere in terms of the maximum Cartesian
-        distance of any point in the line from the origin.
+        Parameters are all passed to :meth:`OpenKnot.alexander_polynomials`,
+        except opacity and kwargs which are given to mayavi.mesh, and
+        sphere_radius_factor which gives the radius of the enclosing
+        sphere in terms of the maximum Cartesian distance of any point
+        in the line from the origin.
         '''
 
-        import pyknot2.visualise as pvis
-        pvis.clear_vispy_canvas()
+        self.plot(**kwargs)
+        plot_shell(self._alexander_map_values, self.points,
+                   number_of_samples=number_of_samples,
+                   **kwargs)
 
-        self.plot()
-
-        positions, scalars = self._self_linking_map_values(
-            number_of_samples, zero_centroid=False)
-
-        print('scalars are', scalars)
-
-        thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
-        phis = n.linspace(0, 2*n.pi, 157)
-
-        thetas, phis = n.meshgrid(thetas, phis)
-
-        r = sphere_radius_factor*n.max(self.points)
-        zs = r*n.cos(thetas)
-        xs = r*n.sin(thetas)*n.cos(phis)
-        ys = r*n.sin(thetas)*n.sin(phis)
-
-        # import mayavi.mlab as may
-        # may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
-        from vispy import scene
-        from colorsys import hsv_to_rgb
-        from vispy import color as vc
-        scalars -= n.min(scalars)
-        scalars /= n.max(scalars)
-        colours = vc.get_colormap('hot')[scalars.reshape(scalars.shape[0] * scalars.shape[1])].rgba
-        colours[:, -1] = 0.1
-        print('colours are', colours)
-        print('ready to make shell')
-        shell = scene.visuals.GridMesh(xs, ys, zs, colors=n.array(colours).reshape(list(xs.shape) + [4]))
-        print('made shell')
-        # shell = scene.visuals.GridMesh(xs, ys, zs, colors=n.random.random(list(xs.shape) + [3]))
-        # print(shell._xs.shape, shell.__colors.shape)
-        pvis.vispy_canvas.view.add(shell)
-        pvis.vispy_canvas.camera = 'arcball'
 
     def alexander_polynomials_multiroots(self, number_of_samples=10,
                                          radius=None,
@@ -1027,6 +927,89 @@ class OpenKnot(SpaceCurve):
         from pyknot2.invariants import virtual_vassiliev_degree_3
         return virtual_vassiliev_degree_3(self.gauss_code())
 
+    def _determinants_and_self_linkings(self, number_of_samples=10, radius=None,
+                                        recalculate=False,
+                                        zero_centroid=False):
+        if zero_centroid:
+            self.zero_centroid()
+
+        angles = get_rotation_angles(number_of_samples)
+
+        polys = []
+        self_linkings = []
+
+        cache_radius = radius
+
+        if radius is None:
+            radius = 100 * n.max(self.points)
+            # Not guaranteed to give 10* the real radius, but good enough
+
+        print_dist = int(max(1, 3000. / len(self.points)))
+        for i, angs in enumerate(angles):
+            if i % print_dist == 0:
+                self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
+            k = Knot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(*angs))
+            if zero_centroid:
+                k.zero_centroid()
+            cs = k.raw_crossings()
+            if len(cs) > 0:
+                closure_cs = n.argwhere(((cs[:, 0] > len(self.points)-1) & (cs[:, 2] < 0.)) |
+                                        ((cs[:, 1] > len(self.points)-1) & (cs[:, 2] > 0.)))
+                indices = closure_cs.flatten()
+                for index in indices:
+                    cs[index, 2:] *= -1
+            gc = GaussCode(cs, verbose=self.verbose)
+            gc.simplify()
+            polys.append([angs[0], angs[1], alexander(gc, simplify=False)])
+
+            # Remove closing crossings to calculate self linking
+            xs, ys = n.where(cs[:, :2] > len(k.points) - 1)
+            keeps = n.ones(len(cs), dtype=n.bool)
+            for x in xs:
+                keeps[x] = False
+            cs = cs[keeps]
+            gausscode = GaussCode(cs)._gauss_code[0]
+            l = len(gausscode)
+            self_linking_counter = 0
+            cache = {}
+            for index, row in enumerate(gausscode):
+                number, over_under, orientation = row
+                if number in cache:
+                    if ((index - cache[number]) % 2) == 0:
+                        self_linking_counter += orientation
+                else:
+                    cache[number] = index
+            self_linkings.append((angs[0], angs[1], self_linking_counter))
+
+
+        return n.array(polys), n.array(self_linkings)
+
+    def _determinant_and_self_linking_fractions(self, number_of_samples=10,
+                                                **kwargs):
+        polys, self_linkings = self._determinants_and_self_linkings(
+            number_of_samples, **kwargs)
+
+        alexs = n.round(polys[:, 2]).astype(n.int)
+
+        fracs = []
+        length = float(len(alexs))
+        for alex in n.unique(alexs):
+            fracs.append((alex, n.sum(alexs == alex) / length))
+
+        det_fracs = sorted(fracs, key=lambda j: j[1])
+
+
+        self_linkings = n.round(self_linkings[:, 2]).astype(n.int)
+
+        fracs = []
+        length = float(len(self_linkings))
+        for linking in n.unique(self_linkings):
+            fracs.append((linking, n.sum(self_linkings == linking) / length))
+
+        self_linking_fracs = sorted(fracs, key=lambda j: j[1])
+
+        return det_fracs, self_linking_fracs
 
 def gall_peters(theta, phi):
     '''

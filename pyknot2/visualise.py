@@ -6,6 +6,8 @@ This module contains functions for plotting knots, supporting
 different toolkits and types of plot.
 '''
 
+import vispy
+
 import numpy as n
 from colorsys import hsv_to_rgb
 from pyknot2.utils import ensure_shape_tuple, vprint
@@ -110,14 +112,21 @@ def ensure_vispy_canvas():
         canvas.unfreeze()
         canvas.view = canvas.central_widget.add_view()
         vispy_canvas = canvas
+    # if not vispy_canvas.central_widget.children:
+    #     vispy_canvas.view = vispy_canvas.central_widget.add_view()
+        
 
 def clear_vispy_canvas():
     global vispy_canvas
+    print('children are', vispy_canvas.central_widget.children)
     if vispy_canvas is None:
         return
-    vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
     vispy_canvas.unfreeze()
+    print('children are', vispy_canvas.central_widget.children)
+    vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
+    print('after children are', vispy_canvas.central_widget.children)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
+
 
 
 def plot_line_vispy(points, clf=True, tube_radius=1.,
@@ -158,6 +167,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     #canvas.view.camera = scene.TurntableCamera(fov=30)
     if zero_centroid:
         l.transform = scene.transforms.MatrixTransform()
+        # l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
 
     canvas.show()
@@ -175,15 +185,18 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
     canvas = vispy_canvas
     from vispy import app, scene, color
 
+    if not isinstance(tube_radius, list):
+        tube_radius = [tube_radius for _ in range(len(lines))]
+
     if colours is None:
         colours = ['purple' for line in lines]
 
     tubes = []
-    for colour, points in zip(colours, lines):
+    for colour, points, radius in zip(colours, lines, tube_radius):
 
         l = scene.visuals.Tube(points, color=colour,
                                shading='smooth',
-                               radius=tube_radius,
+                               radius=radius,
                                closed=closed,
                                tube_points=tube_points)
         tubes.append(l)
@@ -247,6 +260,99 @@ def plot_projection(points, crossings=None, mark_start=False,
         fig.show()
 
     return fig, ax
+
+
+def plot_shell(func, points, mode='auto', **kwargs):
+    if mode =='auto':
+        try:
+            import vispy
+            mode = 'vispy'
+        except ImportError:
+            pass
+    if mode == 'auto':
+        try:
+            import mayavi.mlab as may
+            mode = 'mayavi'
+        except ImportError:
+            pass
+
+    if mode == 'mayavi':
+        plot_shell_mayavi(func, points, **kwargs)
+    elif mode == 'vispy':
+        plot_shell_vispy(func, points, **kwargs)
+    else:
+        raise ValueError('invalid toolkit/mode')
+
+def plot_shell_mayavi(func,
+                      points,
+                      number_of_samples=10,
+                      zero_centroid=False,
+                      sphere_radius_factor=2.,
+                      opacity=0.3, **kwargs):
+    positions, values = func(
+        number_of_samples, zero_centroid=zero_centroid)
+
+    thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi / 2.
+    phis = n.linspace(0, 2 * n.pi, 157)
+
+    thetas, phis = n.meshgrid(thetas, phis)
+
+    r = sphere_radius_factor * n.max(points)
+    zs = r * n.cos(thetas)
+    xs = r * n.sin(thetas) * n.cos(phis)
+    ys = r * n.sin(thetas) * n.sin(phis)
+
+    import mayavi.mlab as may
+
+    may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
+
+def plot_shell_vispy(func,
+                     points,
+                     number_of_samples=10,
+                     radius=None,
+                     zero_centroid=False,
+                     sphere_radius_factor=2.,
+                     opacity=0.5,
+                     cmap='hsv',
+                     **kwargs):
+    '''func must be a function returning values at angles and points,
+    like self._alexander_map_values. 
+    '''
+    
+    positions, values = func(
+        number_of_samples, radius=radius,
+        zero_centroid=zero_centroid)
+    
+    thetas = n.arcsin(n.linspace(-1, 1, 100)) + n.pi/2.
+    phis = n.linspace(0, 2*n.pi, 157)
+    
+    thetas, phis = n.meshgrid(thetas, phis)
+    
+    r = sphere_radius_factor*n.max(points)
+    zs = r*n.cos(thetas)
+    xs = r*n.sin(thetas)*n.cos(phis)
+    ys = r*n.sin(thetas)*n.sin(phis)
+    
+    colours = n.zeros((values.shape[0], values.shape[1], 4))
+    max_val = n.max(values)
+    min_val = n.min(values)
+    unique_values = n.unique(colours)
+    max_val += (1. + 1./len(unique_values))*(max_val - min_val)
+    diff = (max_val - min_val)
+
+    import matplotlib.pyplot as plt
+    cm = plt.get_cmap(cmap)
+    for i in range(colours.shape[0]):
+        for j in range(colours.shape[1]):
+            colours[i, j] = cm(((values[i, j] - min_val) / diff))
+
+    colours[:, :, -1] = opacity
+
+    from vispy.scene import GridMesh
+    from pyknot2.visualise import vispy_canvas
+    mesh = GridMesh(xs, ys, zs, colors=colours)
+    vispy_canvas.view.add(mesh)
+
 
 def plot_cell(lines, mode='auto', **kwargs):
     if mode == 'auto':
@@ -321,18 +427,22 @@ def draw_bounding_box_mayavi(shape, colour=(0, 0, 0), tube_radius=1, markz=False
                    color=colour, tube_radius=tube_radius)
 
 def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
-                    randomise_colours=True, **kwargs):
+                    randomise_colours=True, tube_radius=1., **kwargs):
     if clf:
         clear_vispy_canvas()
     
-    hues = n.linspace(0, 1, len(lines) + 1)[:-1]
-    colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
-    if randomise_colours:
-        random.shuffle(colours)
+    if colours is None:
+        hues = n.linspace(0, 1, len(lines) + 1)[:-1]
+        colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
+        if randomise_colours:
+            random.shuffle(colours)
     i = 0
     segments = []
     segment_colours = []
-    for (line, colour) in zip(lines, colours):
+    segment_radii = []
+    if not isinstance(tube_radius, list):
+        tube_radius = [tube_radius for _ in range(len(lines))]
+    for (line, colour, radius) in zip(lines, colours, tube_radius):
         vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
                False)
         i += 1
@@ -341,12 +451,14 @@ def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
                 continue
             segments.append(segment)
             segment_colours.append(colour)
+            segment_radii.append(radius)
             # plot_line_vispy(segment,
             #                 clf=False, colour=colour, **kwargs)
-    plot_lines_vispy(segments, colours=segment_colours, **kwargs)
+    plot_lines_vispy(segments, colours=segment_colours,
+                     tube_radius=segment_radii, **kwargs)
     
     if boundary is not None:
-        draw_bounding_box_vispy(boundary, tube_radius=kwargs.get('tube_radius', 1.))
+        draw_bounding_box_vispy(boundary, tube_radius=tube_radius[0])
                 
 def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1.):
     if shape is not None:
@@ -375,7 +487,7 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1.):
     # plot_lines_vispy(ls, colours=['black' for _ in ls],
     #                  tube_radius=tube_radius, zero_centroid=False)
     for line in ls:
-        plot_line_vispy(line, clf=False, colour='black',
+        plot_line_vispy(line, clf=False, colour=colour,
                         zero_centroid=False, tube_radius=tube_radius)
 
     global vispy_canvas
@@ -410,3 +522,4 @@ def vispy_save_png(filename):
     img = vispy_canvas.render()
     import vispy.io as io
     io.write_png(filename, img)
+
