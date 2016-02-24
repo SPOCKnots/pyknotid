@@ -328,7 +328,8 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
                             opacity=0.3,
                             method='latitude',
                             edge_color=None,
-                            cmap='hsv'):
+                            cmap='hsv',
+                            **kwargs):
     '''func must be a function of sphere angles theta, phi'''
     
     from vispy.scene import Sphere, ArcballCamera
