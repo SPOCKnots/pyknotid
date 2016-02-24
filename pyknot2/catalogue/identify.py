@@ -10,9 +10,9 @@ from pyknot2.catalogue import converters
 
 db.db.connect()
 
-root_to_attr = {2: Knot.determinant,
-                  3: Knot.alexander_imag_3,
-                  4: Knot.alexander_imag_4}
+_root_to_attr = {2: Knot.determinant,
+                3: Knot.alexander_imag_3,
+                4: Knot.alexander_imag_4}
 
 
 def first_from_invariants(**kwargs):
@@ -120,7 +120,7 @@ def from_invariants(return_query=False, **kwargs):
         elif invariant in ['roots']:
             for root, result in zip(range(2, len(value)+2), value):
                 if result is not None:
-                    conditions.append(root_to_attr[root] == result)
+                    conditions.append(_root_to_attr[root] == result)
         elif invariant == 'unknotting_number':
             conditions.append(Knot.unknotting_number == value)
         elif invariant in ['alexander', 'alex']:
