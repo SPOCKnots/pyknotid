@@ -293,7 +293,8 @@ class Link(object):
         if mode =='vispy':
             points = [k.points for k in lines]
             print('plotting cell')
-            plot_cell([[p] for p in points], boundary=None, **kwargs)
+            plot_cell([[p] for p in points], boundary=None,
+                      closed=True, **kwargs)
             return
 
         if colours is not None:
