@@ -118,15 +118,30 @@ def ensure_vispy_canvas():
 
 def clear_vispy_canvas():
     global vispy_canvas
-    print('children are', vispy_canvas.central_widget.children)
     if vispy_canvas is None:
         return
     vispy_canvas.unfreeze()
-    print('children are', vispy_canvas.central_widget.children)
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
-    print('after children are', vispy_canvas.central_widget.children)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
+def vispy_rotate(elevation=0, max_angle=360):
+    global vispy_canvas
+    cam = vispy_canvas.view.camera
+    from vispy.scene import TurntableCamera
+    from time import sleep
+    vispy_canvas.view.camera = TurntableCamera(
+        fov=cam.fov, scale_factor=cam.scale_factor,
+        azimuth=0, elevation=elevation)
+    try:
+        for i in range(max_angle):
+            vispy_canvas.view.camera.azimuth = i
+            vispy_canvas.update()
+            vispy_canvas.events.draw()
+            vispy_canvas.swap_buffers()
+            sleep(1 / 60.)
+    except KeyboardInterrupt:
+        pass
+    vispy_canvas.view.camera = cam
 
 
 def plot_line_vispy(points, clf=True, tube_radius=1.,
@@ -205,12 +220,14 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
     collection = MeshCollection(tubes)
     canvas.view.add(collection)
     canvas.view.camera = 'arcball'
+    canvas.view.camera.fov = 30
     # canvas.view.camera = scene.TurntableCamera(
     #     fov=90, up='z', distance=1.2*n.max(n.max(
     #         points, axis=0)))
 
     if zero_centroid:
-        l.transform = scene.transforms.AffineTransform()
+        l.transform = scene.transforms.MatrixTransform()
+        # l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
 
     canvas.show()
@@ -306,6 +323,60 @@ def plot_shell_mayavi(func,
 
     may.mesh(xs, ys, zs, scalars=values, opacity=opacity, **kwargs)
 
+def plot_sphere_shell_vispy(func, rows=100, cols=100,
+                            radius=1.,
+                            opacity=0.3,
+                            method='latitude',
+                            edge_color=None,
+                            cmap='hsv'):
+    '''func must be a function of sphere angles theta, phi'''
+    
+    from vispy.scene import Sphere, ArcballCamera
+
+    s = Sphere(rows=rows, cols=cols, method=method,
+               edge_color=edge_color,
+               radius=radius)
+    mesh = s.mesh
+    md = mesh._meshdata
+    vertices = md.get_vertices()
+
+    values = n.zeros(len(vertices))
+
+    print('pre')
+    for i, vertex in enumerate(vertices):
+        if i % 10 == 0:
+            vprint('\ri = {} / {}'.format(i, len(vertices)), newline=False)
+        vertex = vertex / n.sqrt(n.sum(vertex*vertex))
+        theta = n.arccos(vertex[2])
+        phi = n.arctan2(vertex[1], vertex[0])
+
+        if n.isnan(theta):
+            theta = 0.0
+        values[i] = func(theta, phi)
+    vprint()
+
+    colours = n.zeros((len(values), 4))
+    max_val = n.max(values)
+    min_val = n.min(values)
+    unique_values = n.unique(colours)
+    max_val += (1. + 1./len(unique_values))*(max_val - min_val)
+    diff = (max_val - min_val)
+
+    import matplotlib.pyplot as plt
+    cm = plt.get_cmap(cmap)
+    for i in range(len(colours)):
+        colours[i] = cm(((values[i] - min_val) / diff))
+
+    colours[:, -1] = opacity
+
+    md.set_vertex_colors(colours)
+
+    ensure_vispy_canvas()
+    vispy_canvas.view.camera = ArcballCamera(fov=30)
+    vispy_canvas.view.add(s)
+    vispy_canvas.show()
+                            
+
 def plot_shell_vispy(func,
                      points,
                      number_of_samples=10,
@@ -316,7 +387,7 @@ def plot_shell_vispy(func,
                      cmap='hsv',
                      **kwargs):
     '''func must be a function returning values at angles and points,
-    like self._alexander_map_values. 
+    like OpenKnot._alexander_map_values. 
     '''
     
     positions, values = func(
@@ -459,6 +530,7 @@ def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
     
     if boundary is not None:
         draw_bounding_box_vispy(boundary, tube_radius=tube_radius[0])
+
                 
 def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1.):
     if shape is not None:
@@ -486,9 +558,11 @@ def draw_bounding_box_vispy(shape, colour=(0, 0, 0), tube_radius=1.):
 
     # plot_lines_vispy(ls, colours=['black' for _ in ls],
     #                  tube_radius=tube_radius, zero_centroid=False)
-    for line in ls:
-        plot_line_vispy(line, clf=False, colour=colour,
-                        zero_centroid=False, tube_radius=tube_radius)
+    plot_lines_vispy(ls, clf=False, colours=[colour for _ in ls],
+                     zero_centroid=False, tube_radius=tube_radius)
+    # for line in ls:
+    #     plot_line_vispy(line, clf=False, colour=colour,
+    #                     zero_centroid=False, tube_radius=tube_radius)
 
     global vispy_canvas
     vispy_canvas.central_widget.children[0].camera.center = (
@@ -522,4 +596,3 @@ def vispy_save_png(filename):
     img = vispy_canvas.render()
     import vispy.io as io
     io.write_png(filename, img)
-

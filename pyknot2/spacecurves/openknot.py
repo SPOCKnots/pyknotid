@@ -16,7 +16,7 @@ from collections import Counter
 
 from pyknot2.invariants import alexander
 from pyknot2.representations.gausscode import GaussCode
-from pyknot2.visualise import plot_shell
+from pyknot2.visualise import plot_shell, plot_sphere_shell_vispy
 
 
 class OpenKnot(SpaceCurve):
@@ -35,11 +35,7 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self).__init__(*args, **kwargs)
         self._cached_v2 = {}
 
-    @property
-    def points(self):
-        return super(OpenKnot, self).points
-
-    @points.setter
+    @SpaceCurve.points.setter
     def points(self, points):
         super(OpenKnot, self.__class__).points.fset(self, points)
         self._cached_alexanders = None
@@ -216,6 +212,32 @@ class OpenKnot(SpaceCurve):
 
         return n.array(polys)
 
+    def closure_alexander_polynomial(self, theta=0, phi=0):
+        '''Returns the Alexander polynomial of the knot, when projected in
+        the z plane after rotating the given theta and phi to the
+        North pole.
+
+        Parameters
+        ----------
+        theta : float
+            The sphere angle theta
+        phi : float
+            The sphere angle phi
+        '''
+        k = Knot(self.points, verbose=False)
+        k._apply_matrix(rotate_to_top(theta, phi))
+
+        cs = k.raw_crossings()
+        if len(cs) > 0:
+            closure_cs = n.argwhere(((cs[:, 0] > len(self.points)-1) & (cs[:, 2] < 0.)) |
+                                    ((cs[:, 1] > len(self.points)-1) & (cs[:, 2] > 0.)))
+            indices = closure_cs.flatten()
+            for index in indices:
+                cs[index, 2:] *= -1
+        gc = GaussCode(cs, verbose=False)
+        gc.simplify()
+        return alexander(gc, simplify=False)
+        
 
     def alexander_fractions(self, number_of_samples=10, **kwargs):
         '''Returns each of the Alexander polynomials from
@@ -675,7 +697,9 @@ class OpenKnot(SpaceCurve):
                    number_of_samples=number_of_samples,
                    **kwargs)
 
-    def plot_alexander_shell(self, number_of_samples=100, **kwargs):
+    def plot_alexander_shell(self, number_of_samples=100, mode='mesh',
+                             radius=None,
+                             **kwargs):
         '''
         Plots the curve in 3d via self.plot(), along with a translucent
         sphere coloured by the type of knot obtained by closing on each
@@ -689,9 +713,20 @@ class OpenKnot(SpaceCurve):
         '''
 
         self.plot(**kwargs)
-        plot_shell(self._alexander_map_values, self.points,
-                   number_of_samples=number_of_samples,
-                   **kwargs)
+
+        if radius is None:
+            self_radii = n.sqrt(n.sum(self.points*self.points, axis=1))
+            radius = n.max(self_radii) * 2
+        print('radius is', radius)
+        if mode == 'mesh':
+            plot_sphere_shell_vispy(self.closure_alexander_polynomial,
+                                    number_of_samples, number_of_samples,
+                                    radius=radius,
+                                    **kwargs)
+        elif mode == 'crude':
+            plot_shell(self._alexander_map_values, self.points,
+                       number_of_samples=number_of_samples,
+                       **kwargs)
 
 
     def alexander_polynomials_multiroots(self, number_of_samples=10,
