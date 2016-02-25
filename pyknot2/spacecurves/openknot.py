@@ -47,16 +47,31 @@ class OpenKnot(SpaceCurve):
         return n.linalg.norm(self.points[-1] - self.points[0])
 
     def raw_crossings(self, mode='use_max_jump',
+                      virtual_closure=False,
                       recalculate=False, try_cython=False):
         '''
         Calls :meth:`pyknot2.spacecurves.spacecurve.SpaceCurve.raw_crossings`,
         but without including the closing line between the last
         and first points (i.e. setting include_closure=False).
         '''
-        return super(OpenKnot, self).raw_crossings(mode=mode,
-                                                   include_closure=False,
-                                                   recalculate=recalculate,
-                                                   try_cython=try_cython)
+        if not virtual_closure:
+            return super(OpenKnot, self).raw_crossings(mode=mode,
+                                                       include_closure=False,
+                                                       recalculate=recalculate,
+                                                       try_cython=try_cython)
+        cs = super(OpenKnot, self).raw_crossings(mode=mode,
+                                                 include_closure=True,
+                                                 recalculate=recalculate,
+                                                 try_cython=try_cython)
+
+        if len(cs) > 0:
+            closure_cs = n.argwhere(((cs[:, 0] > len(self.points)-1) & (cs[:, 2] < 0.)) |
+                                    ((cs[:, 1] > len(self.points)-1) & (cs[:, 2] > 0.)))
+            indices = closure_cs.flatten()
+            for index in indices:
+                cs[index, 2] = 0
+        return cs
+        
 
     def __str__(self):
         if self._crossings is not None:

@@ -72,11 +72,30 @@ class GaussCode(object):
         gc = GaussCode(code)
         from pyknot2.representations import representation
         rep = representation.Representation(gc)
+        rep.draw_planar_graph()
+        print('ready to do space curve')
         sp = rep.space_curve()
-        sp.rotate()
+        # sp.rotate()
         return sp.gauss_code()
 
+    def without_virtual(self):
+        '''Returns a version of the Gauss code without explicit virtual
+        crossings.'''
+        gc = GaussCode(self)
 
+        new_rows = []
+
+        for row in gc._gauss_code:
+            keep = n.ones(len(row), dtype=n.bool)
+            virtual_cs = n.argwhere(row[:, 0] < 0)
+            indices = virtual_cs.flatten()
+            for index in indices:
+                keep[index] = False
+            new_row = row[keep].copy()
+            new_rows.append(new_row)
+
+        gc._gauss_code = new_rows
+        return gc
 
     def __len__(self):
         return int(sum([len(c) for c in self._gauss_code]) / 2)
@@ -89,17 +108,24 @@ class GaussCode(object):
         assigned_indices = {}
         gauss_code = []
         current_index = 1
+        current_virtual_index = -1
         for line in crossings:
             line_gauss_code = []
             for ident, other_ident, over, clockwise in line:
+                over = int(over)
+                clockwise = int(clockwise)
                 if ident not in assigned_indices:
-                    assigned_indices[other_ident] = current_index
-                    index = current_index
-                    current_index += 1
+                    if over != 0:
+                        assigned_indices[other_ident] = current_index
+                        index = current_index
+                        current_index += 1
+                    else:
+                        assigned_indices[other_ident] = current_virtual_index
+                        index = current_virtual_index
+                        current_virtual_index -= 1
                 else:
                     index = assigned_indices.pop(ident)
-                line_gauss_code.append([index, int(over),
-                                        int(clockwise)])
+                line_gauss_code.append([index, over, clockwise])
             gauss_code.append(n.array(line_gauss_code))
 
         self._gauss_code = gauss_code
@@ -112,8 +138,8 @@ class GaussCode(object):
         lines = regex.split(crossings)
 
         gauss_code = []
-        over_under = {'+': 1, '-': -1}
-        signs = {'c': 1, 'a': -1}
+        over_under = {'+': 1, '-': -1, 'v': 0}
+        signs = {'c': 1, 'a': -1, 'v': 1}
 
         for line in lines:
             line_gauss_code = []
@@ -137,16 +163,22 @@ class GaussCode(object):
             else:
                 for entry in line:
                     out_strs.append(str(entry[0]))
-                    over = (entry[1] > 0)
-                    if over:
-                        out_strs.append('+')
+                    classical = entry[1] != 0
+                    if classical:
+                        over = (entry[1] > 0)
+                        if over:
+                            out_strs.append('+')
+                        else:
+                            out_strs.append('-')
+
+                        clockwise = (entry[2] > 0)
+                        if clockwise:
+                            out_strs.append('c')
+                        else:
+                            out_strs.append('a')
                     else:
-                        out_strs.append('-')
-                    clockwise = (entry[2] > 0)
-                    if clockwise:
-                        out_strs.append('c')
-                    else:
-                        out_strs.append('a')
+                        out_strs.append('v')
+
                     out_strs.append(',')
             out_strs = out_strs[:-1]
             out_strs.append('\n')
