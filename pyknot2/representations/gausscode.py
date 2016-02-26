@@ -78,6 +78,12 @@ class GaussCode(object):
         # sp.rotate()
         return sp.gauss_code()
 
+    def contains_virtual(self):
+        for row in self._gauss_code:
+            if n.any(row[:, 0] < 0):
+                return True
+        return False
+
     def without_virtual(self):
         '''Returns a version of the Gauss code without explicit virtual
         crossings.'''
