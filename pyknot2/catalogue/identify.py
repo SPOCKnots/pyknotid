@@ -15,6 +15,10 @@ _root_to_attr = {2: Knot.determinant,
                 4: Knot.alexander_imag_4}
 
 
+def get_knot(name):
+    return first_from_invariants(id=name)
+
+
 def first_from_invariants(**kwargs):
     '''Returns the first Knot by crossing number (and arbitrary
     ordering within that) with the given invariant conditions.
