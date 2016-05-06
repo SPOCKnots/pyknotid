@@ -175,6 +175,7 @@ class SpaceCurve(object):
             Optional additional centre of mass to shift by before closing
 
         '''
+        com = ensure_shape_tuple(com)
 
         points = line - n.array(com)
 
