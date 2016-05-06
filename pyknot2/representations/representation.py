@@ -46,6 +46,13 @@ class Representation(GaussCode):
         return alexander(self, variable=variable, quadrant=quadrant,
                          simplify=False, mode=mode)
 
+    def jones_polynomial(self, variable=-1, simplify=True):
+        if simplify:
+            self.simplify()
+        from pyknot2.invariants import jones_polynomial
+        p = self.planar_diagram()
+        return jones_polynomial(p)
+
     def alexander_at_root(self, root, round=True, **kwargs):
         '''
         Returns the Alexander polynomial at the given root of unity,
@@ -258,6 +265,11 @@ class Representation(GaussCode):
         from ..invariants import self_linking
         return self_linking(self)
 
+    def writhe(self):
+        writhe = 0
+
+        return int(n.round(n.sum([n.sum(l[:, -1]) for l in self._gauss_code])/2.))
+
     def slip_triangle(self, func):
 
         code = self._gauss_code[0]
@@ -301,7 +313,12 @@ class Representation(GaussCode):
 
     def _construct_planar_graph(self):
         pd = self.planar_diagram()
-        g, duplicates, heights, first_edge = pd.as_networkx()
+        g, duplicates, heights, first_edge = pd.as_networkx_extended()
+
+        # print('g', g)
+        # print('duplicates', duplicates)
+        # print('heights', heights)
+        # print('first_edge', first_edge)
 
         import planarity
 
@@ -341,7 +358,7 @@ class Representation(GaussCode):
         x_span = rightmost_x - leftmost_x
         safe_yshift = 0.5 / x_span
 
-        extra_shifts = []
+        extra_x_shifts = []
         
         for n1, n2, data in g.edges(data=True):
             x = data['pos']
@@ -350,6 +367,8 @@ class Representation(GaussCode):
 
             start_node = nodes_by_height[yb]
             end_node = nodes_by_height[ye]
+            if start_node >= len(self) and end_node >= len(self):
+                continue
 
             start_left, start_right = node_lefts_rights[start_node]
             end_left, end_right = node_lefts_rights[end_node]
@@ -400,7 +419,7 @@ class Representation(GaussCode):
                     normal_2 = n.cross(join_2, [0, 0, 1])[:2]
                     normal_2 /= n.linalg.norm(normal_2)
 
-                    extra_shifts.append(line[1][0] + 0.005 * normal_1[0])
+                    extra_x_shifts.append(line[1][0] + 0.005 * normal_1[0])
 
                     line[1] += 0.01*normal_1
                     line[2] += 0.01*normal_2
@@ -410,7 +429,7 @@ class Representation(GaussCode):
                     normal_1 = n.cross(join_1, [0, 0, 1])[:2]
                     normal_1 /= n.linalg.norm(normal_1)
 
-                    extra_shifts.append(line[1][0] + 0.005 * normal_1[0])
+                    extra_x_shifts.append(line[1][0] + 0.005 * normal_1[0])
 
                     line[1] += 0.01*normal_1
                 elif len(line) == 2:
@@ -420,21 +439,21 @@ class Representation(GaussCode):
 
                     line = n.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.01*normal_1, line[1]])
 
-                    extra_shifts.append(line[1][0] - 0.005 * normal_1[0])
+                    extra_x_shifts.append(line[1][0] - 0.005 * normal_1[0])
                 
                     
                 lines.append(line)
 
-        extra_shifts = sorted(extra_shifts)[::-1]
+        extra_x_shifts = sorted(extra_x_shifts)[::-1]
 
-        return g, lines, node_labels, nodes_by_height, (leftmost_x, rightmost_x), first_edge, heights, extra_shifts
+        return g, lines, node_labels, nodes_by_height, (leftmost_x, rightmost_x), first_edge, heights, extra_x_shifts
 
     def draw_planar_graph(self):
         import matplotlib.pyplot as plt
         from matplotlib.patches import Circle
         from matplotlib.collections import PatchCollection
 
-        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_x_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
 
         patches = []
@@ -466,7 +485,8 @@ class Representation(GaussCode):
     def space_curve(self, **kwargs):
         self.simplify()
         
-        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_shifts = self._construct_planar_graph()
+        # self.draw_planar_graph()
+        g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_x_shifts = self._construct_planar_graph()
         leftmost_x, rightmost_x = xlims
 
         cg = CrossingGraph()
@@ -487,7 +507,7 @@ class Representation(GaussCode):
         points = cg.retrieve_space_curve(
             first_edge[0], first_edge[1], first_edge[2], heights)
 
-        for shift in extra_shifts:
+        for shift in extra_x_shifts:
             for i in range(len(points)):
                 cur_x = points[i, 0]
                 if cur_x > shift:
@@ -519,8 +539,12 @@ class CrossingLine(object):
 class CrossingGraph(defaultdict):
     def __init__(self):
         super(CrossingGraph, self).__init__(list)
+
+    def number_of_crossings(self):
+        return int(len(self) / 3)
         
     def assert_four_valency(self):
+        return True
         for key, value in self.items():
             if len(value) != 4:
                 raise ValueError('CrossingGraph is not 4-valent')
@@ -571,7 +595,8 @@ class CrossingGraph(defaultdict):
         segments = []
         h = 1.
         arc_number = initial_arc_number
-        for _ in range(len(self)*2):
+        for _ in range(4*self.number_of_crossings()):
+        # for _ in range(len(self)*2):
             current_points = current_line.points.copy()
             ps = n.zeros((len(current_points), 3))
             ps[:, :-1] = current_points
@@ -595,10 +620,19 @@ class CrossingGraph(defaultdict):
                 for angle in other_incoming_angles]
 
             incoming_index = n.argmin(angle_distances)
-            outgoing_index = (incoming_index + 2) % 4
+            if len(angle_distances) == 4:
+                outgoing_index = (incoming_index + 2) % 4 
+            elif len(angle_distances) == 2:
+                outgoing_index = (incoming_index + 1) % 2
+            else:
+                raise ValueError('Encountered node with neither 2 nor 4 arcs, should be impossible')
             current_line = next_lines[outgoing_index]
 
-            arc_number = (arc_number % (len(self) * 2)) + 1
+            # This is the old arc number calculation before adding intermediates
+            # arc_number = (arc_number % (len(self) * 2)) + 1
+
+            if len(angle_distances) == 4:
+                arc_number = (arc_number % (2*self.number_of_crossings())) + 1
 
         return n.vstack(segments)
 

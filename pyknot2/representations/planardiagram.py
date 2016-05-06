@@ -79,6 +79,76 @@ class PlanarDiagram(list):
                     indices[number] = (i, j)
         return Link(scs)
 
+    def as_networkx_extended(self):
+        print('pd is', self)
+        import networkx as nx
+        edges = []
+        cache = {}
+        heights = {}
+        edge_directions = []
+        from collections import defaultdict
+        intermediate_edges_by_node = defaultdict(lambda : [None, None, None, None])
+        intermediate_node_index = len(self)
+        for node_index, crossing in enumerate(self):
+            for crossing_index, arc_number in enumerate(crossing):
+                if arc_number in cache:
+                    other_node_index, other_height, other_crossing_index = cache[arc_number]
+                    # edges.append([other_node_index, node_index])
+                    edges.append([other_node_index, intermediate_node_index])
+                    edges.append([node_index, intermediate_node_index])
+
+                    height = index_height(crossing_index)
+
+                    if crossing.is_outgoing(arc_number):
+                        # heights[node_index, other_node_index, arc_number] = (height, other_height)
+                        heights[node_index, intermediate_node_index, arc_number] = (height, 0.)
+                        heights[intermediate_node_index, other_node_index, arc_number] = (0., other_height)
+
+                        # edge_directions.append((node_index, other_node_index, arc_number))
+                        edge_directions.append((node_index, intermediate_node_index, arc_number))
+                        edge_directions.append((intermediate_node_index, other_node_index, arc_number))
+                    else:
+                        # heights[other_node_index, node_index, arc_number] = (other_height, height)
+                        heights[other_node_index, intermediate_node_index, arc_number] = (other_height, 0.)
+                        heights[intermediate_node_index, node_index, arc_number] = (0., height)
+
+                        # edge_directions.append((other_node_index, node_index, arc_number))
+                        edge_directions.append((other_node_index, intermediate_node_index, arc_number))
+                        edge_directions.append((intermediate_node_index, node_index, arc_number))
+
+                    intermediate_edges_by_node[node_index][crossing_index] = intermediate_node_index
+                    intermediate_edges_by_node[other_node_index][other_crossing_index] = intermediate_node_index
+
+                    intermediate_node_index += 1 
+                    
+                else:
+                    cache[arc_number] = (node_index, index_height(crossing_index), crossing_index)
+
+        for node, intermediate_nodes in intermediate_edges_by_node.items():
+            for i, intermediate in enumerate(intermediate_nodes):
+                next_intermediate = intermediate_nodes[(i+1) % 4]
+                edges.append([intermediate, next_intermediate])
+
+        # print('intermediates are', intermediate_edges_by_node)
+        g = nx.Graph()
+        g.add_nodes_from(range(len(self))*3)
+        g.add_edges_from(edges)
+
+        # print('possible heights:')
+        # for key, value in sorted(heights.items()):
+        #     print(key, value)
+
+
+        seen = set()
+        duplicates = list()
+        for edge in edges:
+            edge = tuple(edge)
+            if edge in seen:
+                duplicates.append(sorted(edge))
+            seen.add(edge)
+
+        return g, duplicates, heights, sorted(edge_directions)[0]
+
     def as_networkx(self):
         '''Get a networkx graph representing the planar diagram, where
         each node is a crossing and each edge is an arc. This is a
@@ -110,17 +180,16 @@ class PlanarDiagram(list):
                     other_node_index, other_height = cache[arc_number]
                     edges.append([other_node_index, node_index])
 
-                    print('\nfound with', node_index, other_node_index, 'arc', arc_number)
-
                     height = index_height(crossing_index)
 
-                    print('crossing is', crossing)
                     if crossing.is_outgoing(arc_number):
-                        print('{} is outgoing'.format(arc_number))
+                        # print('node {} {}, crossing {} is outgoing to {}'.format(
+                        #     node_index, crossing, arc_number, other_node_index))
                         heights[node_index, other_node_index, arc_number] = (height, other_height)
                         edge_directions.append((node_index, other_node_index, arc_number))
                     else:
-                        print('{} is incoming'.format(arc_number))
+                        # print('node {} {}, crossing {} is incoming from {}'.format(
+                            # node_index, crossing, arc_number, other_node_index))
                         heights[other_node_index, node_index, arc_number] = (other_height, height)
                         edge_directions.append((other_node_index, node_index, arc_number))
                     
@@ -130,7 +199,11 @@ class PlanarDiagram(list):
         g = nx.Graph()
         g.add_nodes_from(range(len(self)))
         g.add_edges_from(edges)
-        print('edges are', edges)
+
+        # print('possible heights:')
+        # for key, value in sorted(heights.items()):
+        #     print(key, value)
+
 
         seen = set()
         duplicates = list()
@@ -140,12 +213,6 @@ class PlanarDiagram(list):
                 duplicates.append(sorted(edge))
             seen.add(edge)
 
-        print('duplicates are', duplicates)
-        print('kabloo!')
-        print('heights are', heights)
-        for key in sorted(heights.keys()):
-            print(key, heights[key])
-        print('edge directions', sorted(edge_directions))
         return g, duplicates, heights, sorted(edge_directions)[0]
             
 def index_height(index):
@@ -236,7 +303,6 @@ class Crossing(list):
         if index not in self:
             raise ValueError('arc index doesn\'t intersect crossing')
         other_index = self[(self.index(index) + 2) % 4]
-        print('indices are', index, other_index)
         if other_index == 1 and index != 2:  # => index is the final arc
             return True
         if index == 1 and other_index != 2:  # => other_index is the final arc
