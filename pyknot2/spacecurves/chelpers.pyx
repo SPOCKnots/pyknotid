@@ -141,7 +141,7 @@ cdef tuple do_vectors_intersect(double px, double py, double dpx, double dpy,
     """
     cdef double t, u
 
-    if abs(cross_product(dpx, dpy, dqx, dqy)) < 0.00001:
+    if abs(cross_product(dpx, dpy, dqx, dqy)) < 0.000001:
         return (0, 0., 0.)
 
     t = cross_product(qx - px, qy - py, dqx, dqy) / cross_product(dpx, dpy,
