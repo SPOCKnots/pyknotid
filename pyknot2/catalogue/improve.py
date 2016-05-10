@@ -15,6 +15,53 @@ import csv
 import json
 import numpy as n
 
+
+def planar_writhe_from_dt_code(max_crossings=12):
+
+    from pyknot2.catalogue import from_invariants
+    from pyknot2.representations import dtnotation as dt
+
+    knots = Knot.select().where(
+        Knot.min_crossings <= max_crossings).where(
+            Knot.planar_writhe >> None).where(
+                Knot.min_crossings > 0)
+
+    output_knots = []
+    i = 0
+    for knot in knots:
+        if i % 100 == 0:
+            print(i, len(output_knots))
+
+        i += 1
+
+        assert knot.planar_writhe is None
+        assert knot.min_crossings <= max_crossings
+
+        d = dt.DTNotation(knot.dt_code)
+        r = d.representation()
+        if r is None:
+            print('{} caused trouble, skipping'.format(knot))
+            continue
+
+        writhe = r.writhe()
+        knot.planar_writhe = writhe
+        output_knots.append(knot)
+
+        if i % 10000 == 0:
+            print('Saving changes')
+            with db.transaction():
+                for knot in output_knots:
+                    knot.save()
+                output_knots = []
+
+        print(knot, writhe)
+
+    print('Saving changes')
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
+        output_knots = []
+ 
 def jones_from_homfly():
     '''Takes any knots with a homfly polynomial but lacking jones, and
     computes the latter from the former.'''
@@ -244,3 +291,6 @@ def check_determinants(**parameters):
             print('{}: SUCCESS, {}'.format(knot, det))
 
     return fails
+
+
+   
