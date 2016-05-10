@@ -98,6 +98,10 @@ class Knot(BaseModel):
     positive amphichiral, negative amphichiral fully
     amphichiral or chiral.'''
 
+    planar_writhe = IntegerField(null=True)
+    '''The writhe of the minimal diagram described by the DT_code. This is
+    not necessarily unique (see Perko pair, I think?).'''
+
     def __str__(self):
         if self.name:
             return '<Knot {} ({})>'.format(self.identifier, self.name)

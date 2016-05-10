@@ -92,6 +92,10 @@ def from_invariants(return_query=False, **kwargs):
     symmetry : string
         The symmetry of the knot, one of 'reversible',
         'positive amphicheiral', 'negative amphicheiral', 'chiral'.
+    writhe or planar_writhe : int
+        The writhe of the knot's minimal diagram as recorded by its dt
+        code. This is probably not necessarily unique, only the value
+        of the dt code stored is given.
     other : iterable
         A list of other peewee terms that can be chained in ``where()``
         calls, e.g. ``database.Knot.min_crossings < 5``. This provides
@@ -101,6 +105,7 @@ def from_invariants(return_query=False, **kwargs):
         returns a list. Defaults to False (i.e. the list). This will
         be much slower if the list is very large, but is convenient
         for most searches.
+
     '''
 
     conditions = []
@@ -151,6 +156,8 @@ def from_invariants(return_query=False, **kwargs):
                               (Knot.vassiliev_3 >> None))
         elif invariant == 'symmetry':
             conditions.append(Knot.symmetry == value.lower())
+        elif invariant in ('writhe', 'planar_writhe'):
+            conditions.append(Knot.planar_writhe == value)
         elif invariant == 'other':
             for condition in value:
                 conditions.append(condition)
