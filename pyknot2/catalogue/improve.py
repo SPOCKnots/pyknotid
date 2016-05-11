@@ -44,6 +44,8 @@ def planar_writhe_from_dt_code(max_crossings=12):
             continue
 
         writhe = r.writhe()
+        if writhe < 0:
+            writhe *= -1
         knot.planar_writhe = writhe
         output_knots.append(knot)
 
