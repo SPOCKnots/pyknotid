@@ -16,7 +16,10 @@ _root_to_attr = {2: Knot.determinant,
 
 
 def get_knot(name):
-    return first_from_invariants(id=name)
+    k = first_from_invariants(id=name)
+    if k is None:
+        raise ValueError('No knot with this name was found')
+    return k
 
 
 def first_from_invariants(**kwargs):
