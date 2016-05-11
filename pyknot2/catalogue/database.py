@@ -8,6 +8,7 @@ These models use the peewee ORM. Other ORMs are not currently supported!
 from peewee import *
 import json
 import os
+from os.path import realpath, dirname, exists, join
 from pyknot2.catalogue import converters
 
 directory = os.path.dirname(os.path.realpath(__file__)) + '/knots.db'
@@ -147,15 +148,45 @@ class Knot(BaseModel):
             print('Vassiliev order 3: {}'.format(self.vassiliev_3))
         if self.symmetry is not None:
             print('Symmetry: {}'.format(self.symmetry))
-                
+
     def space_curve(self, **kwargs):
         '''Returns a Knot object representing this knot.'''
 
         if self.dt_code is None:
             raise ValueError('No DT code is known, cannot create '
                              'space curve.')
-        
+
         from pyknot2.representations import DTNotation
         d = DTNotation(self.dt_code)
         return d.representation(**kwargs).space_curve()
+
+    def retrieve_image_path(self, **kwargs):
+        images_folder = join(
+            dirname(realpath(__file__)), 'diagrams_with_mirrors')
+
+        name = self.identifier
+
+        filen = _name_to_filen(name)
+
+        filen = join(images_folder, filen)
+
+        if not exists(filen):
+            return None
+
+        return filen
+
+
+def _name_to_filen(name):
+    if name.startswith('K'):
+        name = name[1:]
+        if int(name[:2]) == 11:
+            digits = 3
+        else:
+            digits = 4
+        filen = '{{}}_{{:0{}}}.png'.format(digits).format(name[:3], int(name[3:]))
+
+    else:
+        filen = name + '.png'
+
+    return filen
 
