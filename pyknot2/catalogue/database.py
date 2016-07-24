@@ -160,6 +160,11 @@ class Knot(BaseModel):
         d = DTNotation(self.dt_code)
         return d.representation(**kwargs).space_curve()
 
+    def url(self):
+        '''The guessed url of this knot in the Knot Atlas. The url may not actually exist.
+        '''
+        return 'http://katlas.org/wiki/{}'.format(self.identifier)
+
     def retrieve_image_path(self, **kwargs):
         images_folder = join(
             dirname(realpath(__file__)), 'diagrams_with_mirrors')
