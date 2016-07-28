@@ -6,6 +6,7 @@ from itertools import combinations, permutations
 from collections import defaultdict
 
 from pyknot2.representations.gausscode import GaussCode
+from pyknot2.utils import vprint
 
 
 def _to_GaussCode(rep):
@@ -103,7 +104,8 @@ def writhing_numbers(gc, diagrams, based=False):
                  factorial(max_degree) //
                  factorial(len(crossing_numbers) - max_degree))
     for ci, comb in enumerate(combs):
-        print('Combination {} of {}'.format(ci + 1, num_combs))
+        vprint('\rCombination {} of {}    '.format(ci + 1, num_combs),
+               newline=False, condition=(ci % 100) == 0)
 
         perms = permutations(comb)
 
@@ -112,17 +114,18 @@ def writhing_numbers(gc, diagrams, based=False):
             cur_starts = [a[0] for a in cur_arrows]
             cur_ends = [a[1] for a in cur_arrows]
 
+            if based and not reduce(lambda x, y: y > x, perm):
+                continue
+
             a1s = cur_arrows[0][0]
-            print('a1s is', a1s)
+            if based:
+                a1s = 0
 
             strs = []
             order = []
             naive_order = []
-            print('cur arrows is', cur_arrows)
             for i, arrow in enumerate(cur_arrows):
                 i += 1
-                print('arrow[0] is', arrow[0])
-                print('arrow[1] is', arrow[1])
                 strs.append('{}-'.format(i))
                 order.append((arrow[0] - a1s) % len(code))
                 naive_order.append(arrow[0])
@@ -130,35 +133,33 @@ def writhing_numbers(gc, diagrams, based=False):
                 order.append((arrow[1] - a1s) % len(code))
                 naive_order.append(arrow[1])
 
-            print('order is', order)
-            print('naive order is', naive_order)
-
             order = np.argsort(order)
             strs = [strs[i] for i in order]
 
             ordered_indices = tuple(sorted(perm))
 
-            print('strs', strs)
             for diagram in diagrams:
                 if ordered_indices in used_sets[diagram]:
                     continue
-                print('looking for', diagram, 'in', ','.join(strs))
                 if ','.join(strs) == diagram:
-                    print('TRUE')
                     representations_sums[diagram] += (
                         reduce(lambda x, y: x*y,
                                [signs[arrow_i] for arrow_i in perm]))
                     used_sets[diagram].add(ordered_indices)
-
-            print('perm is', perm)
+    vprint()
     
     return representations_sums
 
 
 
 def vassiliev_2(gc):
-    return writhing_numbers(gc, '1-,2+,1+,2-', based=True)
+    results = writhing_numbers(gc, '1-,2+,1+,2-', based=True)
+    print('results', results)
+    return results['1-,2+,1+,2-']
+
 
 def vassiliev_3(gc):
-    return writhing_numbers(gc, ['1-,2+,3-,1+,2-,3+',
-                                 '1-,2-,3+,1+,3-,2+'], based=False)
+    results =  writhing_numbers(gc, ['1-,2+,3-,1+,2-,3+',
+                                     '1-,2-,3+,1+,3-,2+'], based=False)
+    print('results', results)
+    return results['1-,2-,3+,1+,3-,2+'] // 2 + results['1-,2+,3-,1+,2-,3+']
