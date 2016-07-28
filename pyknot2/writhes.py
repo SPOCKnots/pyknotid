@@ -1,15 +1,18 @@
-
+from __future__ import division, print_function
 import numpy as np
+from math import factorial
 from functools import wraps
 from itertools import combinations, permutations
 from collections import defaultdict
 
 from pyknot2.representations.gausscode import GaussCode
 
+
 def _to_GaussCode(rep):
     if not isinstance(rep, GaussCode):
         rep = GaussCode(rep)
     return rep
+
 
 def require_GaussCode(func):
     '''Convert the first argument of the function to a GaussCode.'''
@@ -18,6 +21,7 @@ def require_GaussCode(func):
         rep = _to_GaussCode(rep)
         return func(rep, *args, **kwargs)
     return wrapper
+
 
 def validate_diagram(d):
     '''Do some basic checks on whether an Arrow diagram (as a string of
@@ -41,8 +45,6 @@ def validate_diagram(d):
         raise ValueError('Diagram {} appears invalid: sum of signs for '
                          'some crossings do not equal 0')
         
-    
-    
 
 @require_GaussCode
 def writhing_numbers(gc, diagrams, based=False):
@@ -73,6 +75,7 @@ def writhing_numbers(gc, diagrams, based=False):
 
     code = gc._gauss_code
     code = code[0]
+    gc_len = len(gc)
     from pyknot2.invariants import _crossing_arrows_and_signs
     arrows, signs = _crossing_arrows_and_signs(code, gc.crossing_numbers)
 
@@ -82,56 +85,80 @@ def writhing_numbers(gc, diagrams, based=False):
 
     degrees = defaultdict(lambda: [])
     for diagram in diagrams:
-        degrees[len(diagram.split(','))].append(diagram)
+        degrees[len(diagram.split(',')) // 2].append(diagram)
 
     max_degree = max(degrees.keys())
+    print('max degree is', max_degree)
 
     used_sets = set()
 
     # representations_sums = [0 for _ in diagrams]
     representations_sums = {d: 0 for d in diagrams}
+    used_sets = {d: set() for d in diagrams}
 
     cur_arrows = [None for _ in range(max_degree)]
 
     combs = combinations(crossing_numbers, max_degree)
+    num_combs = (factorial(len(crossing_numbers)) //
+                 factorial(max_degree) //
+                 factorial(len(crossing_numbers) - max_degree))
     for ci, comb in enumerate(combs):
-        print('Combination {} of {}'.format(ci, len(combs)))
-
-        cur_arrows = [arrows[i] for i in comb]
-        cur_starts = [a[0] for a in cur_arrows]
-        cur_ends = [a[1] for a in cur_arrows]
-
-        arrow_indices = {arrow: i+1 for i, arrow in enumerate(cur_arrows)}
-
+        print('Combination {} of {}'.format(ci + 1, num_combs))
 
         perms = permutations(comb)
 
         for perm in perms:
-            pass
+            cur_arrows = [arrows[i] for i in perm]
+            cur_starts = [a[0] for a in cur_arrows]
+            cur_ends = [a[1] for a in cur_arrows]
 
+            a1s = cur_arrows[0][0]
+            print('a1s is', a1s)
 
-        
+            strs = []
+            order = []
+            naive_order = []
+            print('cur arrows is', cur_arrows)
+            for i, arrow in enumerate(cur_arrows):
+                i += 1
+                print('arrow[0] is', arrow[0])
+                print('arrow[1] is', arrow[1])
+                strs.append('{}-'.format(i))
+                order.append((arrow[0] - a1s) % len(code))
+                naive_order.append(arrow[0])
+                strs.append('{}+'.format(i))
+                order.append((arrow[1] - a1s) % len(code))
+                naive_order.append(arrow[1])
 
-        
-        
+            print('order is', order)
+            print('naive order is', naive_order)
 
+            order = np.argsort(order)
+            strs = [strs[i] for i in order]
+
+            ordered_indices = tuple(sorted(perm))
+
+            print('strs', strs)
+            for diagram in diagrams:
+                if ordered_indices in used_sets[diagram]:
+                    continue
+                print('looking for', diagram, 'in', ','.join(strs))
+                if ','.join(strs) == diagram:
+                    print('TRUE')
+                    representations_sums[diagram] += (
+                        reduce(lambda x, y: x*y,
+                               [signs[arrow_i] for arrow_i in perm]))
+                    used_sets[diagram].add(ordered_indices)
+
+            print('perm is', perm)
     
-    for i, depth in enumerate(range(1, max_degree + 1)):
-        for index, arrow_num in enumerate(crossing_numbers):
-            arrow = arrows[index]
-            arr_s, arr_e = arrow
-            arr_e = (arr_e - arr_s) % len(gc)
-
-            cur_arrows = 
-        
-        
-    
-        
-
-    return arrows, signs
-    
+    return representations_sums
 
 
 
 def vassiliev_2(gc):
     return writhing_numbers(gc, '1-,2+,1+,2-', based=True)
+
+def vassiliev_3(gc):
+    return writhing_numbers(gc, ['1-,2+,3-,1+,2-,3+',
+                                 '1-,2-,3+,1+,3-,2+'], based=False)
