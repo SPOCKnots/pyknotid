@@ -100,14 +100,20 @@ def writhing_numbers(gc, diagrams, based=False):
     cur_arrows = [None for _ in range(max_degree)]
 
     combs = combinations(crossing_numbers, max_degree)
-    num_combs = (factorial(len(crossing_numbers)) //
-                 factorial(max_degree) //
-                 factorial(len(crossing_numbers) - max_degree))
+    try:
+        num_combs = (factorial(len(crossing_numbers)) //
+                     factorial(max_degree) //
+                     factorial(len(crossing_numbers) - max_degree))
+    except ValueError:
+        num_combs = 0
     for ci, comb in enumerate(combs):
         vprint('\rCombination {} of {}    '.format(ci + 1, num_combs),
                newline=False, condition=(ci % 100) == 0)
 
-        perms = permutations(comb)
+        if based:
+            perms = [comb]
+        else:
+            perms = permutations(comb)
 
         for perm in perms:
             cur_arrows = [arrows[i] for i in perm]
