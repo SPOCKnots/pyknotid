@@ -118,7 +118,7 @@ def writhing_numbers(gc, diagrams, based=False):
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][0])
 
                 if i == 0:
-                    if terms.endex(number + '+') < terms.index(other_number + '+'):
+                    if terms.index(number + '+') < terms.index(other_number + '+'):
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][1])
                     else:
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][1])
@@ -152,6 +152,13 @@ def writhing_numbers(gc, diagrams, based=False):
         else:
             perms = permutations(comb)
 
+        ordered_indices = tuple(sorted(comb))
+        for diagram in diagrams:
+            if ordered_indices not in used_sets[diagram]:
+                break
+        else:
+            continue
+
         for perm in perms:
             cur_arrows = [list(arrows[i]) for i in perm]
 
@@ -166,7 +173,6 @@ def writhing_numbers(gc, diagrams, based=False):
                 arrow[0] = (arrow[0] - a1s) % code_len
                 arrow[1] = (arrow[1] - a1s) % code_len
 
-            ordered_indices = tuple(sorted(perm))
 
             for diagram in diagrams:
                 if ordered_indices in used_sets[diagram]:
