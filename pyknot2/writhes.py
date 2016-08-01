@@ -77,6 +77,7 @@ def writhing_numbers(gc, diagrams, based=False):
     code = gc._gauss_code
     code = code[0]
     gc_len = len(gc)
+    code_len = len(code)
     from pyknot2.invariants import _crossing_arrows_and_signs
     arrows, signs = _crossing_arrows_and_signs(code, gc.crossing_numbers)
 
@@ -88,8 +89,50 @@ def writhing_numbers(gc, diagrams, based=False):
     for diagram in diagrams:
         degrees[len(diagram.split(',')) // 2].append(diagram)
 
+    relations = {diagram: [] for diagram in diagrams}
+    for diagram in diagrams:
+        degree = len(diagram.split(',')) // 2
+        num_relations = factorial(degree - 1) * 4
+
+        terms = diagram.split(',')
+        numbers = [term[:-1] for term in terms]
+
+        number_strs = list(sorted(set(numbers), key=lambda j: int(j)))
+        for i, number in enumerate(number_strs):
+            for oi, other_number in enumerate(number_strs[i+1:]):
+                oi += i + 1
+                if i != 0:
+                    if terms.index(number + '-') < terms.index(other_number + '-'):
+                        # relations[diagram].append(lambda x, y: x[0] < y[0])
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] < l[oi][0])
+                    else:
+                        # relations[diagram].append(lambda x, y: x[0] > y[0])
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] > l[oi][0])
+
+                    if terms.index(number + '-') < terms.index(other_number + '+'):
+                        # relations[diagram].append(lambda x, y: x[0] < y[1])
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] < l[oi][1])
+                    else:
+                        # relations[diagram].append(lambda x, y: x[0] > y[1])
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] > l[oi][1])
+
+                if terms.index(number + '+') < terms.index(other_number + '-'):
+                    # relations[diagram].append(lambda x, y: x[1] < y[0])
+                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][0])
+                else:
+                    # relations[diagram].append(lambda x, y: x[1] > y[0])
+                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][0])
+                    
+                # This one is unnecessary?
+                if terms.index(number + '+') < terms.index(other_number + '+'):
+                    # relations[diagram].append(lambda x, y: x[1] < y[1])
+                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][1])
+                else:
+                    # relations[diagram].append(lambda x, y: x[1] > y[1])
+                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][1])
+
+
     max_degree = max(degrees.keys())
-    print('max degree is', max_degree)
 
     used_sets = set()
 
@@ -106,6 +149,8 @@ def writhing_numbers(gc, diagrams, based=False):
                      factorial(len(crossing_numbers) - max_degree))
     except ValueError:
         num_combs = 0
+    strs = [None for _ in range(max_degree)] * 2
+    order = [None for _ in range(max_degree)] * 2
     for ci, comb in enumerate(combs):
         vprint('\rCombination {} of {}    '.format(ci + 1, num_combs),
                newline=False, condition=(ci % 100) == 0)
@@ -116,9 +161,7 @@ def writhing_numbers(gc, diagrams, based=False):
             perms = permutations(comb)
 
         for perm in perms:
-            cur_arrows = [arrows[i] for i in perm]
-            cur_starts = [a[0] for a in cur_arrows]
-            cur_ends = [a[1] for a in cur_arrows]
+            cur_arrows = [list(arrows[i]) for i in perm]
 
             if based and not reduce(lambda x, y: y > x, perm):
                 continue
@@ -127,33 +170,26 @@ def writhing_numbers(gc, diagrams, based=False):
             if based:
                 a1s = 0
 
-            strs = []
-            order = []
-            naive_order = []
             for i, arrow in enumerate(cur_arrows):
-                i += 1
-                strs.append('{}-'.format(i))
-                order.append((arrow[0] - a1s) % len(code))
-                naive_order.append(arrow[0])
-                strs.append('{}+'.format(i))
-                order.append((arrow[1] - a1s) % len(code))
-                naive_order.append(arrow[1])
-
-            order = np.argsort(order)
-            strs = [strs[i] for i in order]
+                arrow[0] = (arrow[0] - a1s) % code_len
+                arrow[1] = (arrow[1] - a1s) % code_len
 
             ordered_indices = tuple(sorted(perm))
 
             for diagram in diagrams:
                 if ordered_indices in used_sets[diagram]:
                     continue
-                if ','.join(strs) == diagram:
+                for relation in relations[diagram]:
+                    if not relation(cur_arrows):
+                        break
+                else:
                     representations_sums[diagram] += (
                         reduce(lambda x, y: x*y,
                                [signs[arrow_i] for arrow_i in perm]))
                     used_sets[diagram].add(ordered_indices)
+                        
     vprint()
-    
+
     return representations_sums
 
 
@@ -169,3 +205,12 @@ def vassiliev_3(gc):
                                      '1-,2-,3+,1+,3-,2+'], based=False)
     print('results', results)
     return results['1-,2-,3+,1+,3-,2+'] // 2 + results['1-,2+,3-,1+,2-,3+']
+
+def slip_vassiliev_2(gc):
+    results = writhing_numbers(gc, ['1+,2-,3-,1-,2+,3+',
+                                    '1+,2-,3-,1-,3+,2+',
+                                    '1+,2+,3-,1-,2-,3+',
+                                    '1+,2+,3-,2-,1-,3+'], based=True)
+    print('results', results)
+    return results
+    return results['1+,2-,3-,1-,2+,3+']
