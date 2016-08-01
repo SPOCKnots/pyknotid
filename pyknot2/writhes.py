@@ -117,11 +117,11 @@ def writhing_numbers(gc, diagrams, based=False):
                 else:
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][0])
 
-                # This one is unnecessary?
-                if terms.index(number + '+') < terms.index(other_number + '+'):
-                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][1])
-                else:
-                    relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][1])
+                if i == 0:
+                    if terms.endex(number + '+') < terms.index(other_number + '+'):
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][1])
+                    else:
+                        relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][1])
 
 
     max_degree = max(degrees.keys())
