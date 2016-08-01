@@ -103,32 +103,24 @@ def writhing_numbers(gc, diagrams, based=False):
                 oi += i + 1
                 if i != 0:
                     if terms.index(number + '-') < terms.index(other_number + '-'):
-                        # relations[diagram].append(lambda x, y: x[0] < y[0])
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] < l[oi][0])
                     else:
-                        # relations[diagram].append(lambda x, y: x[0] > y[0])
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] > l[oi][0])
 
                     if terms.index(number + '-') < terms.index(other_number + '+'):
-                        # relations[diagram].append(lambda x, y: x[0] < y[1])
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] < l[oi][1])
                     else:
-                        # relations[diagram].append(lambda x, y: x[0] > y[1])
                         relations[diagram].append(lambda l, i=i, oi=oi: l[i][0] > l[oi][1])
 
                 if terms.index(number + '+') < terms.index(other_number + '-'):
-                    # relations[diagram].append(lambda x, y: x[1] < y[0])
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][0])
                 else:
-                    # relations[diagram].append(lambda x, y: x[1] > y[0])
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][0])
-                    
+
                 # This one is unnecessary?
                 if terms.index(number + '+') < terms.index(other_number + '+'):
-                    # relations[diagram].append(lambda x, y: x[1] < y[1])
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] < l[oi][1])
                 else:
-                    # relations[diagram].append(lambda x, y: x[1] > y[1])
                     relations[diagram].append(lambda l, i=i, oi=oi: l[i][1] > l[oi][1])
 
 
