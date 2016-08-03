@@ -39,6 +39,12 @@ class PeriodicKnot(object):
         self._apply_matrix(rotate_vector_to_top(v))
         self._apply_matrix(rotate_axis_angle((0, 1., 0), n.pi/2.))
 
+    def get_periodic_segments(self):
+        '''Returns a list of line segments making up the curve, cut at the
+        edges of a single periodic repeat.
+        '''
+        
+
     def interpolate(self, factor=2):
         if factor == 1:
             return
@@ -95,7 +101,7 @@ class PeriodicKnot(object):
         if not colour_minimal_unfoldings:
             points = self.points_with_translations(num_translations)
             k = OpenKnot(points)
-            k.plot(**kwargs)
+            k.plot(closed=False, **kwargs)
             return k
         lines = []
         for i in range(-num_translations, num_translations+1):
