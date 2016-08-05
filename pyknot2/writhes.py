@@ -85,8 +85,6 @@ def writhing_numbers(gc, diagrams, based=False):
                 multipliers[diagram.replace('d', '')][term] = multiplier
             diagrams[di] = diagram.replace('d', '')
 
-    print('ms', multipliers)
-
     for d in diagrams:
         validate_diagram(d)
 
@@ -151,9 +149,6 @@ def writhing_numbers(gc, diagrams, based=False):
 
     max_degree = max(degrees.keys())
 
-    used_sets = set()
-
-    # representations_sums = [0 for _ in diagrams]
     representations_sums = {d: 0 for d in diagrams}
     used_sets = {d: set() for d in diagrams}
 
@@ -224,18 +219,62 @@ def vassiliev_2(gc):
 
 def vassiliev_3(gc):
     results =  writhing_numbers(gc, ['1-,2+,3-,1+,2-,3+',
-                                     '1-,2-,3+,1+,3-,2+'], based=False)
+                                     '1-,2-,3+,1+,3-,2+'], based=False,
+                                forbid_all_symmetry=True)
     print('results', results)
     return results['1-,2-,3+,1+,3-,2+'] // 2 + results['1-,2+,3-,1+,2-,3+']
 
+def vassiliev_4(gc):
+    d4 = ['1-,2-,3+,1+,4-,3-,2+,4+',
+          '1-,2+,3-,1+,4-,3+,2-,4+',
+          '1-,2+,3-,4+,2-,1+,4-,3+',
+          '1-,2-,3+,1+,4-,2+,3-,4+',
+          '1-,2+,3-,4+,1+,2-,4-,3+',
+          '1-,2+,3-,4-,1+,4+,3+,2-',
+          '1-,2+,3-,4-,1+,3+,4+,2-',
+          '1-,2+,3-,4+,1+,4-,3+,2-',
+          '1-,2+,3+,4-,1+,3-,4+,2-',
+          '1-,2+,3-,4-,1+,4+,2-,3+',
+          '1-,2-,3+,4-,2+,1+,3-,4+',
+          '1-,2-,3+,4-,1+,2+,3-,4+',
+          '1-,2-,1+,3-,2+,4-,3+,4+',
+          '1-,2-,1+,3+,2+,4-,3-,4+']
+
+    d3 = ['1-,2+,3-d,1+,3+d,2-',
+          '1-d,2+,3-,1+d,2-,3+']
+
+    results_4 = writhing_numbers(gc, d4)
+
+    results_3 = writhing_numbers(gc, d3)
+
+    total = (results_4[d4[0]] + 6*results_4[d4[1]] + 2*results_4[d4[2]] +
+             3*results_4[d4[3]] + results_4[d4[4]] + 2*results_4[d4[5]] +
+             2*results_4[d4[6]] - results_4[d4[7]] + results_4[d4[8]] +
+             results_4[d4[9]] + 2*results_4[d4[10]] + 2*results_4[d4[11]] +
+             results_4[d4[12]] + results_4[d4[13]] +
+             results_3[d3[0]] + results_3[d3[1]])
+
+    print('results 4')
+    for diagram, value in results_4.items():
+        print(diagram, ':', value)
+    print('results 3')
+    for diagram, value in results_3.items():
+        print(diagram, ':', value)
+    return total
+
+             
 def slip_vassiliev_2(gc):
-    results = writhing_numbers(gc, ['1+,2-,3-,1-,2+,3+',
-                                    '1+,2-,3-,1-,3+,2+',
-                                    '1+,2+,3-,1-,2-,3+',
-                                    '1+,2+,3-,2-,1-,3+'], based=True)
-    print('results', results)
-    return results
-    return results['1+,2-,3-,1-,2+,3+']
+    codes = ['1-,2+,3+,1+,2-,3-',
+             '1-,2+,3+,1+,3-,2-',
+             '1-,2-,3+,1+,2+,3-',
+             '1-,2-,3+,2+,1+,3-']
+    # codes = ['1-,2+,3+,1+,2-,3-']
+    results = writhing_numbers(gc, codes, based=True)
+
+    for code in codes:
+        print('{}: {}'.format(code, results[code]))
+    return np.sum(results.values())
+
 
 def vassiliev_2_long_form(gc):
 
