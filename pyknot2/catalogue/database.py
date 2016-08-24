@@ -165,6 +165,10 @@ class Knot(BaseModel):
         '''
         return 'http://katlas.org/wiki/{}'.format(self.identifier)
 
+    def open_url(self):
+        import webbrowser
+        webbrowser.open(self.url())
+
     def retrieve_image_path(self, **kwargs):
         images_folder = join(
             dirname(realpath(__file__)), 'diagrams_with_mirrors')
