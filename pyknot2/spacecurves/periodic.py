@@ -27,6 +27,9 @@ class PeriodicKnot(object):
         if self._period_vector is not None:
             self._period_vector = rotate_to_top(*ROTATION_MAGIC_NUMBERS).dot(self._period_vector)
 
+    def __len__(self):
+        return len(self.points)
+
     @property
     def period_vector(self):
         if self._period_vector is not None:
@@ -74,7 +77,7 @@ class PeriodicKnot(object):
         # print('largest possible distance', largest_possible_distance)
         # print('end_end', end_end_distance)
 
-        return int(n.ceil(largest_possible_distance / end_end_distance) + 2)
+        return int(n.ceil(largest_possible_distance / end_end_distance) + 4)
 
     def roll(self, num):
         pv = self.period_vector
@@ -366,6 +369,14 @@ class PeriodicKnot(object):
             num_translations = self.nearest_non_overlapping_translation()
         gc, equivalencies, translations = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies, translations)
+
+    def alternative_vassiliev_degree_3(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+
 
     def vassiliev_degree_3s(self, number_of_samples=10):
         v3s = []
@@ -898,14 +909,6 @@ def alternative_periodic_vassiliev_degree_2_without_double_count(representation,
             if not (i1 in core_crossings or i2 in core_crossings):
                 continue
 
-            # if a1e > a2e and a1s < a2e and a2s > a1e:
-                
-
-            #     representations_sum += signs[i1] * signs[i2]
-
-            #     for i1other in equivalent_crossing_numbers[i1].union({i1}):
-            #         for i2other in equivalent_crossing_numbers[i2].union({i2}):
-            #             crossings_already_done.add(tuple(sorted([i1other, i2other])))
             if a1s > a2s and a1e < a2s and a2e > a1s:
 
                 real_cs = tuple(sorted((true_crossing_numbers[i1], true_crossing_numbers[i2])) + [abs(i2 - i1)])
@@ -915,10 +918,90 @@ def alternative_periodic_vassiliev_degree_2_without_double_count(representation,
                 crossings_done.add(real_cs)
                 
                 representations_sum += signs[i1] * signs[i2]  # * multiplicities[i1] * multiplicities[i2]
-                print('added with {} and {}'.format(i1, i2))
-                print('true crossings are', real_cs)
 
     return representations_sum
+
+def alternative_periodic_vassiliev_degree_3_without_double_count(
+        representation, core_crossings, true_crossing_numbers):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate v2 '
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_done = set()
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum_1 = 0
+    representations_sum_2 = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers:
+
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            for i3 in crossing_numbers:
+
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+
+                if not (i1 in core_crossings or i2 in core_crossings or i3 in core_crossings):
+                    continue
+
+                si1, si2, si3 = sorted([i1, i2, i3])
+                real_cs = tuple(
+                    sorted(
+                        (true_crossing_numbers[i1],
+                         true_crossing_numbers[i2],
+                         true_crossing_numbers[i3])) + [
+                             si2 - si1,
+                             si3 - si2])
+
+                if real_cs in crossings_done:
+                    continue
+
+                # if (a2s < a1e and a3e < a1e and a3e > a2s and
+                #     a3s > a1e and a2e > a3s):
+                # if ((a1e > a1s and a2s > a1s and a2s < a1e and a3e > a2s and a3e < a1e and a3s > a1e and a2s > a3s) or
+                #     (a1e > a1s and a2e > a1s and a2s < a1e and a3e > a2e and a3e < a2s and a3s > a1e) or
+                #     (a1s > a1e and a2e > a1e and a2e < a1s and a2e > a1s and a3e > a1s and a3e < a2s and a3s > a2s) or
+                #     (a1e < a1s and a2s > a1e and a3e > a1s and a3e > a2s and a3e < a1s and a3s > a1s and a2e > a3s) or
+                #     (a1e > a1s and a2e > a1s and a3s > a2e and a2s > a3s and a1e > a2s and a3e > a1e) or
+                #     (a1s > a1e and a2s > a1e and a2s < a1s and a3e > a1s and a2e > a3e and a3s > a2e)):
+                if ((a2s > a1s and a3e > a2s and a1e > a3e and a3s > a1e and a2e > a3s) or
+                    (a2e > a1s and a3e > a2e and a2s > a3e and a1e > a2s and a3s > a1e) or
+                    (a2e > a1e and a1s > a2e and a3e > a1s and a2s > a3e and a3s > a2s) or
+                    (a2s > a1e and a3e > a2s and a1s > a3e and a3s > a1s and a2e > a3s) or
+                    (a2e > a1s and a3s > a2e and a2s > a3s and a1e > a2s and a3e > a1e) or
+                    (a2s > a1e and a1s > a2s and a3e > a1s and a2e > a3e and a3s > a2e)):
+                    print('r1 with', i1, i2, i3, signs[i1] * signs[i2] *
+                          signs[i3])
+                    representations_sum_1 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    crossings_done.add(real_cs)
+                # if ((a2e < a1e and a3s < a1e and a3s > a2e and
+                #      a2s > a1e and a3e > a2s)):
+                if ((a2s > a1e and a3e > a2s and a1s > a3e and a2e > a1s and a3s > a2e) or
+                    (a2e > a1s and a3s > a2e and a1e > a3s and a2s > a1e and a3e > a2s)):
+                  
+                    print('r3 with', i1, i2, i3, signs[i1] * signs[i2] *
+                          signs[i3])
+                    representations_sum_2 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    crossings_done.add(real_cs)
+
+    return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
 
 def periodic_vassiliev_degree_3_without_double_count(representation,
