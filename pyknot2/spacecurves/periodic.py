@@ -377,6 +377,13 @@ class PeriodicKnot(object):
         return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
                                                                             true_crossing_numbers)
 
+    def alternative_vassiliev_degree_4_conway_z4(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_4_conway_z4(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+
 
     def vassiliev_degree_3s(self, number_of_samples=10):
         v3s = []
@@ -1201,3 +1208,99 @@ def get_true_crossing_numbers(equivalent_cs, cores):
         output[crossing] = min([c for c in equivalents if c in cores])
 
     return output
+
+
+def alternative_periodic_vassiliev_degree_4_conway_z4(
+        representation, core_crossings, true_crossing_numbers):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate v2 '
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_done = set()
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers:
+
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            for i3 in crossing_numbers:
+
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+
+                for i4 in crossing_numbers:
+                    arrow4 = arrows[i4]
+                    a4s, a4e = arrow4
+
+                    if not (i1 in core_crossings or i2 in core_crossings or i3 in core_crossings or i4 in core_crossings):
+                        continue
+
+                    if len(set([true_crossing_numbers[ii] for ii in (i1, i2, i3, i4)])) < 4:
+                        continue
+                    si1, si2, si3, si4 = sorted([i1, i2, i3, i4])
+                    real_cs = tuple(
+                        sorted(
+                            (true_crossing_numbers[i1],
+                             true_crossing_numbers[i2],
+                             true_crossing_numbers[i3],
+                             true_crossing_numbers[i4])) + [
+                                 si2 - si1,
+                                 si3 - si2,
+                                 si4 - si3])
+
+                    if real_cs in crossings_done:
+                        continue
+
+                    # if ((a2e > a1s and a3s > a2e and a4e > a3s and a1e > a4e and a3s > a1e and a3e > a2s and a4s > a3e) or
+                    #     (a2e > a1s and a1e > a2e and a2s > a1e and a3s > a2s and a4e > a3s and a3e > a4e and a4s > a3e) or
+                    #     (a2e > a1s and a1e > a2e and a3s > a1e and a4e > a3s and a3e > a4e and a4s > a3e and a2s > a4s) or
+                    #     (a2e > a1s and a3s > a2e and a4e > a3s and a3e > a4e and a4s > a3e and a1e > a4s and a2s > a1e) or
+                    #     (a2s > a1s and a3e > a2s and a2e > a3e and a3s > a2e and a4e > a3s and a1e > a4e and a4s > a1e) or
+                    if ((a1s < a2e < a3s < a4e < a1e < a2s < a3e < a4s) or
+                        (a1s < a2e < a1e < a2s < a3s < a4e < a3e < a4s) or
+                        (a1s < a2e < a1e < a3s < a4e < a3e < a4s < a1s) or
+                        (a1s < a2e < a3s < a4e < a3e < a4s < a1e < a2s) or
+                        (a1s < a2s < a3e < a2e < a3s < a4e < a1e < a4s) or
+                        #
+                        (a1s < a2e < a3s < a4e < a3e < a1e < a2s < a4s) or
+                        (a1s < a2e < a3e < a2s < a4e < a1e < a3s < a4s) or
+                        (a1s < a2e < a1e < a3s < a4e < a2s < a3e < a4s) or
+                        (a1s < a2e < a3e < a4s < a1e < a3s < a4e < a2s) or
+                        (a1s < a2e < a3s < a4e < a2s < a3e < a1e < a4s) or
+                        (a1s < a2e < a4s < a1e < a3s < a4e < a3e < a4s) or
+                        (a1s < a2s < a3e < a1e < a4s < a2e < a4e < a3s) or
+                        (a1s < a2s < a3e < a4e < a1e < a4s < a2e < a3s) or
+                        #
+                        (a1s < a2e < a1e < a3s < a2s < a4e < a3e < a4s) or
+                        (a1s < a2e < a3s < a1e < a4s < a3e < a4e < a2s) or
+                        (a1s < a2s < a3e < a4s < a2e < a4e < a1e < a3e) or
+                        (a1s < a2s < a3e < a1e < a3s < a4e < a2e < a4s) or
+                        (a1s < a2s < a3e < a2e < a4e < a1e < a4s < a3s) or
+                        (a1s < a2e < a1e < a3s < a4e < a3e < a2s < a4s) or
+                        (a1s < a2e < a3e < a4e < a3s < a1e < a4s < a2s) or
+                        (a1s < a2e < a3e < a2s < a4e < a3s < a1e < a4s)):
+                        
+                            print('r with', i1, i2, i3, i4, signs[i1] * signs[i2] *
+                                  signs[i3] * signs[i4])
+                            # print('true', [true_crossing_numbers[ii] for ii in (i1, i2, i3, i4)])
+                            representations_sum += (signs[i1] * signs[i2] *
+                                                    signs[i3] * signs[i4])
+                            crossings_done.add(real_cs)
+
+    return representations_sum
