@@ -17,7 +17,7 @@ ROTATION_MAGIC_NUMBERS = (0.53, 1.0)
 
 class PeriodicKnot(object):
     def __init__(self, points, period_vector=None, autorotate=True):
-        self.points = points
+        self.points = n.array(points).copy()
         self._period_vector = period_vector
 
         from pyknot2.spacecurves.rotation import rotate_to_top
@@ -376,6 +376,20 @@ class PeriodicKnot(object):
         gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
         return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
                                                                             true_crossing_numbers)
+
+    def silly_v3(self, nt=None):
+        v3_1 = self.alternative_vassiliev_degree_3(nt)
+        self.points[:, 1:] *= -1
+        v3_2 = self.alternative_vassiliev_degree_3(nt)
+        self.points[:, 1:] *= -1
+        return v3_1, v3_2
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+    def vass_flip(self):
+        self.points[:, 1:] *= -1
 
     def alternative_vassiliev_degree_4_conway_z4(self, num_translations=None):
         if num_translations is None:
@@ -966,6 +980,16 @@ def alternative_periodic_vassiliev_degree_3_without_double_count(
                 if not (i1 in core_crossings or i2 in core_crossings or i3 in core_crossings):
                     continue
 
+                # # Not sure if this condition is good
+                # if len(set([true_crossing_numbers[ii] for ii in [i1, i2, i3]])) < 3:
+                #     continue
+
+                if len(set([i1, i2, i3])) < 3:
+                    continue
+
+                # if len(set([true_crossing_numbers[ii] for ii in [i1, i2, i3]])) < 3:
+                #     continue
+
                 si1, si2, si3 = sorted([i1, i2, i3])
                 real_cs = tuple(
                     sorted(
@@ -973,41 +997,74 @@ def alternative_periodic_vassiliev_degree_3_without_double_count(
                          true_crossing_numbers[i2],
                          true_crossing_numbers[i3])) + [
                              si2 - si1,
-                             si3 - si2])
+                             si3 - si2] + [(a1s < a2s < a3e < a1e < a3s < a2e),
+                                           (a1s < a2e < a3e < a2s < a1e < a3s),
+                                           (a1e < a2e < a1s < a3e < a2s < a3s),
+                                           (a1e < a2s < a3e < a1s < a3s < a2e),
+                                           (a1s < a2e < a3s < a2s < a1e < a3e),
+                                           (a1e < a2s < a1s < a3e < a2e < a3s)])
+
+                if i1 == 20 and i2 == 21 and i3 == 22:
+                    print('!!!')
+                    print('rcs', real_cs)
+                    print((a1s < a2s < a3e < a1e < a3s < a2e),
+                          (a1s < a2e < a3e < a2s < a1e < a3s),
+                          (a1e < a2e < a1s < a3e < a2s < a3s),
+                          (a1e < a2s < a3e < a1s < a3s < a2e),
+                          (a1s < a2e < a3s < a2s < a1e < a3e),
+                          (a1e < a2s < a1s < a3e < a2e < a3s))
+                    
 
                 if real_cs in crossings_done:
                     continue
 
-                # if (a2s < a1e and a3e < a1e and a3e > a2s and
-                #     a3s > a1e and a2e > a3s):
-                # if ((a1e > a1s and a2s > a1s and a2s < a1e and a3e > a2s and a3e < a1e and a3s > a1e and a2s > a3s) or
-                #     (a1e > a1s and a2e > a1s and a2s < a1e and a3e > a2e and a3e < a2s and a3s > a1e) or
-                #     (a1s > a1e and a2e > a1e and a2e < a1s and a2e > a1s and a3e > a1s and a3e < a2s and a3s > a2s) or
-                #     (a1e < a1s and a2s > a1e and a3e > a1s and a3e > a2s and a3e < a1s and a3s > a1s and a2e > a3s) or
-                #     (a1e > a1s and a2e > a1s and a3s > a2e and a2s > a3s and a1e > a2s and a3e > a1e) or
-                #     (a1s > a1e and a2s > a1e and a2s < a1s and a3e > a1s and a2e > a3e and a3s > a2e)):
-                if ((a2s > a1s and a3e > a2s and a1e > a3e and a3s > a1e and a2e > a3s) or
-                    (a2e > a1s and a3e > a2e and a2s > a3e and a1e > a2s and a3s > a1e) or
-                    (a2e > a1e and a1s > a2e and a3e > a1s and a2s > a3e and a3s > a2s) or
-                    (a2s > a1e and a3e > a2s and a1s > a3e and a3s > a1s and a2e > a3s) or
-                    (a2e > a1s and a3s > a2e and a2s > a3s and a1e > a2s and a3e > a1e) or
-                    (a2s > a1e and a1s > a2s and a3e > a1s and a2e > a3e and a3s > a2e)):
+                if ((a1s < a2s < a3e < a1e < a3s < a2e) or
+                    (a1s < a2e < a3e < a2s < a1e < a3s) or
+                    (a1e < a2e < a1s < a3e < a2s < a3s) or
+                    (a1e < a2s < a3e < a1s < a3s < a2e) or
+                    (a1s < a2e < a3s < a2s < a1e < a3e) or
+                    (a1e < a2s < a1s < a3e < a2e < a3s)):
                     print('r1 with', i1, i2, i3, signs[i1] * signs[i2] *
                           signs[i3])
+                    print('and real cs', real_cs)
+                    print((a1s < a2s < a3e < a1e < a3s < a2e),
+                          (a1s < a2e < a3e < a2s < a1e < a3s),
+                          (a1e < a2e < a1s < a3e < a2s < a3s),
+                          (a1e < a2s < a3e < a1s < a3s < a2e),
+                          (a1s < a2e < a3s < a2s < a1e < a3e),
+                          (a1e < a2s < a1s < a3e < a2e < a3s))
                     representations_sum_1 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     crossings_done.add(real_cs)
-                # if ((a2e < a1e and a3s < a1e and a3s > a2e and
-                #      a2s > a1e and a3e > a2s)):
+                # if ((a1s < a2e < a3s < a1e < a3e < a2s) or
+                #     (a1e < a2s < a3e < a2e < a1s < a3s) or
+                #     (a1s < a2e < a1e < a3s < a2s < a3e) or
+                #     (a1e < a2e < a3s < a1s < a3e < a2s) or
+                #     (a1e < a2s < a3s < a2e < a1s < a3e) or
+                #     (a1s < a2s < a1e < a3s < a2e < a3e)):
+                #     print('r1 alternative with', i1, i2, i3, signs[i1] * signs[i2] *
+                #           signs[i3])
+                #     print('and real cs', real_cs)
+                #     print((a1s < a2s < a3e < a1e < a3s < a2e),
+                #           (a1s < a2e < a3e < a2s < a1e < a3s),
+                #           (a1e < a2e < a1s < a3e < a2s < a3s),
+                #           (a1e < a2s < a3e < a1s < a3s < a2e),
+                #           (a1s < a2e < a3s < a2s < a1e < a3e),
+                #           (a1e < a2s < a1s < a3e < a2e < a3s))
+                #     representations_sum_1 += (signs[i1] * signs[i2] *
+                #                               signs[i3])
+                #     crossings_done.add(real_cs)
                 if ((a2s > a1e and a3e > a2s and a1s > a3e and a2e > a1s and a3s > a2e) or
                     (a2e > a1s and a3s > a2e and a1e > a3s and a2s > a1e and a3e > a2s)):
                   
                     print('r3 with', i1, i2, i3, signs[i1] * signs[i2] *
                           signs[i3])
+                    print('and real cs', real_cs)
                     representations_sum_2 += (signs[i1] * signs[i2] *
                                               signs[i3])
                     crossings_done.add(real_cs)
 
+    return representations_sum_1 / 2. + representations_sum_2
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
 
