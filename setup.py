@@ -18,7 +18,7 @@ setup(
     description='Tools for analysing knots',
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
-    install_requires=['numpy', 'networkx'],
+    install_requires=['numpy', 'networkx', 'planarity'],
     cmdclass={'build_ext': build_ext},
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
