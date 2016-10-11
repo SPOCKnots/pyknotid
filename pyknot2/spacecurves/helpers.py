@@ -96,7 +96,7 @@ def find_crossings(v, dv,
             i += 1  # naive mode - check everything
             already_jumped = 1
         elif jump_mode == 2:
-            num_jumps = (floor(distance / max_segment_length)) - 1
+            num_jumps = int((floor(distance / max_segment_length)) - 1)
             if num_jumps < 1:
                 num_jumps = 1
             i += num_jumps
