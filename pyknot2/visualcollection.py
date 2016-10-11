@@ -19,12 +19,13 @@ class MeshCollectionVisual(MeshVisual):
                 raise ValueError('Non-MeshVisual received')
 
             md = visual._meshdata
-            vertices.append(md.get_vertices())
-            indices.append(md.get_faces())
-            vertex_colors.append(md.get_vertex_colors())
+            vertices.append(md.get_vertices().copy())
+            indices.append(md.get_faces().copy())
+            vertex_colors.append(md.get_vertex_colors().copy())
 
-        cum_lens = np.hstack([[0], np.cumsum(map(len, vertices))[:-1]])
-        for cur_len, inds in zip(cum_lens, indices):
+        cum_lens = np.hstack([[0], np.cumsum(list(map(len, vertices)))[:-1]])
+
+        for cur_len, inds in list(zip(cum_lens, indices)):
             inds += cur_len
 
         vertices = np.vstack(vertices)
