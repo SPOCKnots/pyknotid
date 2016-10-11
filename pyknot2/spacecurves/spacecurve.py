@@ -8,6 +8,7 @@ the curve.
 '''
 
 import numpy as n
+import numpy as np
 import sys
 from scipy.interpolate import interp1d
 
@@ -247,6 +248,79 @@ class SpaceCurve(object):
         knot.translate(n.array([0.00123, 0.00231, 0.00321]))
         knot.rotate(n.random.random(3) * 0.012)
         return knot
+
+    @classmethod
+    def from_braid_word(cls, word):
+        '''
+        Returns a :class:`SpaceCurve` instance formed from the given braid
+        word.
+
+        The braid word should be of the form 'aAbBcC' (i.e. capitalisation
+        denotes inverse).
+
+        Parameters
+        ----------
+        word : str
+            The braid word to interpret.
+        '''
+
+        num_strands = len(set(word.lower())) + 1
+
+        xs = n.arange(num_strands) + 1
+
+        y = 0.
+
+        lines = [[[x, y, 0.]] for x in xs]
+
+        strands_by_final_index = {strand: lines[strand] for strand in range(num_strands)}
+        strands_by_initial_index = {strand: lines[strand] for strand in range(num_strands)}
+
+        for letter in word:
+            index = ord(letter.lower()) - ord('a')
+
+            sign = '+' if letter.isupper() else '-'
+
+            if sign == '+':
+                lines[index].append([index + 1 + 0.5, y + 0.5, 1.])
+                lines[index].append([index + 1 + 1., y + 1., 0.])
+                lines[index + 1].append([index + 1 + 0.5, y + 0.5, -1.])
+                lines[index + 1].append([index + 1, y + 1., 0.])
+            else:
+                lines[index + 1].append([index + 1 + 0.5, y + 0.5, 1.])
+                lines[index + 1].append([index + 1, y + 1., 0.])
+                lines[index].append([index + 1 + 0.5, y + 0.5, -1.])
+                lines[index].append([index + 1 + 1., y + 1., 0.])
+
+            lines[index], lines[index + 1] = lines[index + 1], lines[index]
+            strands_by_final_index[index], strands_by_final_index[index + 1] = strands_by_final_index[index + 1], strands_by_final_index[index]
+
+            y += 1.
+
+            for i, line in enumerate(lines):
+                if i not in (index, index + 1):
+                    lines[i].append([i + 1., y, 0.])
+
+        for i, line in enumerate(lines):
+            line.append([0., y + i + 1, 0.])
+            line.append([-1*(i + 1), y, 0.])
+            line.append([-1*(i + 1), 0, 0.])
+            line.append([0., -i - 1., 0.])
+            line.append([i + 1., -0.5, 0.])
+
+        # indices_by_strand = {strand: index for (strand, index) in strands_by_final_index.items()}
+
+        line = []
+        index = 0
+        for i in range(num_strands):
+            cur_strand = strands_by_initial_index[index]
+            line.extend(cur_strand)
+            print('index is', index)
+            print('cur strand is', cur_strand)
+            index = int(np.round(cur_strand[-1][0])) - 1
+
+        k = cls(n.array(line)*5.)
+        k.zero_centroid()
+        return k
 
     def translate(self, vector):
         '''Translates all the points of self by the given vector.
