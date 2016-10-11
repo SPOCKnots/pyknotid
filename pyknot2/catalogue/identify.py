@@ -11,8 +11,8 @@ from pyknot2.catalogue import converters
 db.db.connect()
 
 _root_to_attr = {2: Knot.determinant,
-                3: Knot.alexander_imag_3,
-                4: Knot.alexander_imag_4}
+                 3: Knot.alexander_imag_3,
+                 4: Knot.alexander_imag_4}
 
 
 def get_knot(name):
