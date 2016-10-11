@@ -70,6 +70,6 @@ def ensure_shape_tuple(shape):
     '''If the input is a number, returns a tuple with that number
     repeated three times, otherwise just returns the input.
     '''
-    if isinstance(shape, (float, long, int)):
+    if isinstance(shape, (float, int)):
         return (shape, shape, shape)
     return shape
