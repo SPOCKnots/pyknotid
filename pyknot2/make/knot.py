@@ -1,5 +1,12 @@
-'''
-Functions for making knots, returning a set of points.
+'''Making knots
+============
+
+Functions for making knots, returning a set of points. The knots
+available are an arbitray selection based on known analytic forms.
+
+Each of these functions returns a list of points. Pass them to
+pyknot2.spacecurves.knot.Knot for topological analysis.
+
 '''
 
 import numpy as n

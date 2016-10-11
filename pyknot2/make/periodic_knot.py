@@ -1,3 +1,13 @@
+'''Making periodic knots
+=====================
+
+Functions for making periodic knots. Each function returns an open
+curve that is assumed to repeat infinitely along the axis between its
+start and end points. Pass these functions to
+pyknot2.spacecurves.periodic for topological analysis.
+
+'''
+
 import numpy as n
 import numpy as np
 from pyknot2.spacecurves.periodic import CellKnot, PeriodicKnot
