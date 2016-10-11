@@ -21,6 +21,9 @@ def arclength(points, include_closure=True):
         first points. Defaults to True.
     '''
 
+    if len(points) < 2:
+        return 0.
+        
     lengths = n.roll(points, -1, axis=0) - points
     length_mags = n.sqrt(n.sum(lengths*lengths, axis=1))
     arclength = n.sum(length_mags[:-1])

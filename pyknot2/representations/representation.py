@@ -315,11 +315,6 @@ class Representation(GaussCode):
         pd = self.planar_diagram()
         g, duplicates, heights, first_edge = pd.as_networkx_extended()
 
-        # print('g', g)
-        # print('duplicates', duplicates)
-        # print('heights', heights)
-        # print('first_edge', first_edge)
-
         import planarity
 
         pg = planarity.PGraph(g)
@@ -375,13 +370,13 @@ class Representation(GaussCode):
 
             start_frac = n.abs((x - start_left) / (start_right - start_left) - 0.5)
             start_frac = 0.5 - start_frac
-            if ye < ys:
+            if True:  # ye < ys:  # This always evaluated to True - a bug?
                 start_frac *= -1
             start_shift = start_frac
 
             end_frac = n.abs((x - end_left) / (end_right - end_left) - 0.5)
             end_frac = 0.5 - end_frac
-            if ye > ys:
+            if False:  # ye > ys:  # This always evaluated to False - a bug?
                 end_frac *= -1
             end_shift = end_frac
 
