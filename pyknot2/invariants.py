@@ -63,7 +63,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     simplify : bool
         Whether to call the GaussCode simplify method, defaults to True.
     mode : string
-        One of 'python', 'maxima', 'cypari' or 'mathematica'. This
+        One of 'python', 'maxima', 'cypari' or 'mathematica'. 
         denotes what
         tools to use; if python, the calculation is performed with
         numpy or sympy as appropriate. If maxima or mathematica, that
@@ -425,6 +425,175 @@ def jones_mathematica(representation):
     r = re.compile('([0-9]+)')
     result = r.sub(r'sym.Integer(\1)', result)
     return eval(result.replace('^', '**'))
+
+q = sym.var('q')
+def jones_polynomial(representation, var=q):
+    from pyknot2.representations.gausscode import GaussCode
+    from pyknot2.representations.planardiagram import PlanarDiagram, Crossing
+    if not isinstance(representation, (GaussCode, PlanarDiagram)):
+        representation = GaussCode(representation)
+    if isinstance(representation, GaussCode):
+        representation = PlanarDiagram(representation)
+
+    rep = representation
+
+    if isinstance(q, sym.Symbol):
+        A = sym.var('A')
+    else:
+        A = (var + 0j)**0.25
+    
+    crossings = crossings_connectedness_order(rep)
+    if len(crossings) < 2:
+        return 1
+    
+    web = []
+    crossing = crossings[0]
+    crossing = PlanarDiagram(crossing)
+    diag_1, diag_2 = kauffman_skein(crossing)
+    web.append([diag_1, A])
+    web.append([diag_2, 1.0/A])
+    replacement = -A**2 - A**-2
+
+    for crossing in crossings[1:]:
+        crossing = PlanarDiagram(crossing)
+        diag_1, diag_2 = kauffman_skein(crossing)
+        new_web = []
+
+        for term in web:
+            diag_1_product = PlanarDiagram(
+                [x for x in diag_1] +
+                [x for x in term[0]]).contract_points()
+            diag_2_product = PlanarDiagram(
+                [x for x in diag_2] +
+                [x for x in term[0]]).contract_points()
+            contracted_1 = 0
+            contracted_2 = 0
+            diag_1_new = []
+            diag_2_new = []
+
+            for point in diag_1_product:
+                if len(point.components()) == 1:
+                    contracted_1 += 1
+                else:
+                    diag_1_new.append(point)
+            for point in diag_2_product:
+                if len(point.components()) == 1:
+                    contracted_2 += 1
+                else:
+                    diag_2_new.append(point)
+
+            new_term_1 = ([sorted(diag_1_new)] +
+                          [term[1] * (replacement ** contracted_1) * A])
+            new_term_2 = ([sorted(diag_2_new)] +
+                          [term[1] * (replacement ** contracted_2) * 1.0/A])
+
+            new_web.append(new_term_1)
+            new_web.append(new_term_2)
+
+        unique_diags = list(set([tuple(x[0]) for x in new_web]))
+        contracted_web = [[list(x)] for x in unique_diags]
+
+        for term in new_web:
+            for diag in contracted_web:
+                if diag[0] == term[0]:
+                    if len(diag) == 1:
+                        diag.append(term[1])
+                    else:
+                        diag[1] += term[1]
+
+        web = contracted_web
+
+    # quick and dirty writhe calculation
+    crossings = [x for x in rep if isinstance(x, Crossing)]
+    total_writhe = 0
+    for crossing in crossings:
+        total_writhe += crossing.sign()
+        
+    jones_precursor = web[0][1]
+
+    jones_poly = (-A**3)**total_writhe * jones_precursor / replacement
+
+    if isinstance(var, sym.Symbol):
+        return sym.expand(sym.simplify(jones_poly)).subs(A, var**0.25)
+    return round(abs(jones_poly))
+
+
+def crossings_connectedness_order(planar_diagram):
+    from pyknot2.representations.planardiagram import Crossing
+    crossings = [x for x in planar_diagram if isinstance(x, Crossing)]
+
+    inner_components = crossings[0].components()
+    crossings_remaining = crossings[1:]
+    ordered_crossings = [crossings[0]]
+
+    for i in range(len(crossings_remaining)):
+        connectedness = []
+        for crossing in crossings_remaining:
+            new_components = (len(list(set(crossing.components() + inner_components))) -
+                              len(inner_components))
+
+            connectedness.append(len(crossing.components()) - new_components)
+        most_connected_index = connectedness.index(max(connectedness))
+        inner_components += crossings_remaining[most_connected_index].components()
+        inner_components = list(set(inner_components))
+        ordered_crossings.append(crossings_remaining[most_connected_index])
+        del crossings_remaining[most_connected_index]
+
+    return ordered_crossings
+
+def contract_points(planar_diagram):
+    '''
+    For appropriately contracting :class: `Points` in a
+    :class: `PlanarDiagram` According to the following rules:
+
+    P_a,b P_b,c -> P_a,c
+    P_a,b P_a,b -> P_a,a
+    '''
+    import copy
+
+    pd_crossings = [x for x in planar_diagram if type(x) == Crossing]
+    pd_points = [x for x in planar_diagram if type(x) == Point]
+
+    pd_trimmed = PlanarDiagram()
+    for crossing in pd_crossings:
+        pd_trimmed.append(crossing)
+
+    substituted_points = []
+    for i in range(len(pd_points)):
+        if pd_points[i] not in substituted_points:
+            pd_trimmed.append(pd_points[i])
+            totally_simplified = False
+            while not totally_simplified:
+                pd_trimmed_old = copy.copy(pd_trimmed)
+                for j in range(i+1, len(pd_points)):
+                    if (len(pd_trimmed[-1].components()) > 1 and
+                            len(pd_points[j].components()) > 1 and
+                            pd_points[j] not in substituted_points):
+                        # This skips P_a,a situations
+                        if pd_trimmed[-1].components() != pd_points[j].components():
+                            # This conditions skips (P_a,b P_a,b) situations
+                            substituted = False
+                            p = 0
+                            while substituted is not True and p != 2:
+                                q = 0
+                                while substituted is not True and q != 2:
+                                    if pd_trimmed[-1].components()[p] == pd_points[j].components()[q]:
+                                        pd_trimmed.append(Point(pd_trimmed[-1].components()[(p+1) % 2],
+                                                                pd_points[j].components()[(q+1) % 2]))
+                                        del pd_trimmed[-2]
+                                        substituted = True
+                                        substituted_points.append(pd_points[j])
+                                    q += 1
+                                p += 1
+                        else:
+                            # This deals with (P_a,b P_a,b) situations
+                            pd_trimmed.append(Point(pd_trimmed[-1].components()[0],
+                                                    pd_trimmed[-1].components()[0]))
+                            del pd_trimmed[-2]
+                            substituted_points.append(pd_points[j])
+                if pd_trimmed_old == pd_trimmed:
+                    totally_simplified = True
+    return pd_trimmed
 
 
 def _write_mathematica_script(filen, text):
@@ -928,7 +1097,7 @@ def _vassiliev_degree_3_python(representation):
                                               signs[i3])
                     used_sets.add(ordered_indices)
 
-    print 
+    print()
     
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
@@ -1059,12 +1228,14 @@ def virtual_vassiliev_degree_3(representation):
     gc = gc[0]
     arrows, signs = _crossing_arrows_and_signs(
         gc, representation.crossing_numbers)
+
+    diagrams_found = [[] for _ in range(8)]
     
     crossing_numbers = list(representation.crossing_numbers)
     used_sets = set()
     representations_sum = 0
     for index, i1 in enumerate(crossing_numbers):
-        if index % 10 == 0:
+        if index % 10 == 0 and len(crossing_numbers) > 10:
             vprint('\rCurrently comparing index {}'.format(index), False)
         arrow1 = arrows[i1]
         a1s, a1e = arrow1
@@ -1083,8 +1254,10 @@ def virtual_vassiliev_degree_3(representation):
                 first_two_ordered_indices not in used_sets):
                 if signs[i1] > 0:
                     representations_sum -= 1
+                    # print('7')
                 else:
                     representations_sum += 1
+                    # print('8')
                 used_sets.add(first_two_ordered_indices)
            
             for i3 in crossing_numbers:
@@ -1106,38 +1279,46 @@ def virtual_vassiliev_degree_3(representation):
                     representations_sum += 3*(signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('1')
 
                 if (a2s < a1e and a3s < a1e and a2s < a3s and
                     a2e < a3e and a2e > a1e):
                     representations_sum -= (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('2')
 
                 if (a2s < a1e and a3e < a1e and a3e > a2s and
                     a3s > a1e and a2e > a3s):
                     representations_sum += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('3')
 
                 if (a2e < a1e and a3s < a1e and a3s > a2e and
                     a3e > a1e and a2s > a3e):
                     representations_sum += (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('4')
 
                 if (a2e < a1e and a3e < a1e and a3s < a2s and
                     a3s > a1e):
                     representations_sum -= (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('5')
 
                 if (a2s < a1e and a3s < a1e and a3e < a2e and
                     a3e > a1e):
                     representations_sum -= (signs[i1] * signs[i2] *
                                               signs[i3])
                     used_sets.add(ordered_indices)
+                    # print('6')
 
     print()
 
     return representations_sum
     return int(round(representations_sum))
+
+
