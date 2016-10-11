@@ -25,7 +25,7 @@ class Cell(object):
         lines = [l for l in lines if len(l) > 1]
         if downsample is not None:
             lines = [l[::downsample] for l in lines]
-        lines = map(_interpret_line, lines)
+        lines = list(map(_interpret_line, lines))
         if cram:
             lines = [_cram_into_cell(l, self.shape) for l in lines]
         self.lines = [_cut_line_at_jumps(l, self.shape) for l in lines]
@@ -36,16 +36,19 @@ class Cell(object):
             self.line_types = [_test_periodicity(l, self.shape) for l in self.lines]
 
     @classmethod
-    def from_qwer(cls, (q, w, e, r), shape, **kwargs):
+    def from_qwer(cls, qwer, shape, **kwargs):
         '''
         Returns an instance of Cell having parsed the output line format
         of Sandy's simulations.
         '''
+        q, w, e, r = qwer
         if len(w) > 0 and isinstance(w[0], tuple):
             w = [l[2] for l in w]
         if len(e) > 0 and isinstance(e[0], tuple):
             e = [l[2] for l in e]
-        return cls(q+w+e, shape, **kwargs)
+        output = cls(q+w+e, shape, **kwargs)
+        output.qwer = (q, w, e, r)
+        return output
 
     def append(self, line, cram=False):
         line = _interpret_line(line)
@@ -78,6 +81,16 @@ class Cell(object):
     def to_povray(self, filen, spline='cubic_spline'):
         from pyknot2.visualise import cell_to_povray
         cell_to_povray(filen, self.lines, self.shape)
+
+    def get_lengths(self):
+        from pyknot2.spacecurves.openknot import OpenKnot
+        lengths = []
+        for line in self.lines:
+            points = n.vstack(line)
+            k = OpenKnot.from_periodic_line(points, self.shape,
+                                            perturb=False)
+            lengths.append(k.arclength())
+        return lengths
 
 
                 
