@@ -16,7 +16,17 @@ ROTATION_MAGIC_NUMBERS = (0.02, 1.1)
 ROTATION_MAGIC_NUMBERS = (0.53, 1.0)
 
 class PeriodicKnot(object):
-    def __init__(self, points, period_vector=None, autorotate=True):
+    def __init__(self, points, period_vector=None, autorotate=True, repeats=1):
+
+        if repeats < 1:
+            raise ValueError('Must be at least 1 repeat of the base points')
+        if repeats > 1:
+            k = PeriodicKnot(points, period_vector=period_vector, autorotate=False)
+            new_points = [points]
+            for i in range(1, repeats):
+                new_points.append(k.translated_points(i))
+            points = n.vstack(new_points)
+        
         self.points = n.array(points).copy()
         self._period_vector = period_vector
 
@@ -26,6 +36,50 @@ class PeriodicKnot(object):
 
         if self._period_vector is not None:
             self._period_vector = rotate_to_top(*ROTATION_MAGIC_NUMBERS).dot(self._period_vector)
+
+    @classmethod
+    def from_periodic_line(cls, line, shape, perturb=True, **kwargs):
+        '''Returns a :class:`PeriodicKnot` instance in which the line has been
+        unwrapped through
+        the periodic boundaries.
+
+        Parameters
+        ----------
+        line : array-like
+            The Nx3 vector of points in the line
+        shape : array-like
+            The x, y, z distances of the periodic boundary
+        perturb : bool
+            If True, translates and rotates the knot to avoid any lattice
+            problems.
+        '''
+        shape = ensure_shape_tuple(shape)
+
+        points = line.copy()
+        points += n.array([0.00123, 0.00231, 0.00321])
+
+        dx, dy, dz = shape
+        for i in range(1, len(points)):
+            prevLine = points[i-1]
+            curLine = points[i]
+            rest = points[i:]
+            change = curLine - prevLine
+            if -1.05*dx < change[0] < -0.95*dx:
+                rest[:, 0] += dx
+            if 1.05*dx > change[0] > 0.95*dx:
+                rest[:, 0] -= dx
+            if -1.05*dy < change[1] < -0.95*dy:
+                rest[:, 1] += dy
+            if 1.05*dy > change[1] > 0.95*dy:
+                rest[:, 1] -= dy
+            if -1.05*dz < change[2] < -0.95*dz:
+                rest[:, 2] += dz
+            if 1.05*dz > change[2] > 0.95*dz:
+                rest[:, 2] -= dz
+
+        return cls(points)
+
+
 
     def __len__(self):
         return len(self.points)
@@ -117,6 +171,18 @@ class PeriodicKnot(object):
     def translated_points(self, num):
         return self.points + num * self.period_vector
 
+    def smooth(self, **kwargs):
+        '''Smooths each of the x, y, z components of self.points, using the
+        smooth function of
+        :class:`pyknot2.spacecurves.spacecurve.Spacecurve`.
+
+        .. warning:: This *can* change the topology of the curve.
+        '''
+        from pyknot2.spacecurves.openknot import OpenKnot
+        k = OpenKnot(self.points)
+        k.smooth(**kwargs)
+        self.points = k.points
+
     def plot_projection_with(self, num_translations=0, mat=None):
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
@@ -143,6 +209,7 @@ class PeriodicKnot(object):
         return points
 
     def rotate(self, angles=None):
+
         '''
         Rotates all the points of self by the given angles in each axis.
 
@@ -1319,7 +1386,29 @@ def alternative_periodic_vassiliev_degree_4_conway_z4(
                              true_crossing_numbers[i4])) + [
                                  si2 - si1,
                                  si3 - si2,
-                                 si4 - si3])
+                                 si4 - si3] + [(a1s < a2e < a3s < a4e < a1e < a2s < a3e < a4s),
+                                               (a1s < a2e < a1e < a2s < a3s < a4e < a3e < a4s),
+                                               (a1s < a2e < a1e < a3s < a4e < a3e < a4s < a1s),
+                                               (a1s < a2e < a3s < a4e < a3e < a4s < a1e < a2s),
+                                               (a1s < a2s < a3e < a2e < a3s < a4e < a1e < a4s),
+                                               #
+                                               (a1s < a2e < a3s < a4e < a3e < a1e < a2s < a4s),
+                                               (a1s < a2e < a3e < a2s < a4e < a1e < a3s < a4s),
+                                               (a1s < a2e < a1e < a3s < a4e < a2s < a3e < a4s),
+                                               (a1s < a2e < a3e < a4s < a1e < a3s < a4e < a2s),
+                                               (a1s < a2e < a3s < a4e < a2s < a3e < a1e < a4s),
+                                               (a1s < a2e < a4s < a1e < a3s < a4e < a3e < a4s),
+                                               (a1s < a2s < a3e < a1e < a4s < a2e < a4e < a3s),
+                                               (a1s < a2s < a3e < a4e < a1e < a4s < a2e < a3s),
+                                               #
+                                               (a1s < a2e < a1e < a3s < a2s < a4e < a3e < a4s),
+                                               (a1s < a2e < a3s < a1e < a4s < a3e < a4e < a2s),
+                                               (a1s < a2s < a3e < a4s < a2e < a4e < a1e < a3e),
+                                               (a1s < a2s < a3e < a1e < a3s < a4e < a2e < a4s),
+                                               (a1s < a2s < a3e < a2e < a4e < a1e < a4s < a3s),
+                                               (a1s < a2e < a1e < a3s < a4e < a3e < a2s < a4s),
+                                               (a1s < a2e < a3e < a4e < a3s < a1e < a4s < a2s),
+                                               (a1s < a2e < a3e < a2s < a4e < a3s < a1e < a4s)])
 
                     if real_cs in crossings_done:
                         continue
