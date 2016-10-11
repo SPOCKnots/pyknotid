@@ -21,7 +21,7 @@ class DTNotation(object):
     '''
 
     def __init__(self, code):
-        if isinstance(code, (str, unicode)):
+        if isinstance(code, (str)):
             self._init_from_string(code)
         elif isinstance(code, n.ndarray):
             code = [code]
