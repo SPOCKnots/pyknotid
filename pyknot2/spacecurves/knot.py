@@ -166,9 +166,24 @@ class Knot(SpaceCurve):
         '''
         Returns the hyperbolic volume at the given point, via
         :meth:`pyknot2.representations.PlanarDiagram.as_spherogram`.
+
+        Returns
+        -------
+        volume : float
+            A float representing the volume returned.
+        accuracy : int
+            The number of digits of precision. This is significant
+            digits, e.g. 0.00021 with 1 digit precision = 2E-4.
+        solution_type : str
+            The solution type of the manifold. Normally one of:
+            - 'contains degenerate tetrahedra' => may not be a valid result
+            - 'all tetrahedra positively oriented' =>
+              really probably hyperbolic
         '''
         from ..invariants import hyperbolic_volume
-        return hyperbolic_volume(self.planar_diagram())
+        m = self.exterior_manifold()
+        v = m.volume()
+        return (float(v), v.accuracy, m.solution_type())
 
     def exterior_manifold(self):
         '''
@@ -421,7 +436,11 @@ class Knot(SpaceCurve):
         fig.tight_layout()
         fig.show()
         return fig, ax
-        
+
+
+def mag(v):
+    return n.sqrt(v.dot(v))
+
 
 def _isolate_open_knot(k, det, start, end):
     from pyknot2.spacecurves import OpenKnot
