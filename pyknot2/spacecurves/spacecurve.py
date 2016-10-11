@@ -15,6 +15,7 @@ from scipy.interpolate import interp1d
 try:
     from pyknot2.spacecurves import chelpers
 except ImportError:
+    print('Could not import chelpers, using *slower* Python routine')
     from pyknot2.spacecurves import helpers as chelpers
 from pyknot2.spacecurves import helpers as helpers
 from pyknot2.spacecurves.geometry import arclength, radius_of_gyration
