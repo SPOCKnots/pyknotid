@@ -80,7 +80,7 @@ class PlanarDiagram(list):
         return Link(scs)
 
     def as_networkx_extended(self):
-        print('pd is', self)
+        # print('pd is', self)
         import networkx as nx
         edges = []
         cache = {}
@@ -131,7 +131,7 @@ class PlanarDiagram(list):
 
         # print('intermediates are', intermediate_edges_by_node)
         g = nx.Graph()
-        g.add_nodes_from(range(len(self))*3)
+        g.add_nodes_from(list(range(len(self)))*3)
         g.add_edges_from(edges)
 
         # print('possible heights:')
@@ -168,7 +168,7 @@ class PlanarDiagram(list):
         first_edge : tuple
             The first edge in the graph, including (start, end, arc_number).
         '''
-        print('pd is', self)
+        # print('pd is', self)
         import networkx as nx
         edges = []
         cache = {}
