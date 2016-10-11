@@ -2,7 +2,7 @@
 Visualise
 =========
 
-This module contains functions for plotting knots, supporting
+Functions for plotting knots, supporting
 different toolkits and types of plot.
 '''
 
