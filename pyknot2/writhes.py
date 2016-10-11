@@ -271,9 +271,13 @@ def slip_vassiliev_2(gc):
     # codes = ['1-,2+,3+,1+,2-,3-']
     results = writhing_numbers(gc, codes, based=True)
 
+    gc = gc.flipped()
+    results2 = writhing_numbers(gc, codes, based=True)
+
     for code in codes:
         print('{}: {}'.format(code, results[code]))
-    return np.sum(results.values())
+    return np.sum(results.values()) + np.sum(results2.values())
+    return np.sum(results.values()), np.sum(results2.values())
 
 
 def vassiliev_2_long_form(gc):
