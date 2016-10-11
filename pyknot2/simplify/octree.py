@@ -14,6 +14,10 @@ except ImportError:
     cline_to_segments = None
 
 
+class OctreeError(Exception):
+    pass
+
+
 class OctreeCell(object):
     '''Stores line segments, and is capable of splitting and simplifying
     them.
@@ -58,9 +62,9 @@ class OctreeCell(object):
         elif cut_selection == 'uniform':
             self.cut_planes = self.get_uniform_random_planes()
         elif cut_selection == 'com':
-            raise Exception('com cut selection not yet supported')
+            raise OctreeError('com cut selection not yet supported')
         else:
-            raise Exception('invalid choice of cut_selection')
+            raise OctreeError('invalid choice of cut_selection')
 
         if state is None:
             state = {}
@@ -372,7 +376,7 @@ class OctreeCell(object):
         '''
         lines = self.get_lines(remove_unnecessary_jumps)
         if len(lines) == 0:
-            raise Exception('Tried to get single line but no lines found.')
+            raise OctreeError('Tried to get single line but no lines found.')
         return lines[0]
 
 
@@ -472,7 +476,7 @@ class LineSegment(object):
             elif x <= cut_x and y > cut_y:
                 return 'ful'
             else:
-                raise Exception('Segment not in any region?')
+                raise OctreeError('Segment not in any region?')
         elif z <= cut_z:
             if x > cut_x and y >= cut_y:
                 return 'bur'
@@ -483,9 +487,9 @@ class LineSegment(object):
             elif x <= cut_x and y > cut_y:
                 return 'bul'
             else:
-                raise Exception('Segment not in any region?')
+                raise OctreeError('Segment not in any region?')
         else:
-            raise Exception('Segment not in any region?')
+            raise OctreeError('Segment not in any region?')
 
     def cut_at(self, cuts):
         '''Returns a list of new LineSegments, resulting from cutting self at
@@ -745,7 +749,7 @@ def find_octants_of_segments(segments, cuts):
         elif cell == 'bul':
             bul.append(seg)
         else:
-            raise Exception('Segment not in recognised cell.')
+            raise OctreeError('Segment not in recognised cell.')
     return (fur, flr, fll, ful, bur, blr, bll, bul)
 
 def resample(points):

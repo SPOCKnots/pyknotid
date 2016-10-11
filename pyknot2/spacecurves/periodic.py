@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, division
 
 import numpy as n
 
@@ -16,15 +16,73 @@ ROTATION_MAGIC_NUMBERS = (0.02, 1.1)
 ROTATION_MAGIC_NUMBERS = (0.53, 1.0)
 
 class PeriodicKnot(object):
-    def __init__(self, points, period_vector=None):
-        self.points = points
+    def __init__(self, points, period_vector=None, autorotate=True, repeats=1):
+
+        if repeats < 1:
+            raise ValueError('Must be at least 1 repeat of the base points')
+        if repeats > 1:
+            k = PeriodicKnot(points, period_vector=period_vector, autorotate=False)
+            new_points = [points]
+            for i in range(1, repeats):
+                new_points.append(k.translated_points(i))
+            points = n.vstack(new_points)
+        
+        self.points = n.array(points).copy()
         self._period_vector = period_vector
 
         from pyknot2.spacecurves.rotation import rotate_to_top
-        self._apply_matrix(rotate_to_top(*ROTATION_MAGIC_NUMBERS))
+        if autorotate:
+            self._apply_matrix(rotate_to_top(*ROTATION_MAGIC_NUMBERS))
 
         if self._period_vector is not None:
             self._period_vector = rotate_to_top(*ROTATION_MAGIC_NUMBERS).dot(self._period_vector)
+
+    @classmethod
+    def from_periodic_line(cls, line, shape, perturb=True, **kwargs):
+        '''Returns a :class:`PeriodicKnot` instance in which the line has been
+        unwrapped through
+        the periodic boundaries.
+
+        Parameters
+        ----------
+        line : array-like
+            The Nx3 vector of points in the line
+        shape : array-like
+            The x, y, z distances of the periodic boundary
+        perturb : bool
+            If True, translates and rotates the knot to avoid any lattice
+            problems.
+        '''
+        shape = ensure_shape_tuple(shape)
+
+        points = line.copy()
+        points += n.array([0.00123, 0.00231, 0.00321])
+
+        dx, dy, dz = shape
+        for i in range(1, len(points)):
+            prevLine = points[i-1]
+            curLine = points[i]
+            rest = points[i:]
+            change = curLine - prevLine
+            if -1.05*dx < change[0] < -0.95*dx:
+                rest[:, 0] += dx
+            if 1.05*dx > change[0] > 0.95*dx:
+                rest[:, 0] -= dx
+            if -1.05*dy < change[1] < -0.95*dy:
+                rest[:, 1] += dy
+            if 1.05*dy > change[1] > 0.95*dy:
+                rest[:, 1] -= dy
+            if -1.05*dz < change[2] < -0.95*dz:
+                rest[:, 2] += dz
+            if 1.05*dz > change[2] > 0.95*dz:
+                rest[:, 2] -= dz
+
+        return cls(points)
+
+
+
+    def __len__(self):
+        return len(self.points)
 
     @property
     def period_vector(self):
@@ -38,6 +96,12 @@ class PeriodicKnot(object):
             rotate_vector_to_top, rotate_axis_angle)
         self._apply_matrix(rotate_vector_to_top(v))
         self._apply_matrix(rotate_axis_angle((0, 1., 0), n.pi/2.))
+
+    def get_periodic_segments(self):
+        '''Returns a list of line segments making up the curve, cut at the
+        edges of a single periodic repeat.
+        '''
+        
 
     def interpolate(self, factor=2):
         if factor == 1:
@@ -67,7 +131,7 @@ class PeriodicKnot(object):
         # print('largest possible distance', largest_possible_distance)
         # print('end_end', end_end_distance)
 
-        return int(n.ceil(largest_possible_distance / end_end_distance) + 2)
+        return int(n.ceil(largest_possible_distance / end_end_distance) + 4)
 
     def roll(self, num):
         pv = self.period_vector
@@ -101,11 +165,23 @@ class PeriodicKnot(object):
         for i in range(-num_translations, num_translations+1):
             lines.append(self.translated_points(i))
         l = Link(lines)
-        l.plot(**kwargs)
+        l.plot(closed=False, **kwargs)
         return l
 
     def translated_points(self, num):
         return self.points + num * self.period_vector
+
+    def smooth(self, **kwargs):
+        '''Smooths each of the x, y, z components of self.points, using the
+        smooth function of
+        :class:`pyknot2.spacecurves.spacecurve.Spacecurve`.
+
+        .. warning:: This *can* change the topology of the curve.
+        '''
+        from pyknot2.spacecurves.openknot import OpenKnot
+        k = OpenKnot(self.points)
+        k.smooth(**kwargs)
+        self.points = k.points
 
     def plot_projection_with(self, num_translations=0, mat=None):
         import matplotlib.pyplot as plt
@@ -133,6 +209,7 @@ class PeriodicKnot(object):
         return points
 
     def rotate(self, angles=None):
+
         '''
         Rotates all the points of self by the given angles in each axis.
 
@@ -242,6 +319,58 @@ class PeriodicKnot(object):
         crossings.sort(key=lambda j: j[0])
         return n.array(crossings), core_num, core_index
 
+    def alternative_raw_crossings(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        from pyknot2.spacecurves.rotation import rotate_to_top
+
+        points = self.points_with_translations(num_translations)
+
+        from pyknot2.spacecurves.openknot import OpenKnot
+
+        k = OpenKnot(points)
+
+        crossings = k.raw_crossings()
+
+        num_points = len(points)
+        core_num = len(self.points) - 1
+        core_index = num_translations * core_num 
+
+        return crossings, core_num, core_index
+
+    def alternative_gauss_code(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        crossings, core_num, core_index = self.alternative_raw_crossings(num_translations)
+
+        equivalent_crossing_indices = get_equivalent_crossing_indices(
+            crossings, len(self.points) - 1)
+
+        from pyknot2.representations import GaussCode
+        gc = GaussCode(crossings)
+        # if num_translations == 0:
+        #     return gc, defaultdict(set)
+
+        gc_array = gc._gauss_code[0]
+
+        equivalent_crossing_numbers = get_equivalent_crossing_numbers(
+            equivalent_crossing_indices, gc._gauss_code[0])
+
+        core_crossings = set()
+        multiplicities = defaultdict(lambda *j: 1)
+        for raw_crossing, gc_crossing in zip(crossings, gc_array):
+            if ((core_index <= raw_crossing[0] <= core_index + core_num) or
+                (core_index <= raw_crossing[1] <= core_index + core_num)):
+                core_crossings.add(gc_crossing[0])
+                multiplicities[gc_crossing[0]] = 1
+            if ((core_index <= raw_crossing[0] <= core_index + core_num) and
+                (core_index <= raw_crossing[1] <= core_index + core_num)):
+                multiplicities[gc_crossing[0]] = 2
+
+        true_crossing_numbers = get_true_crossing_numbers(equivalent_crossing_numbers, core_crossings)
+
+        return gc, core_crossings, multiplicities, true_crossing_numbers
+
     def gauss_code(self, num_translations=None):
         if num_translations is None:
             num_translations = self.nearest_non_overlapping_translation()
@@ -265,11 +394,9 @@ class PeriodicKnot(object):
             crossing_number = code[i][0]
             if crossing_number not in translation_numbers:
                 position1 = row[0]
-                # translation1 = int(n.floor((position1 - centre_start) / (len(self.points - 1))))
                 translation1 = int(position1 / (len(self.points) - 1)) - num_translations
 
                 position2 = row[1]
-                # translation2 = int(n.floor((position2 - centre_start) / (len(self.points - 1))))
 
                 translation2 = int(position2 / (len(self.points) - 1)) - num_translations
 
@@ -283,6 +410,13 @@ class PeriodicKnot(object):
             num_translations = self.nearest_non_overlapping_translation()
         gc, equivalencies, translations = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_2_without_double_count(gc, equivalencies, translations)
+
+    def alternative_vassiliev_degree_2(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_2_without_double_count(gc, core_crossings, multiplicities,
+                                                                            true_crossing_numbers)
 
     def vassiliev_degree_2s(self, number_of_samples=10):
         v2s = []
@@ -302,6 +436,35 @@ class PeriodicKnot(object):
             num_translations = self.nearest_non_overlapping_translation()
         gc, equivalencies, translations = self.gauss_code(num_translations)
         return periodic_vassiliev_degree_3_without_double_count(gc, equivalencies, translations)
+
+    def alternative_vassiliev_degree_3(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+
+    def silly_v3(self, nt=None):
+        v3_1 = self.alternative_vassiliev_degree_3(nt)
+        self.points[:, 1:] *= -1
+        v3_2 = self.alternative_vassiliev_degree_3(nt)
+        self.points[:, 1:] *= -1
+        return v3_1, v3_2
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_3_without_double_count(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+    def vass_flip(self):
+        self.points[:, 1:] *= -1
+
+    def alternative_vassiliev_degree_4_conway_z4(self, num_translations=None):
+        if num_translations is None:
+            num_translations = self.nearest_non_overlapping_translation()
+        gc, core_crossings, multiplicities, true_crossing_numbers = self.alternative_gauss_code(num_translations)
+        return alternative_periodic_vassiliev_degree_4_conway_z4(gc, core_crossings, 
+                                                                            true_crossing_numbers)
+
 
     def vassiliev_degree_3s(self, number_of_samples=10):
         v3s = []
@@ -776,12 +939,13 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
             arrow2 = arrows[i2]
             a2s, a2e = arrow2
 
-            if a2s > a1s and a2e < a1s and a1e > a2s:
-
-                ti1 = translation_indices[i1]
-                ti2 = translation_indices[i2]
+            # if a2s > a1s and a2e < a1s and a1e > a2s:
+            if a1e > a2e and a1s < a2e and a2s > a1e:
                 
+
                 representations_sum += signs[i1] * signs[i2]
+                print('t1')
+                print('found with {} and {}'.format(i1, i2))
 
                 # print('vass with', i1, i2, signs[i1] * signs[i2], 'indices',
                 #       translation_indices[i1], translation_indices[i2])
@@ -790,6 +954,8 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
                         crossings_already_done.add(tuple(sorted([i1other, i2other])))
             elif a1s > a2s and a1e < a2s and a2e > a1s:
                 representations_sum += signs[i1] * signs[i2]
+                print('t2')
+                print('found with {} and {}'.format(i1, i2))
 
                 # print('vass with', i1, i2, '...', signs[i1] * signs[i2], 'indices',
                 #       translation_indices[i1], translation_indices[i2])
@@ -798,6 +964,176 @@ def periodic_vassiliev_degree_2_without_double_count(representation, equivalent_
                         crossings_already_done.add(tuple(sorted([i1other, i2other])))
 
     return representations_sum
+
+def alternative_periodic_vassiliev_degree_2_without_double_count(representation, core_crossings=set(),
+                                                                 multiplicities={}, true_crossing_numbers={}):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate v2 '
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_done = set()
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers[index+1:]:
+
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            if not (i1 in core_crossings or i2 in core_crossings):
+                continue
+
+            if a1s > a2s and a1e < a2s and a2e > a1s:
+
+                real_cs = tuple(sorted((true_crossing_numbers[i1], true_crossing_numbers[i2])) + [abs(i2 - i1)])
+                # real_cs = tuple(sorted((true_crossing_numbers[i1], true_crossing_numbers[i2])))
+                if real_cs in crossings_done:
+                    continue
+                crossings_done.add(real_cs)
+                
+                representations_sum += signs[i1] * signs[i2]  # * multiplicities[i1] * multiplicities[i2]
+
+    return representations_sum
+
+def alternative_periodic_vassiliev_degree_3_without_double_count(
+        representation, core_crossings, true_crossing_numbers):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate v2 '
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_done = set()
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum_1 = 0
+    representations_sum_2 = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers:
+
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            for i3 in crossing_numbers:
+
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+
+                if not (i1 in core_crossings or i2 in core_crossings or i3 in core_crossings):
+                    continue
+
+                # # Not sure if this condition is good
+                # if len(set([true_crossing_numbers[ii] for ii in [i1, i2, i3]])) < 3:
+                #     continue
+
+                if len(set([i1, i2, i3])) < 3:
+                    continue
+
+                # if len(set([true_crossing_numbers[ii] for ii in [i1, i2, i3]])) < 3:
+                #     continue
+
+                si1, si2, si3 = sorted([i1, i2, i3])
+                real_cs = tuple(
+                    sorted(
+                        (true_crossing_numbers[i1],
+                         true_crossing_numbers[i2],
+                         true_crossing_numbers[i3])) + [
+                             si2 - si1,
+                             si3 - si2] + [(a1s < a2s < a3e < a1e < a3s < a2e),
+                                           (a1s < a2e < a3e < a2s < a1e < a3s),
+                                           (a1e < a2e < a1s < a3e < a2s < a3s),
+                                           (a1e < a2s < a3e < a1s < a3s < a2e),
+                                           (a1s < a2e < a3s < a2s < a1e < a3e),
+                                           (a1e < a2s < a1s < a3e < a2e < a3s)])
+
+                if i1 == 20 and i2 == 21 and i3 == 22:
+                    print('!!!')
+                    print('rcs', real_cs)
+                    print((a1s < a2s < a3e < a1e < a3s < a2e),
+                          (a1s < a2e < a3e < a2s < a1e < a3s),
+                          (a1e < a2e < a1s < a3e < a2s < a3s),
+                          (a1e < a2s < a3e < a1s < a3s < a2e),
+                          (a1s < a2e < a3s < a2s < a1e < a3e),
+                          (a1e < a2s < a1s < a3e < a2e < a3s))
+                    
+
+                if real_cs in crossings_done:
+                    continue
+
+                if ((a1s < a2s < a3e < a1e < a3s < a2e) or
+                    (a1s < a2e < a3e < a2s < a1e < a3s) or
+                    (a1e < a2e < a1s < a3e < a2s < a3s) or
+                    (a1e < a2s < a3e < a1s < a3s < a2e) or
+                    (a1s < a2e < a3s < a2s < a1e < a3e) or
+                    (a1e < a2s < a1s < a3e < a2e < a3s)):
+                    print('r1 with', i1, i2, i3, signs[i1] * signs[i2] *
+                          signs[i3])
+                    print('and real cs', real_cs)
+                    print((a1s < a2s < a3e < a1e < a3s < a2e),
+                          (a1s < a2e < a3e < a2s < a1e < a3s),
+                          (a1e < a2e < a1s < a3e < a2s < a3s),
+                          (a1e < a2s < a3e < a1s < a3s < a2e),
+                          (a1s < a2e < a3s < a2s < a1e < a3e),
+                          (a1e < a2s < a1s < a3e < a2e < a3s))
+                    representations_sum_1 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    crossings_done.add(real_cs)
+                # if ((a1s < a2e < a3s < a1e < a3e < a2s) or
+                #     (a1e < a2s < a3e < a2e < a1s < a3s) or
+                #     (a1s < a2e < a1e < a3s < a2s < a3e) or
+                #     (a1e < a2e < a3s < a1s < a3e < a2s) or
+                #     (a1e < a2s < a3s < a2e < a1s < a3e) or
+                #     (a1s < a2s < a1e < a3s < a2e < a3e)):
+                #     print('r1 alternative with', i1, i2, i3, signs[i1] * signs[i2] *
+                #           signs[i3])
+                #     print('and real cs', real_cs)
+                #     print((a1s < a2s < a3e < a1e < a3s < a2e),
+                #           (a1s < a2e < a3e < a2s < a1e < a3s),
+                #           (a1e < a2e < a1s < a3e < a2s < a3s),
+                #           (a1e < a2s < a3e < a1s < a3s < a2e),
+                #           (a1s < a2e < a3s < a2s < a1e < a3e),
+                #           (a1e < a2s < a1s < a3e < a2e < a3s))
+                #     representations_sum_1 += (signs[i1] * signs[i2] *
+                #                               signs[i3])
+                #     crossings_done.add(real_cs)
+                if ((a2s > a1e and a3e > a2s and a1s > a3e and a2e > a1s and a3s > a2e) or
+                    (a2e > a1s and a3s > a2e and a1e > a3s and a2s > a1e and a3e > a2s)):
+                  
+                    print('r3 with', i1, i2, i3, signs[i1] * signs[i2] *
+                          signs[i3])
+                    print('and real cs', real_cs)
+                    representations_sum_2 += (signs[i1] * signs[i2] *
+                                              signs[i3])
+                    crossings_done.add(real_cs)
+
+    return representations_sum_1 / 2. + representations_sum_2
+    return int(round(representations_sum_1 / 2.)) + representations_sum_2
+
 
 def periodic_vassiliev_degree_3_without_double_count(representation,
                                                      equivalent_crossing_numbers,
@@ -990,3 +1326,127 @@ def _fold(points, shape):
 
     return n.vstack(new_points)[1:]
     
+def get_true_crossing_numbers(equivalent_cs, cores):
+    output = {}
+    for crossing, equivalents in equivalent_cs.items():
+        output[crossing] = min([c for c in equivalents if c in cores])
+
+    return output
+
+
+def alternative_periodic_vassiliev_degree_4_conway_z4(
+        representation, core_crossings, true_crossing_numbers):
+    # Hacky periodic version of the vassiliev function in
+    # pyknot2.invariants
+    from pyknot2.invariants import _crossing_arrows_and_signs
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate v2 '
+                        'for something with more than 1 component')
+
+    gc = gc[0]
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+
+    crossings_done = set()
+
+    crossing_numbers = list(representation.crossing_numbers)
+    representations_sum = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers:
+
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            for i3 in crossing_numbers:
+
+                arrow3 = arrows[i3]
+                a3s, a3e = arrow3
+
+                for i4 in crossing_numbers:
+                    arrow4 = arrows[i4]
+                    a4s, a4e = arrow4
+
+                    if not (i1 in core_crossings or i2 in core_crossings or i3 in core_crossings or i4 in core_crossings):
+                        continue
+
+                    if len(set([true_crossing_numbers[ii] for ii in (i1, i2, i3, i4)])) < 4:
+                        continue
+                    si1, si2, si3, si4 = sorted([i1, i2, i3, i4])
+                    real_cs = tuple(
+                        sorted(
+                            (true_crossing_numbers[i1],
+                             true_crossing_numbers[i2],
+                             true_crossing_numbers[i3],
+                             true_crossing_numbers[i4])) + [
+                                 si2 - si1,
+                                 si3 - si2,
+                                 si4 - si3] + [(a1s < a2e < a3s < a4e < a1e < a2s < a3e < a4s),
+                                               (a1s < a2e < a1e < a2s < a3s < a4e < a3e < a4s),
+                                               (a1s < a2e < a1e < a3s < a4e < a3e < a4s < a1s),
+                                               (a1s < a2e < a3s < a4e < a3e < a4s < a1e < a2s),
+                                               (a1s < a2s < a3e < a2e < a3s < a4e < a1e < a4s),
+                                               #
+                                               (a1s < a2e < a3s < a4e < a3e < a1e < a2s < a4s),
+                                               (a1s < a2e < a3e < a2s < a4e < a1e < a3s < a4s),
+                                               (a1s < a2e < a1e < a3s < a4e < a2s < a3e < a4s),
+                                               (a1s < a2e < a3e < a4s < a1e < a3s < a4e < a2s),
+                                               (a1s < a2e < a3s < a4e < a2s < a3e < a1e < a4s),
+                                               (a1s < a2e < a4s < a1e < a3s < a4e < a3e < a4s),
+                                               (a1s < a2s < a3e < a1e < a4s < a2e < a4e < a3s),
+                                               (a1s < a2s < a3e < a4e < a1e < a4s < a2e < a3s),
+                                               #
+                                               (a1s < a2e < a1e < a3s < a2s < a4e < a3e < a4s),
+                                               (a1s < a2e < a3s < a1e < a4s < a3e < a4e < a2s),
+                                               (a1s < a2s < a3e < a4s < a2e < a4e < a1e < a3e),
+                                               (a1s < a2s < a3e < a1e < a3s < a4e < a2e < a4s),
+                                               (a1s < a2s < a3e < a2e < a4e < a1e < a4s < a3s),
+                                               (a1s < a2e < a1e < a3s < a4e < a3e < a2s < a4s),
+                                               (a1s < a2e < a3e < a4e < a3s < a1e < a4s < a2s),
+                                               (a1s < a2e < a3e < a2s < a4e < a3s < a1e < a4s)])
+
+                    if real_cs in crossings_done:
+                        continue
+
+                    # if ((a2e > a1s and a3s > a2e and a4e > a3s and a1e > a4e and a3s > a1e and a3e > a2s and a4s > a3e) or
+                    #     (a2e > a1s and a1e > a2e and a2s > a1e and a3s > a2s and a4e > a3s and a3e > a4e and a4s > a3e) or
+                    #     (a2e > a1s and a1e > a2e and a3s > a1e and a4e > a3s and a3e > a4e and a4s > a3e and a2s > a4s) or
+                    #     (a2e > a1s and a3s > a2e and a4e > a3s and a3e > a4e and a4s > a3e and a1e > a4s and a2s > a1e) or
+                    #     (a2s > a1s and a3e > a2s and a2e > a3e and a3s > a2e and a4e > a3s and a1e > a4e and a4s > a1e) or
+                    if ((a1s < a2e < a3s < a4e < a1e < a2s < a3e < a4s) or
+                        (a1s < a2e < a1e < a2s < a3s < a4e < a3e < a4s) or
+                        (a1s < a2e < a1e < a3s < a4e < a3e < a4s < a1s) or
+                        (a1s < a2e < a3s < a4e < a3e < a4s < a1e < a2s) or
+                        (a1s < a2s < a3e < a2e < a3s < a4e < a1e < a4s) or
+                        #
+                        (a1s < a2e < a3s < a4e < a3e < a1e < a2s < a4s) or
+                        (a1s < a2e < a3e < a2s < a4e < a1e < a3s < a4s) or
+                        (a1s < a2e < a1e < a3s < a4e < a2s < a3e < a4s) or
+                        (a1s < a2e < a3e < a4s < a1e < a3s < a4e < a2s) or
+                        (a1s < a2e < a3s < a4e < a2s < a3e < a1e < a4s) or
+                        (a1s < a2e < a4s < a1e < a3s < a4e < a3e < a4s) or
+                        (a1s < a2s < a3e < a1e < a4s < a2e < a4e < a3s) or
+                        (a1s < a2s < a3e < a4e < a1e < a4s < a2e < a3s) or
+                        #
+                        (a1s < a2e < a1e < a3s < a2s < a4e < a3e < a4s) or
+                        (a1s < a2e < a3s < a1e < a4s < a3e < a4e < a2s) or
+                        (a1s < a2s < a3e < a4s < a2e < a4e < a1e < a3e) or
+                        (a1s < a2s < a3e < a1e < a3s < a4e < a2e < a4s) or
+                        (a1s < a2s < a3e < a2e < a4e < a1e < a4s < a3s) or
+                        (a1s < a2e < a1e < a3s < a4e < a3e < a2s < a4s) or
+                        (a1s < a2e < a3e < a4e < a3s < a1e < a4s < a2s) or
+                        (a1s < a2e < a3e < a2s < a4e < a3s < a1e < a4s)):
+                        
+                            print('r with', i1, i2, i3, i4, signs[i1] * signs[i2] *
+                                  signs[i3] * signs[i4])
+                            # print('true', [true_crossing_numbers[ii] for ii in (i1, i2, i3, i4)])
+                            representations_sum += (signs[i1] * signs[i2] *
+                                                    signs[i3] * signs[i4])
+                            crossings_done.add(real_cs)
+
+    return representations_sum

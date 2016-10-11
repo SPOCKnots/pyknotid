@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
@@ -18,8 +18,8 @@ setup(
     description='Tools for analysing knots',
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
-    install_requires=['numpy'],
+    install_requires=['numpy', 'networkx', 'planarity'],
     cmdclass={'build_ext': build_ext},
     include_dirs=[numpy.get_include()],
-    ext_modules=ext_modules
+    packages=find_packages(),
 )

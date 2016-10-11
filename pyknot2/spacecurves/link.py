@@ -290,11 +290,14 @@ class Link(object):
         from pyknot2.visualise import plot_cell
         lines = self.lines
 
+        if 'closed' not in kwargs:
+            kwargs['closed'] = True
+
         if mode =='vispy':
             points = [k.points for k in lines]
             print('plotting cell')
             plot_cell([[p] for p in points], boundary=None,
-                      closed=True, **kwargs)
+                      **kwargs)
             return
 
         if colours is not None:
