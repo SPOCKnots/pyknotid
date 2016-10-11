@@ -6,12 +6,17 @@ This module contains functions for plotting knots, supporting
 different toolkits and types of plot.
 '''
 
+from __future__ import division
+
 import vispy
+# vispy.use('PyQt5')
 
 import numpy as n
+import numpy as np
 from colorsys import hsv_to_rgb
 from pyknot2.utils import ensure_shape_tuple, vprint
 import random
+from colorsys import hsv_to_rgb
 
 vispy_canvas = None
 
@@ -147,6 +152,7 @@ def vispy_rotate(elevation=0, max_angle=360):
 def plot_line_vispy(points, clf=True, tube_radius=1.,
                     colour=None, zero_centroid=True,
                     closed=False, mus=None,
+                    cmap=None,
                     tube_points=8, **kwargs):
     # Add an extra point to fix tube drawing bug
     last_tangent = points[-1] - points[-2]
@@ -158,10 +164,15 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
     canvas = vispy_canvas
     from vispy import app, scene, color
 
+    if isinstance(cmap, str):
+        from matplotlib.cm import get_cmap
+        mpl_cmap = get_cmap(cmap)
+        cmap = lambda v: n.array(mpl_cmap(v))
+    cmap = cmap or (lambda c: hsv_to_rgb(c, 1, 1))
+
     if colour is None:
-        from colorsys import hsv_to_rgb
         colours = n.linspace(0, 1, len(points))
-        colours = n.array([hsv_to_rgb(c, 1, 1) for c in colours])
+        colours = n.array([cmap(c) for c in colours])
     else:
         colours = color.ColorArray(colour)
 
@@ -216,7 +227,7 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
                                tube_points=tube_points)
         tubes.append(l)
     
-    from visualcollection import MeshCollection
+    from .visualcollection import MeshCollection
     collection = MeshCollection(tubes)
     canvas.view.add(collection)
     canvas.view.camera = 'arcball'
@@ -325,10 +336,12 @@ def plot_shell_mayavi(func,
 
 def plot_sphere_shell_vispy(func, rows=100, cols=100,
                             radius=1.,
-                            opacity=0.3,
+                            opacity=1.,
+                            translation=(0., 0., 0.),
                             method='latitude',
                             edge_color=None,
                             cmap='hsv',
+                            smooth=0,
                             **kwargs):
     '''func must be a function of sphere angles theta, phi'''
     
@@ -340,6 +353,7 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
     mesh = s.mesh
     md = mesh._meshdata
     vertices = md.get_vertices()
+    md.set_vertices(vertices + n.array(translation))
 
     values = n.zeros(len(vertices))
 
@@ -360,7 +374,7 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
     max_val = n.max(values)
     min_val = n.min(values)
     unique_values = n.unique(colours)
-    max_val += (1. + 1./len(unique_values))*(max_val - min_val)
+    # max_val += (1. + 1./len(unique_values))*(max_val - min_val)
     diff = (max_val - min_val)
 
     import matplotlib.pyplot as plt
@@ -370,12 +384,30 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
 
     colours[:, -1] = opacity
 
+    faces = md.get_faces()
+    for si in range(smooth):
+        new_colours = [[n.array(row) for _ in range(3)]
+                       for row in colours]
+        for i, face in enumerate(faces):
+            new_colours[face[0]].append(colours[face[1]])
+            new_colours[face[0]].append(colours[face[2]])
+            new_colours[face[1]].append(colours[face[0]])
+            new_colours[face[1]].append(colours[face[2]])
+            new_colours[face[2]].append(colours[face[0]])
+            new_colours[face[2]].append(colours[face[1]])
+
+        new_colours = n.array([n.average(cs, axis=0) for cs in new_colours])
+
+        colours = new_colours
+
     md.set_vertex_colors(colours)
 
     ensure_vispy_canvas()
     vispy_canvas.view.camera = ArcballCamera(fov=30)
     vispy_canvas.view.add(s)
     vispy_canvas.show()
+
+    return colours
                             
 
 def plot_shell_vispy(func,
@@ -508,6 +540,8 @@ def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
         colours = [hsv_to_rgb(hue, 1, 1) for hue in hues]
         if randomise_colours:
             random.shuffle(colours)
+    elif not isinstance(colours, (list, tuple)):
+        colours = [colours for _ in lines]
     i = 0
     segments = []
     segment_colours = []
@@ -527,7 +561,7 @@ def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
             # plot_line_vispy(segment,
             #                 clf=False, colour=colour, **kwargs)
     plot_lines_vispy(segments, colours=segment_colours,
-                     tube_radius=segment_radii, **kwargs)
+                     tube_radius=segment_radii, clf=clf, **kwargs)
     
     if boundary is not None:
         draw_bounding_box_vispy(boundary, tube_radius=tube_radius[0])
@@ -597,3 +631,506 @@ def vispy_save_png(filename):
     img = vispy_canvas.render()
     import vispy.io as io
     io.write_png(filename, img)
+
+def plot_sphere_mollweide_vispy(func, circle_points=50, depth=2,
+                                edge_color=None,
+                                cmap='hsv',
+                                smooth=0,
+                                mesh='circles',
+                                **kwargs):
+    '''func must be a function of sphere angles theta, phi'''
+    
+    # from vispy.scene import Sphere, ArcballCamera
+    from vispy.scene import TurntableCamera, Mesh
+
+    if mesh == 'circles':
+        vertices, indices = circles_ellipse_mesh(circle_points, depth)
+    else:
+        vertices, indices = recursive_ellipse_mesh(circle_points, depth)
+    vertices[:, 0] *= 2*n.sqrt(2)
+    vertices[:, 1] *= n.sqrt(2)
+    mesh = Mesh(vertices, indices)
+
+    md = mesh._meshdata
+    vertices = md.get_vertices()
+
+    values = n.zeros(len(vertices))
+
+    print('pre')
+    thetas = []
+    phis = []
+    for i, vertex in enumerate(vertices):
+        if i % 10 == 0:
+            vprint('\ri = {} / {}'.format(i, len(vertices)), newline=False)
+
+        intermediate = n.arcsin(vertex[1] / n.sqrt(2))
+        theta = n.arcsin((2*intermediate + n.sin(2*intermediate)) / n.pi)
+        phi = n.pi * vertex[0] / (2*n.sqrt(2) * n.cos(intermediate))
+
+        # theta = n.arccos(vertex[2])
+        # phi = n.arctan2(vertex[1], vertex[0])
+
+        if n.isnan(theta):
+            theta = 0.0
+            print('theta', vertex)
+        if n.isnan(phi):
+            phi = 0.0
+            print('phi', vertex)
+
+        thetas.append(theta)
+        phis.append(phi)
+        values[i] = func(theta + n.pi/2, phi + n.pi)
+    vprint()
+
+    print('thetas', n.min(thetas), n.max(thetas))
+    print('phis', n.min(phis), n.max(phis))
+
+    colours = n.zeros((len(values), 4))
+    max_val = n.max(values)
+    min_val = n.min(values)
+    unique_values = n.unique(colours)
+    max_val += (1. + 1./len(unique_values))*(max_val - min_val)
+    diff = (max_val - min_val)
+
+    import matplotlib.pyplot as plt
+    cm = plt.get_cmap(cmap)
+    for i in range(len(colours)):
+        colours[i] = cm(((values[i] - min_val) / diff))
+
+    colours[:, -1] = 1.
+
+    faces = md.get_faces()
+    for si in range(smooth):
+        new_colours = [[n.array(row) for _ in range(3)]
+                       for row in colours]
+        for i, face in enumerate(faces):
+            new_colours[face[0]].append(colours[face[1]])
+            new_colours[face[0]].append(colours[face[2]])
+            new_colours[face[1]].append(colours[face[0]])
+            new_colours[face[1]].append(colours[face[2]])
+            new_colours[face[2]].append(colours[face[0]])
+            new_colours[face[2]].append(colours[face[1]])
+
+        new_colours = n.array([n.average(cs, axis=0) for cs in new_colours])
+
+        colours = new_colours
+
+    md.set_vertex_colors(colours)
+
+    ensure_vispy_canvas()
+    clear_vispy_canvas()
+    vispy_canvas.view.camera = TurntableCamera(fov=0, elevation=90.)
+    vispy_canvas.view.add(mesh)
+    vispy_canvas.show()
+
+def circles_ellipse_mesh(radial=5, azimuthal=100):
+    angles = n.linspace(0, 2*n.pi, azimuthal + 1)[:-1]
+    radii = n.linspace(0, 1., radial)
+
+    offsets = n.zeros(len(angles))
+    offsets[::2] += 2*n.pi / azimuthal
+
+    vertices = []
+    for i, radius in enumerate(radii):
+        cur_angles = angles
+        if i % 2 == 0:
+            cur_angles += 0.5* (2*n.pi) / azimuthal
+        points = n.zeros((len(angles), 3))
+        points[:, 0] = n.cos(angles) * radius
+        points[:, 1] = n.sin(angles) * radius
+
+
+        vertices.append(points)
+
+    vertices = n.vstack(vertices)
+
+    indices = []
+    num_angles = len(angles)
+    for num, radius in enumerate(radii[:-1]):
+        base_index = num_angles * num
+        next_num = num + 1
+        for i in range(len(angles)):
+            cur_index = base_index + i
+            next_index = base_index + (i + 1) % num_angles
+            next_r_index_1 = base_index + ((i - 1) % num_angles) + num_angles
+            next_r_index_2 = base_index + i + num_angles
+            indices.append((cur_index, next_r_index_1, next_r_index_2))
+            indices.append((cur_index, next_r_index_2, next_index))
+
+    return vertices, n.array(indices)
+                            
+def plot_vertices_indices(vertices, indices):
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+
+    ax.plot(vertices[:, 0], vertices[:, 1], 'o')
+
+    for triangle in indices:
+        ax.plot([vertices[triangle[0]][0],
+                 vertices[triangle[1]][0],
+                 vertices[triangle[2]][0]],
+                [vertices[triangle[0]][1],
+                 vertices[triangle[1]][1],
+                 vertices[triangle[2]][1]])
+
+    fig.show()
+    return fig, ax
+                          
+
+
+def recursive_ellipse_mesh(init_num_points=10, depth=2):
+    triangle = n.array([[0., 0.],
+                        [1., 0.],
+                        [0.5, 1.5]])
+
+    angles = n.linspace(0, 2*n.pi, init_num_points + 1)[:-1]
+    xs = n.sin(angles)
+    ys = n.cos(angles)
+    centre = n.array([0., 0.])
+        
+    vertices = []
+    indices = []
+    vertices_dict = {}
+
+    for i in range(len(angles)):
+        triangle = n.array([centre, (xs[i], ys[i]),
+                            (xs[(i+1) % len(angles)],
+                             ys[(i+1) % len(angles)])])
+        indices.extend(get_subtriangles(triangle, vertices,
+                                        vertices_dict, 0,
+                                        depth))
+                                                        
+
+    # indices = get_subtriangles(triangle, vertices, {}, 0, depth)
+
+    return (n.array(vertices), n.array(indices))
+                         
+    
+
+def get_subtriangles(points, vertices, vertices_dict, depth, max_depth):
+    if depth > max_depth:
+        indices = []
+        for point in points:
+            point = tuple(point)
+            if tuple(point) not in vertices_dict:
+                vertices.append(point)
+                vertices_dict[point] = len(vertices) - 1
+            indices.append(vertices_dict[point])
+                
+        return [indices]
+
+    arr_points = n.array(points)
+
+    centre = n.average(arr_points, axis=0)
+    half_edges = arr_points + 0.5*(n.roll(arr_points, -1, axis=0) - arr_points)
+
+    new_points = n.array([arr_points[0],
+                          half_edges[0],
+                          arr_points[1],
+                          half_edges[1],
+                          arr_points[2],
+                          half_edges[2]])
+
+    subtriangles = []
+    for i in range(6):
+        new_triangle = n.array([centre, new_points[i], new_points[(i+1) % 6]])
+        subtriangles.extend(get_subtriangles(new_triangle, vertices,
+                                             vertices_dict,
+                                             depth+1, max_depth))
+    return subtriangles
+
+
+    
+def plot_sphere_lambert_vispy(func, circle_points=50, depth=2,
+                              edge_color=None,
+                              cmap='hsv',
+                              smooth=0,
+                              mesh='circles',
+                              **kwargs):
+    '''func must be a function of sphere angles theta, phi'''
+    
+    # from vispy.scene import sphere, arcballcamera
+    from vispy.scene import TurntableCamera, Mesh
+
+    if mesh == 'circles':
+        vertices, indices = circles_ellipse_mesh(circle_points, depth)
+    else:
+        vertices, indices = recursive_ellipse_mesh(circle_points, depth)
+    # vertices[:, 0] *= 2*n.sqrt(2)
+    # vertices[:, 1] *= n.sqrt(2)
+    vertices[:, 0] *= 2
+    vertices[:, 1] *= 2
+    mesh = Mesh(vertices, indices)
+
+    md = mesh._meshdata
+    vertices = md.get_vertices()
+
+    values = n.zeros(len(vertices))
+
+    print('pre')
+    thetas = []
+    phis = []
+    for i, vertex in enumerate(vertices):
+        if i % 10 == 0:
+            vprint('\ri = {} / {}'.format(i, len(vertices)), newline=False)
+
+        # print('vertex is', vertex)
+        # print('radius is', np.sqrt(vertex[0]**2 + vertex[1]**2))
+        # print('angle is', np.arctan2(vertex[1], vertex[0]))
+
+        # intermediate = n.arcsin(vertex[1] / n.sqrt(2))
+        # theta = n.arcsin((2*intermediate + n.sin(2*intermediate)) / n.pi)
+        # phi = n.pi * vertex[0] / (2*n.sqrt(2) * n.cos(intermediate))
+
+        theta = 2*np.arccos(np.sqrt(vertex[0]**2 + vertex[1]**2)/2.)
+        phi = np.arctan2(vertex[1], vertex[0])
+
+        # theta = n.arccos(vertex[2])
+        # phi = n.arctan2(vertex[1], vertex[0])
+
+        if n.isnan(theta):
+            theta = 0.0
+            print('theta', vertex)
+        if n.isnan(phi):
+            phi = 0.0
+            print('phi', vertex)
+
+        thetas.append(theta)
+        phis.append(phi)
+        values[i] = func(theta + n.pi/2, phi + n.pi)
+    vprint()
+
+    print('thetas', n.min(thetas), n.max(thetas))
+    print('phis', n.min(phis), n.max(phis))
+
+    colours = n.zeros((len(values), 4))
+    max_val = n.max(values)
+    min_val = n.min(values)
+    unique_values = n.unique(colours)
+    max_val += (1. + 1./len(unique_values))*(max_val - min_val)
+    diff = (max_val - min_val)
+
+    import matplotlib.pyplot as plt
+    cm = plt.get_cmap(cmap)
+    for i in range(len(colours)):
+        colours[i] = cm(((values[i] - min_val) / diff))
+
+    colours[:, -1] = 1.
+
+    faces = md.get_faces()
+    for si in range(smooth):
+        new_colours = [[n.array(row) for _ in range(3)]
+                       for row in colours]
+        for i, face in enumerate(faces):
+            new_colours[face[0]].append(colours[face[1]])
+            new_colours[face[0]].append(colours[face[2]])
+            new_colours[face[1]].append(colours[face[0]])
+            new_colours[face[1]].append(colours[face[2]])
+            new_colours[face[2]].append(colours[face[0]])
+            new_colours[face[2]].append(colours[face[1]])
+
+        new_colours = n.array([n.average(cs, axis=0) for cs in new_colours])
+
+        colours = new_colours
+
+    md.set_vertex_colors(colours)
+
+    ensure_vispy_canvas()
+    clear_vispy_canvas()
+    vispy_canvas.view.camera = TurntableCamera(fov=0, elevation=90.)
+    vispy_canvas.view.add(mesh)
+    vispy_canvas.show()
+
+
+def plot_sphere_lambert_sharp_vispy(func, circle_points=50, depth=2,
+                                    output_size=500,
+                                    edge_color=None,
+                                    cmap='brg',
+                                    smooth=0,
+                                    mesh='circles',
+                                    **kwargs):
+    '''func must be a function of sphere angles theta, phi'''
+    
+    from vispy.scene import TurntableCamera, Mesh
+
+    if mesh == 'circles':
+        vertices, indices = circles_ellipse_mesh(circle_points, depth)
+    else:
+        vertices, indices = recursive_ellipse_mesh(circle_points, depth)
+    vertices[:, 0] *= 2
+    vertices[:, 1] *= 2
+    mesh = Mesh(vertices, indices)
+
+    md = mesh._meshdata
+    vertices = md.get_vertices()
+
+    values = n.zeros(len(vertices))
+
+    print('pre')
+    thetas = []
+    phis = []
+    for i, vertex in enumerate(vertices):
+        if i % 10 == 0:
+            vprint('\ri = {} / {}'.format(i, len(vertices)), newline=False)
+
+        theta = 2*np.arccos(np.sqrt(vertex[0]**2 + vertex[1]**2)/2.)
+        phi = np.arctan2(vertex[1], vertex[0])
+
+        if n.isnan(theta):
+            theta = 0.0
+            print('theta', vertex)
+        if n.isnan(phi):
+            phi = 0.0
+            print('phi', vertex)
+
+        thetas.append(theta)
+        phis.append(phi)
+        values[i] = func(theta + n.pi/2, phi + n.pi)
+    vprint()
+
+    return thetas, phis, values
+
+    import svgwrite as svg
+    d = svg.Drawing()
+
+    import matplotlib.pyplot as plt
+    cmap = plt.get_cmap(cmap)
+    
+    max_value = n.max(values)
+    min_value = n.min(values)
+    def normalise(v):
+        return (v - min_value) / (max_value - min_value)
+    for tri_i, triangle in enumerate(indices):
+        v1 = vertices[triangle[0]]
+        v2 = vertices[triangle[1]]
+        v3 = vertices[triangle[2]]
+
+        c1 = values[triangle[0]]
+        c2 = values[triangle[1]]
+        c3 = values[triangle[2]]
+
+        offset_x = 2.001412
+        offset_y = 2.0214
+        v1_x = (v1[0] + offset_x) / 4. * output_size
+        v1_y = (v1[1] + offset_y) / 4. * output_size
+
+        v2_x = (v2[0] + offset_x) / 4. * output_size
+        v2_y = (v2[1] + offset_y) / 4. * output_size
+
+        v3_x = (v3[0] + offset_x) / 4. * output_size
+        v3_y = (v3[1] + offset_y) / 4. * output_size
+
+        c_x = n.average([v1_x, v2_x, v3_x])
+        c_y = n.average([v1_y, v2_y, v3_y])
+
+        v12_x = (v1_x + v2_x) / 2.
+        v12_y = (v1_y + v2_y) / 2.
+        v13_x = (v1_x + v3_x) / 2.
+        v13_y = (v1_y + v3_y) / 2.
+        v23_x = (v2_x + v3_x) / 2.
+        v23_y = (v2_y + v3_y) / 2.
+
+        cmap_1 = cmap(normalise(c1))
+        rgb_cmap1 = [int(c*255) for c in cmap_1[:3]]
+        d.add(d.polygon([[v1_x, v1_y],
+                         [v12_x, v12_y],
+                         [c_x, c_y],
+                         [v13_x, v13_y]],
+                        fill='rgb({},{},{})'.format(*rgb_cmap1),
+                        stroke='rgb({},{},{})'.format(*rgb_cmap1),
+                        stroke_width='0.5'))
+
+        cmap_2 = cmap(normalise(c2))
+        rgb_cmap2 = [int(c*255) for c in cmap_2[:3]]
+        d.add(d.polygon([[v2_x, v2_y],
+                         [v12_x, v12_y],
+                         [c_x, c_y],
+                         [v23_x, v23_y]],
+                        fill='rgb({},{},{})'.format(*rgb_cmap2),
+                        stroke='rgb({},{},{})'.format(*rgb_cmap2),
+                        stroke_width='0.5'))
+
+        cmap_3 = cmap(normalise(c3))
+        rgb_cmap3 = [int(c*255) for c in cmap_3[:3]]
+        d.add(d.polygon([[v3_x, v3_y],
+                         [v13_x, v13_y],
+                         [c_x, c_y],
+                         [v23_x, v23_y]],
+                        fill='rgb({},{},{})'.format(*rgb_cmap3),
+                        stroke='rgb({},{},{})'.format(*rgb_cmap3),
+                        stroke_width='0.5'))
+
+        # print('cols', c1, cmap_1, c2, cmap_2, c3, cmap_3)
+
+    return d
+
+        
+                    
+        
+        
+
+
+def get_coloured_subtriangles(points, point_values, vertices, values, vertices_dict, depth, max_depth):
+    if depth > max_depth:
+        indices = []
+        for point, value in zip(points, point_values):
+            point = tuple(point)
+            if tuple(point) not in vertices_dict:
+                vertices.append(point)
+                values.append(value)
+                vertices_dict[point] = len(vertices) - 1
+            indices.append(vertices_dict[point])
+                
+        return [indices]
+
+    arr_points = n.array(points)
+
+    centre = n.average(arr_points, axis=0)
+    half_edges = arr_points + 0.5*(n.roll(arr_points, -1, axis=0) - arr_points)
+
+    new_points = n.array([arr_points[0],
+                          half_edges[0],
+                          arr_points[1],
+                          half_edges[1],
+                          arr_points[2],
+                          half_edges[2]])
+
+    subtriangles = []
+    for i in range(6):
+        new_triangle = n.array([centre, new_points[i], new_points[(i+1) % 6]])
+        subtriangles.extend(get_subtriangles(new_triangle, vertices,
+                                             vertices_dict,
+                                             depth+1, max_depth))
+    return subtriangles
+
+
+def point_inside_triangle(point, triangle):
+    px, py = point
+    p1x, p1y = triangle[0]
+    p2x, p2y = triangle[1]
+    p3x, p3y = triangle[2]
+    alpha = (((p2y - p3y)*(px - p3x) + (p3x - p2x)*(py - p3y)) /
+             ((p2y - p3y)*(p1x - p3x) + (p3x - p2x)*(p1y - p3y)))
+    if alpha < 0:
+        return False
+    beta = (((p3y - p1y)*(px - p3x) + (p1x - p3x)*(py - p3y)) /
+            ((p2y - p3y)*(p1x - p3x) + (p3x - p2x)*(p1y - p3y)))
+    if beta < 0:
+        return False
+    gamma = 1.0 - alpha - beta
+    if gamma < 0:
+        return False
+
+    return True
+
+
+def PointInsideTriangle2(pt,tri):
+    '''checks if point pt(2) is inside triangle tri(3x2). @Developer'''
+    a = 1/(-tri[1,1]*tri[2,0]+tri[0,1]*(-tri[1,0]+tri[2,0])+ \
+        tri[0,0]*(tri[1,1]-tri[2,1])+tri[1,0]*tri[2,1])
+    s = a*(tri[2,0]*tri[0,1]-tri[0,0]*tri[2,1]+(tri[2,1]-tri[0,1])*pt[0]+ \
+        (tri[0,0]-tri[2,0])*pt[1])
+    if s<0: return False
+    else: t = a*(tri[0,0]*tri[1,1]-tri[1,0]*tri[0,1]+(tri[0,1]-tri[1,1])*pt[0]+ \
+              (tri[1,0]-tri[0,0])*pt[1])
+    return ((t>0) and (1-s-t>0))
