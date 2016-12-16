@@ -41,11 +41,7 @@ class Knot(SpaceCurve):
         so that it will appear visually to close when plotted.
     '''
 
-    @property
-    def points(self):
-        return super(Knot, self).points
-
-    @points.setter
+    @SpaceCurve.points.setter
     def points(self, points):
         super(Knot, self.__class__).points.fset(self, points)
         self._cached_isolated = None
@@ -420,7 +416,6 @@ class Knot(SpaceCurve):
         grid = GridSpec(length, length)
         for coords, points in results.items():
             print('coords are', coords)
-            print length
             ax = plt.subplot(grid[length - 1 - coords[0], coords[1]])
             ax.plot(points[:, 0], points[:, 1])
             ax.set_xticks([])
