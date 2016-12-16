@@ -8,6 +8,12 @@ of curves.
 
 import numpy as n
 import re
+import sys
+
+if sys.version_info.major == 2:
+    string_types = basestring
+else:
+    string_types = str
 
 class DTNotation(object):
     '''
@@ -21,7 +27,7 @@ class DTNotation(object):
     '''
 
     def __init__(self, code):
-        if isinstance(code, (str)):
+        if isinstance(code, string_types):
             self._init_from_string(code)
         elif isinstance(code, n.ndarray):
             code = [code]

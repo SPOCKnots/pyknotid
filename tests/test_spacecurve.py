@@ -111,4 +111,4 @@ def test_compiled_vs_python_find_crossings(k):
     g1 = k.gauss_code(recalculate=True, try_cython=True)
     g2 = k.gauss_code(recalculate=True, try_cython=False)
 
-    assert g1 == g2
+    assert str(g1) == str(g2)

@@ -32,6 +32,10 @@ def test_reconstruction(knot):
         if hv == 'Not hyperbolic':
             hv = 0.0
         else:
-            hv = float(hv)
-        assert np.isclose(hv, k.hyperbolic_volume(), rtol=0.05)
+            try:
+                hv = float(hv)
+            except ValueError:
+                hv = 0.0
+        assert np.isclose(hv, k.hyperbolic_volume()[0], atol=0.005,
+                          rtol=0.05)
     
