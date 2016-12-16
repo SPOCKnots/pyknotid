@@ -15,10 +15,12 @@ ext_modules = [
 
 setup(
     name='pyknot2',
+    version='1.0',
     description='Tools for analysing knots',
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
-    install_requires=['numpy', 'networkx', 'planarity'],
+    install_requires=['numpy', 'networkx', 'planarity',
+                      'peewee'],
     cmdclass={'build_ext': build_ext},
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
