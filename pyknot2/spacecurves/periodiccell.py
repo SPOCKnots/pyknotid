@@ -4,6 +4,7 @@ Tools for working with a periodic cell of spacecurves.
 from pyknot2.utils import ensure_shape_tuple
 from pyknot2.spacecurves import Knot, OpenKnot
 import numpy as n
+import numpy as np
 
 class Cell(object):
     '''Class for holding the vertices of some number of lines with
@@ -57,9 +58,37 @@ class Cell(object):
         self.lines.append(line)
 
     def plot(self, boundary=True, clf=True, tube_radius=1.0,
+             length_colours=None,
              **kwargs):
         from pyknot2.visualise import plot_cell
         boundary = self.shape if boundary else None
+
+        if length_colours is not None:
+            if 'colours' in kwargs:
+                raise ValueError(
+                    'colours and length_colours cannot both be set')
+
+            q, w, e, r = self.qwer
+            from pyknot2.spacecurves.openknot import OpenKnot
+
+            lengths = []
+            for line in q + w + e:
+                k = OpenKnot.from_periodic_line(line, self.shape)
+                length = k.arclength()
+                lengths.append(length)
+            total_length = np.sum(lengths)
+            lengths = [l / total_length for l in lengths]
+
+            colours = []
+            for length in lengths:
+                for bound, colour in length_colours[:-1]:
+                    if length < bound:
+                        colours.append(colour)
+                        break
+                else:
+                    colours.append(length_colours[-1])
+            kwargs['colours'] = colours
+
         plot_cell(self.lines, boundary=boundary, clf=clf,
                   tube_radius=tube_radius, **kwargs)
 
