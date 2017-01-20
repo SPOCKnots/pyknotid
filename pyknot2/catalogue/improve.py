@@ -295,4 +295,102 @@ def check_determinants(**parameters):
     return fails
 
 
-   
+def vassiliev_invariants_from_space_curve(max_crossings=12):   
+
+    knots = Knot.select().where(Knot.vassiliev_3 >> None).where(
+        Knot.min_crossings <= max_crossings)
+    print('Calculating Vassiliev 3 for {} knots'.format(knots.count()))
+
+    output_knots = []
+    num_knots = knots.count()
+    for i, knot in enumerate(knots):
+        if i % 1 == 0:
+            print(i, '/', num_knots)
+
+        assert knot.vassiliev_3 is None
+
+        ks = knot.space_curve(verbose=False)
+        v3 = ks.vassiliev_degree_3()
+
+        knot.vassiliev_3 = v3
+        output_knots.append(knot)
+
+        if knot.vassiliev_2 is None:
+            v2 = ks.vassiliev_degree_2()
+            knot.vassiliev_2 = v2
+        else:
+            v2 = knot.vassiliev_2
+
+        if i % 10000 == 0:
+            print('saving changes')
+            with db.transaction():
+                for knot in output_knots:
+                    knot.save()
+                output_knots = []
+
+        print(knot, v2, v3)
+
+    print('saving changes')
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
+        output_knots = []
+
+
+def vassiliev_2_invariants_from_space_curve(max_crossings=16):   
+
+    knots = Knot.select().where(Knot.vassiliev_2 >> None).where(
+        Knot.min_crossings <= max_crossings)
+    print('Calculating Vassiliev 2 for {} knots'.format(knots.count()))
+
+    output_knots = []
+    num_knots = knots.count()
+    for i, knot in enumerate(knots):
+        if i % 1 == 0:
+            print(i, '/', num_knots)
+
+        assert knot.vassiliev_2 is None
+
+        ks = knot.space_curve(verbose=False)
+        v2 = ks.vassiliev_degree_2()
+
+        knot.vassiliev_2 = v2
+        output_knots.append(knot)
+
+        print(knot, v2)
+
+    print('saving changes')
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
+        output_knots = []
+
+        
+def alexander_at_roots_from_dt_code():
+    knots = Knot.select().where(Knot.alexander_imag_3 >> None)
+
+    output_knots = []
+    
+    num_knots = knots.count()
+    for i, knot in enumerate(knots):
+        if i % 1 == 0:
+            print(i, '/', num_knots)
+
+        ks = knot.space_curve(verbose=False)
+
+        roots = ks.alexander_at_root((2, 3, 4))
+
+        knot.determinant = roots[0]
+        knot.alexander_imag_3 = roots[1]
+        knot.alexander_imag_4 = roots[2]
+
+        output_knots.append(knot)
+
+        print(knot, roots)
+
+    print('saving changes')
+    with db.transaction():
+        for knot in output_knots:
+            knot.save()
+
+        
