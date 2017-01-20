@@ -7,7 +7,7 @@ import sys
 import numpy as np
 
 from os import path
-sys.path.append(path.split(path.dirname(path.realpath(__file__)))[0])
+sys.path.append(path.split(path.dirname(path.abspath(__file__)))[0])
 
 from pyknot2.spacecurves.knot import Knot
 
@@ -40,18 +40,34 @@ def main():
 
     parser.add_argument('filename', help='The file to load')
 
-    parser.add_argument('--identify', dest='identify', action='store_true')
+    parser.add_argument('--identify', dest='identify', action='store_true',
+                        help=('Look up the knot in the pyknot2 database, '
+                              'using its invariants. This may take a few '
+                              'seconds on the first run, and can only return '
+                              'knots with the same invariants, not necessarily '
+                              'perfect matches.'))
     parser.add_argument('--no-identify', dest='identify', action='store_false')
     parser.set_defaults(identify=True)
 
-    parser.add_argument('--rotate', dest='rotate', action='store_true')
+    parser.add_argument('--rotate', dest='rotate', action='store_true',
+                        help=('Rotate the space curve randomly before '
+                              'identifying. Usually a good idea, and '
+                              'defaults to True.'))
     parser.add_argument('--no-rotate', dest='rotate', action='store_false')
     parser.set_defaults(rotate=True)
 
-    parser.add_argument('--writhe', action='store_true')
-    parser.add_argument('--projections', type=int, default=100)
+    parser.add_argument('--writhe', action='store_true',
+                        help=('If passed, will also print an approximation '
+                              'for the 3D writhe and average crossing number '
+                              'of the knot.'))
+    parser.add_argument('--projections', type=int, default=100,
+                        help=('The number of projections to average over '
+                              'when calculating writhe.'))
 
-    parser.add_argument('--with-vassiliev-3', action='store_true')
+    parser.add_argument('--with-vassiliev-3', action='store_true',
+                        help=('If passed, also calculates the Vassiliev '
+                              'invariant of third order (per Polyak and '
+                              'Viro'))
 
     args = parser.parse_args(sys.argv[1:])
 
