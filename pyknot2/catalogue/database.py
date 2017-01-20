@@ -149,7 +149,7 @@ class Knot(BaseModel):
         if self.symmetry is not None:
             print('Symmetry: {}'.format(self.symmetry))
 
-    def space_curve(self, **kwargs):
+    def space_curve(self, verbose=True, **kwargs):
         '''Returns a Knot object representing this knot.'''
 
         if self.dt_code is None:
@@ -158,7 +158,8 @@ class Knot(BaseModel):
 
         from pyknot2.representations import DTNotation
         d = DTNotation(self.dt_code)
-        return d.representation(**kwargs).space_curve()
+        return d.representation(verbose=verbose, **kwargs).space_curve(
+            verbose=verbose)
 
     def url(self):
         '''The guessed url of this knot in the Knot Atlas. The url may not actually exist.
