@@ -114,7 +114,10 @@ def ensure_vispy_canvas():
     if vispy_canvas is None:
         from vispy import app, scene
         canvas = scene.SceneCanvas(keys='interactive', bgcolor='white')
-        canvas.unfreeze()
+        try:
+            canvas.unfreeze()
+        except AttributeError:  # depends on Vispy version
+            pass
         canvas.view = canvas.central_widget.add_view()
         vispy_canvas = canvas
     # if not vispy_canvas.central_widget.children:
@@ -125,7 +128,10 @@ def clear_vispy_canvas():
     global vispy_canvas
     if vispy_canvas is None:
         return
-    vispy_canvas.unfreeze()
+    try:
+        vispy_canvas.unfreeze()
+    except AttributeError:  # depends on Vispy version
+        pass
     vispy_canvas.central_widget.remove_widget(vispy_canvas.view)
     vispy_canvas.view = vispy_canvas.central_widget.add_view()
 
