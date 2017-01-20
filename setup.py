@@ -44,4 +44,9 @@ setup(
     ext_modules=cythonize(ext_modules),
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'analyse-knot-file = pyknot2.cli.analyse_knot_file:main',
+            'plot-knot = pyknot2.cli.plot_knot:main']
+        }
 )
