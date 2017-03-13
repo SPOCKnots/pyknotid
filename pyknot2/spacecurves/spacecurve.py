@@ -898,3 +898,54 @@ class SpaceCurve(object):
         if periodic:
             points = points[(window_len + 1):-(window_len + 1)]
         self.points = points
+
+    def curvatures(self):
+        '''Returns curvatures at each vertex (or really line segment)
+        according to Mark's formula.'''
+        points = self.points
+
+        ts = np.roll(points, -1, axis=0) - points
+        vs = np.sqrt(np.sum(ts*ts, axis=1))
+
+        gamma_dd = 0.25 * (np.roll(points, -2, axis=0) + np.roll(points, 2, axis=0) - 2*points)
+        vns = 0.5 * (vs + np.roll(vs, 1))
+        gamma_d = 0.5 * (np.roll(points, -1, axis=0) - np.roll(points, 1, axis=0))
+        ans = 0.25 * (np.roll(vs, -1) + vs - np.roll(vs, 1) - np.roll(vs, 2))
+        kappas = gamma_dd - np.einsum('i,ij->ij', (ans / vns), gamma_d)
+        kappas = np.sqrt(np.sum(kappas * kappas, axis=1))
+        kappas = (1./vns**2) * kappas
+
+        kappas[:3] = kappas[3]
+        kappas[-3:] = kappas[-4]
+
+        return kappas
+
+    def torsions(self, signed=False):
+        '''Returns torsions at each vertex according to Mark's formula.'''
+
+        d = self.points
+
+        ts = np.roll(d, -1, axis=0) - d
+        vs = np.sqrt(np.sum(ts*ts, axis=1))
+
+        gamma_dd = 0.25 * (np.roll(d, -2, axis=0) + np.roll(d, 2, axis=0) - 2*d)
+        vns = 0.5 * (vs + np.roll(vs, 1))
+        gamma_d = 0.5 * (np.roll(d, -1, axis=0) - np.roll(d, 1, axis=0))
+        ans = 0.25 * (np.roll(vs, -1) + vs - np.roll(vs, 1) - np.roll(vs, 2))
+
+        kappas = gamma_dd - np.einsum('i,ij->ij', (ans / vns), gamma_d)
+        kappas = np.sum(kappas * kappas, axis=1)
+
+        gamma_ddd = 0.125 * (np.roll(d, -3, axis=0) - 3*np.roll(d, -1, axis=0) +
+                            3*np.roll(d, 1, axis=0) - np.roll(d, 3, axis=0))
+
+        numerator = np.sum(np.cross(gamma_d, gamma_dd) * gamma_ddd, axis=1)
+        denominator = vns**2 * np.abs(kappas)
+
+        torsions = numerator / denominator
+        if not signed:
+            torsions = np.abs(torsions)
+        torsions[:3] = torsions[3]
+        torsions[-3:] = torsions[-4]
+
+        return torsions
