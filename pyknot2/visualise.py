@@ -348,6 +348,9 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
                             edge_color=None,
                             cmap='hsv',
                             smooth=0,
+                            cutoff=0.4,
+                            cutoff_max=0.8,
+                            transparent_side=True,
                             **kwargs):
     '''func must be a function of sphere angles theta, phi'''
     
@@ -362,6 +365,7 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
     md.set_vertices(vertices + n.array(translation))
 
     values = n.zeros(len(vertices))
+    opacities = n.ones(len(vertices))
 
     print('pre')
     for i, vertex in enumerate(vertices):
@@ -374,6 +378,10 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
         if n.isnan(theta):
             theta = 0.0
         values[i] = func(theta, phi)
+        distance = vertex[1] - cutoff
+        distance_frac = distance / (cutoff_max - cutoff)
+        opacity = max(0, 1. - distance_frac)
+        opacities[i] = 1. if vertex[1] < cutoff else opacity
     vprint()
 
     colours = n.zeros((len(values), 4))
@@ -405,6 +413,8 @@ def plot_sphere_shell_vispy(func, rows=100, cols=100,
         new_colours = n.array([n.average(cs, axis=0) for cs in new_colours])
 
         colours = new_colours
+
+    colours = [(c[0], c[1], c[2], o) for c, o in zip(colours, opacities)]
 
     md.set_vertex_colors(colours)
 
@@ -558,6 +568,8 @@ def plot_cell_vispy(lines, boundary=None, clf=True, colours=None,
         vprint('Plotting line {} / {}\r'.format(i, len(lines)-1),
                False)
         i += 1
+        if len(colour) == 4 and colour[-1] == 0:
+            continue
         for segment in line:
             if len(segment) < 4:
                 continue
