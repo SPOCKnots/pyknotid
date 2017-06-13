@@ -8,7 +8,7 @@ import numpy as np
 from vispy.scene.visuals import create_visual_node
 
 class MeshCollectionVisual(MeshVisual):
-    def __init__(self, visuals):
+    def __init__(self, visuals, shading='smooth'):
 
         vertices = []
         indices = []
@@ -34,7 +34,7 @@ class MeshCollectionVisual(MeshVisual):
 
         MeshVisual.__init__(self, vertices, indices,
                             vertex_colors=vertex_colors,
-                            shading='smooth')
+                            shading=shading)
 
             
 MeshCollection = create_visual_node(MeshCollectionVisual)
