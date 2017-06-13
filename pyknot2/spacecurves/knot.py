@@ -9,6 +9,7 @@ topologically trivial.
 from __future__ import division
 
 import numpy as n
+import numpy as np
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve
 
@@ -45,6 +46,9 @@ class Knot(SpaceCurve):
     def points(self, points):
         super(Knot, self.__class__).points.fset(self, points)
         self._cached_isolated = None
+
+    def tangents(self):
+        return super(Knot, self).tangents(closed=True)
 
     def copy(self):
         '''Returns another knot with the same points and verbosity
@@ -251,6 +255,42 @@ class Knot(SpaceCurve):
         from pyknot2.catalogue.identify import from_invariants
         return from_invariants(**identify_kwargs)
 
+    def planar_writhe_quantities(self, num_angles=100, **kwargs):
+        '''Returns the second order writhes, and arnold 2St+J+ values, for a
+        range of different projection directions.
+
+        '''
+        from pyknot2.spacecurves.rotation import (
+            get_rotation_angles, rotate_to_top)
+
+        angles = get_rotation_angles(num_angles)
+
+        results = []
+
+        print_dist = int(max(1, 3000. / len(self.points)))
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        for i, angs in enumerate(angles):
+            if i % print_dist == 0:
+                self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
+            
+            k = Knot(self.points, verbose=False)
+            k._apply_matrix(rotate_to_top(*angs))
+
+            results.append((angs, k, k.planar_second_order_writhe(),
+                            k.arnold_2St_2Jplus()))
+
+            ax.clear()
+            k.plot_projection(fig_ax=(fig, ax))
+            fig.set_size_inches((3, 3))
+            ax.set_title('Wr2 = {}, unknot Wr2 = {}'.format(results[-1][2],
+                                                            results[-1][3]))
+            fig.tight_layout()
+            fig.savefig('planar_writhe_quantities-{:05d}.png'.format(i))
+
+        return results
+
+
     def slipknot_alexander(self, num_samples=0, **kwargs):
         '''
         Parameters
@@ -431,6 +471,144 @@ class Knot(SpaceCurve):
         fig.tight_layout()
         fig.show()
         return fig, ax
+
+    def whitney_index(self):
+        '''The degree of the Gauss map mapping a point on the curve to the
+        direction of the positive tangent vector at this point.'''
+
+        points = self.points
+        tangents = self.tangents()
+
+        directions = np.apply_along_axis(
+            lambda arr: np.arctan2(arr[1], arr[0]), 1, tangents)
+
+        directions[directions > np.pi] -= 2*np.pi
+        directions[directions < -np.pi] += 2*np.pi
+
+        jumps = np.roll(directions, -1) - directions
+
+
+        index = np.sum(jumps > np.pi) - np.sum(jumps < -np.pi)
+
+        return index
+
+    def arnold_2St_2Jplus(self, **kwargs):
+        from pyknot2.invariants import arnold_2St_2Jplus
+        gc = self.gauss_code(**kwargs)
+        # Do *not* simplify, as this is only a plane curve invariant
+        return arnold_2St_2Jplus(gc)
+
+    def arnold_2St_2Jminus(self, **kwargs):
+        from pyknot2.invariants import arnold_2St_2Jminus
+        gc = self.gauss_code(**kwargs)
+        # Do *not* simplify, as this is only a plane curve invariant
+        return arnold_2St_2Jminus(gc)
+
+    def plot_secant_crossings(self, radius=None, **kwargs):
+        crossings = self.raw_crossings(**kwargs)
+
+        if radius is None:
+            radii = self.points - np.average(self.points, axis=0)
+            radius = 1.5 * np.max(np.sqrt(np.sum(radii**2, axis=1)))
+
+        unique_crossings = []
+        crossings_done = set()
+        for crossing in crossings:
+            if crossing[0] in crossings_done:
+                continue
+            crossings_done.add(crossing[1])
+            unique_crossings.append(crossing)
+
+        points = self.points
+
+        lines = []
+
+        for i, crossing in enumerate(unique_crossings):
+            start1, end1, height1, sign1 = crossing
+            for other_crossing in unique_crossings[i+1:]:
+                start2, end2, height2, sign2 = other_crossing
+
+                if not (start2 > start1 and end1 > start2 and end2 > end1):
+                    continue
+
+                start_point1 = points[int(start1)]
+                start_point1 += (start1 - int(start1)) * (
+                    points[int(start1) + 1] - points[int(start1)])
+                segment_point1s = points[int(start1) + 1:int(start2) + 1]
+                end_point1 = points[int(start2)]
+                end_point1 += (start2 - int(start2)) * (
+                    points[int(start2) + 1] - points[int(start2)])
+
+                segment1 = np.vstack(
+                    [start_point1, segment_point1s, end_point1])
+
+                #
+                start_point2 = points[int(end1)]
+                start_point2 += (end1 - int(end1)) * (
+                    points[int(end1) + 1] - points[int(end1)])
+                segment_point2s = points[int(end1) + 1:int(end2) + 1]
+                end_point2 = points[int(end2)]
+                end_point2 += (end2 - int(end2)) * (
+                    points[int(end2) + 1] - points[int(end2)])
+
+                segment2 = np.vstack(
+                    [start_point2, segment_point2s, end_point2])
+
+                directions = np.vstack([
+                    start_point1 - segment2,
+                    segment1 - end_point2])
+
+                lines.append(directions)
+
+        for line in lines:
+            print(line[0], line[1])
+
+        sphere_lines = []
+
+        for line in lines:
+            radii = np.sqrt(np.sum(line**2, axis=1))
+            thetas = np.arccos(line[:, 2] / radii)
+            phis = np.arctan2(line[:, 1], line[:, 0])
+
+            sphere_points = np.zeros(line.shape)
+            sphere_points[:, 0] = radius * np.sin(thetas) * np.cos(phis)
+            sphere_points[:, 1] = radius * np.sin(thetas) * np.sin(phis)
+            sphere_points[:, 2] = radius * np.cos(thetas)
+
+            sphere_lines.append(sphere_points)
+
+        self.plot(tube_radius=0.1, colour=(0.3, 0.3, 0.3, 1))
+
+        # Plot the poles
+        from vispy.geometry import create_sphere
+        from vispy.scene import Mesh
+        meshdata = create_sphere(radius=1.3)
+        vertices = meshdata.get_vertices()
+        faces = meshdata.get_faces()
+        vertices[:, 2] += radius
+        mesh1 = Mesh(vertices=vertices, faces=faces, vertex_colors=np.array([(0.3, 0.3, 0.3, 1) for v in vertices]))
+        vertices = vertices.copy()
+        vertices[:, 2] -= 2*radius
+        mesh2 = Mesh(vertices=vertices, faces=faces, vertex_colors=np.array([(0.3, 0.3, 0.3, 1) for v in vertices]))
+
+        import pyknot2.visualise as pvis
+        pvis.vispy_canvas.view.add(mesh1)
+        pvis.vispy_canvas.view.add(mesh2)
+
+        from colorsys import hsv_to_rgb
+        colours = [hsv_to_rgb(hue, 1, 0.6) for hue in np.linspace(0, 1, len(sphere_lines) + 1)][:-1]
+        for line, colour in zip(sphere_lines, colours):
+            k = Knot(line)
+            k.plot(clf=False, tube_radius=0.15, colour=colour, zero_centroid=False)
+
+
+        return sphere_lines
+        
+
+
+
+
+            
 
 
 def mag(v):
