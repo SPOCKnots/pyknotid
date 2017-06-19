@@ -504,12 +504,101 @@ class Knot(SpaceCurve):
         # Do *not* simplify, as this is only a plane curve invariant
         return arnold_2St_2Jminus(gc)
 
+    def plot_secant_manifold(self):
+        import matplotlib.pyplot as plt
+        # from colorsys import hls_to_rgb
+        from hsluv import hsluv_to_rgb, hpluv_to_rgb
+        from scipy.special import erfinv
+
+        points = self.points
+
+        colours = np.ones((len(points), len(points), 3))
+        heights = np.zeros((len(points), len(points)))
+
+        thetas = []
+        phis = []
+
+        for i1, point in enumerate(points):
+            for i2, other_point in enumerate(points[i1+1:]):
+                i2 += i1 + 1
+                direction = other_point - point
+                theta = np.arccos(direction[2] / mag(direction))
+                phi = np.arctan2(direction[1], direction[0])
+
+                # colours[i2, i1] = hls_to_rgb((phi + np.pi) / (2*np.pi), erfinv((theta / np.pi) * 2 - 1.) / 4.4 + 0.5, 1)
+                colours[i2, i1] = hsluv_to_rgb((360 * (phi + np.pi) / (2*np.pi), 100, 65))# * (erfinv((theta / np.pi) * 2 - 1.) / 4.4 + 0.5)))
+
+                phis.append(phi)
+                thetas.append(theta)
+
+                heights[i2, i1] = theta
+
+        print(np.min(phis), np.max(phis), np.min(thetas), np.max(thetas))
+
+        fig, ax = plt.subplots()
+
+        ax.imshow(colours, origin='lower', zorder=-1)
+        # ax.contour(heights, cmap='Greys', levels=np.linspace(-1, 1, 13))
+        ax.contour(heights, cmap='Greys_r', levels=np.linspace(0, np.pi, 11),
+                   zorder=0)
+
+        crossings = self.raw_crossings()
+
+        # Plot the lines between crossings
+        unique_crossings = []
+        crossings_done = set()
+        for crossing in crossings:
+            if crossing[0] in crossings_done:
+                continue
+            crossings_done.add(crossing[1])
+            unique_crossings.append(crossing)
+
+        for i, crossing in enumerate(unique_crossings):
+            start1, end1, height1, sign1 = crossing
+            for other_crossing in unique_crossings[i+1:]:
+                start2, end2, height2, sign2 = other_crossing
+
+                if not (start2 > start1 and end1 > start2 and end2 > end1):
+                    continue
+
+                colour = 'crimson' if sign1 * sign2 > 0 else 'lime'
+                ax.plot([start1, start2], [end1, end2], color=colour, zorder=1)
+
+        # Plot the crossing points
+        for crossing in crossings:
+            if crossing[1] > crossing[0]:
+                colour = 'crimson' if crossing[3] > 0 else 'lime'
+                edge_colour = 'black' if crossing[2] > 0 else 'white'
+                ax.scatter([crossing[0]], [crossing[1]], color=colour, edgecolors=edge_colour,
+                           s=30, zorder=2)
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        fig.tight_layout()
+        
+        # Plot the knot projection inset
+        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+        inset_ax = inset_axes(ax, width="45%", height="45%", loc=4)
+        # inset_ax = fig.add_axes([0.6, 0.1, 0.4, 0.4])
+        self.plot_projection(fig_ax=(fig, inset_ax))
+        inset_ax.set_axis_off()
+
+        ax.set_xlim(0.5, len(points) + 0.5)
+        ax.set_ylim(0.5, len(points) + 0.5)
+
+        ax.set_ylabel('i2')
+        ax.set_xlabel('i1')
+
+        return fig, ax
+
     def plot_secant_crossings(self, radius=None, **kwargs):
+        
         crossings = self.raw_crossings(**kwargs)
 
         if radius is None:
             radii = self.points - np.average(self.points, axis=0)
-            radius = 1.5 * np.max(np.sqrt(np.sum(radii**2, axis=1)))
+            radius = 2.5 * np.max(np.sqrt(np.sum(radii**2, axis=1)))
 
         unique_crossings = []
         crossings_done = set()
@@ -560,20 +649,21 @@ class Knot(SpaceCurve):
 
                 lines.append(directions)
 
-        for line in lines:
-            print(line[0], line[1])
-
         sphere_lines = []
 
-        for line in lines:
+        for i, line in enumerate(lines):
             radii = np.sqrt(np.sum(line**2, axis=1))
             thetas = np.arccos(line[:, 2] / radii)
             phis = np.arctan2(line[:, 1], line[:, 0])
+
+            local_radius = radius - 0.02*i*radius*np.sin(2*np.sin(thetas))
 
             sphere_points = np.zeros(line.shape)
             sphere_points[:, 0] = radius * np.sin(thetas) * np.cos(phis)
             sphere_points[:, 1] = radius * np.sin(thetas) * np.sin(phis)
             sphere_points[:, 2] = radius * np.cos(thetas)
+
+            # sphere_points += 2*(np.random.random(sphere_points.shape) - 0.5) * 0.005 * radius
 
             sphere_lines.append(sphere_points)
 
@@ -582,7 +672,7 @@ class Knot(SpaceCurve):
         # Plot the poles
         from vispy.geometry import create_sphere
         from vispy.scene import Mesh
-        meshdata = create_sphere(radius=1.3)
+        meshdata = create_sphere(radius=0.035 * radius)
         vertices = meshdata.get_vertices()
         faces = meshdata.get_faces()
         vertices[:, 2] += radius
@@ -596,19 +686,13 @@ class Knot(SpaceCurve):
         pvis.vispy_canvas.view.add(mesh2)
 
         from colorsys import hsv_to_rgb
-        colours = [hsv_to_rgb(hue, 1, 0.6) for hue in np.linspace(0, 1, len(sphere_lines) + 1)][:-1]
+        colours = [hsv_to_rgb(hue, 1, 0.8) for hue in np.linspace(0, 1, len(sphere_lines) + 1)][:-1]
+        colours = np.array(colours)
+        np.random.shuffle(colours)
         for line, colour in zip(sphere_lines, colours):
-            k = Knot(line)
+            from pyknot2.spacecurves.openknot import OpenKnot
+            k = OpenKnot(line)
             k.plot(clf=False, tube_radius=0.15, colour=colour, zero_centroid=False)
-
-
-        return sphere_lines
-        
-
-
-
-
-            
 
 
 def mag(v):
