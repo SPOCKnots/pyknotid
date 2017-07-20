@@ -15,7 +15,8 @@ from scipy.interpolate import interp1d
 try:
     from pyknot2.spacecurves import chelpers
 except ImportError:
-    print('Could not import chelpers, using *slower* Python routine')
+    print('Could not import chelpers, using slower Python routine. This will'
+          'give the same result, but is slower.')
     from pyknot2.spacecurves import helpers as chelpers
 from pyknot2.spacecurves import helpers as helpers
 from pyknot2.spacecurves.geometry import arclength, radius_of_gyration
@@ -86,6 +87,12 @@ class SpaceCurve(object):
         as self. Other attributes (e.g. cached crossings) are not
         preserved.'''
         return SpaceCurve(self.points.copy(), verbose=self.verbose)
+
+    def tangents(self, closed=False):
+        ts = np.roll(self.points, -1, axis=0) - self.points
+        if not closed:
+            ts = ts[:-1]
+        return ts
 
     @property
     def points(self):
@@ -494,7 +501,7 @@ class SpaceCurve(object):
         crossings = self.raw_crossings(**kwargs)
         return n.sum(crossings[:, 3]) / 2.
 
-    def writhe(self, samples=10, recalculate=False, **kwargs):
+    def writhe(self, samples=10, recalculate=False, method='integral', **kwargs):
         '''
         The (approximate) writhe of the space curve, obtained by averaging
         the planar writhe over the given number of directions.
@@ -506,12 +513,44 @@ class SpaceCurve(object):
         recalculate : bool
             Whether to recalculate the writhe even if a cached result
             is available. Defaults to False.
+        method : str
+            If 'projections', averages the planar writhe over many
+            projections. If 'integral', calculates the writhing integral.
         **kwargs :
             These are passed directly to :meth:`raw_crossings`.
         '''
-        crossing_number, writhe = self._writhe_and_crossing_numbers(
-            samples, recalculate=recalculate, **kwargs)
+        if method == 'projections':
+            crossing_number, writhe = self._writhe_and_crossing_numbers(
+                samples, recalculate=recalculate, **kwargs)
+
+        elif method == 'integral':
+            from pyknot2.spacecurves.complexity import writhe_integral
+            writhe = writhe_integral(self.points, **kwargs)
+
         return writhe
+
+    def higher_order_writhe(self, order=(1, 3, 2, 4), try_cython=True):
+        from pyknot2.spacecurves.complexity import higher_order_writhe_integral
+        return higher_order_writhe_integral(self.points, order=order,
+                                            try_cython=try_cython)
+
+    def second_order_writhes(self, try_cython=True):
+        from pyknot2.spacecurves.complexity import second_order_writhes
+        return second_order_writhes(self.points, try_cython=try_cython)
+
+    def planar_second_order_writhe(self, **kwargs):
+        '''The second order writhe (type 2, i1,i3,i2,i4) of the projection of
+        the curve along the z axis.
+        '''
+        from pyknot2.invariants import second_order_writhe
+        gc = self.gauss_code(**kwargs)
+        return second_order_writhe(gc)
+
+    def second_order_twist(self, z):
+        from pyknot2.spacecurves import complexity as com
+        z = np.array(z).astype(np.float)
+        assert len(z) == 3
+        return com.second_order_twist(self.points, z)
 
     def average_crossing_number(self, samples=10, recalculate=False,
                                 **kwargs):
@@ -534,6 +573,7 @@ class SpaceCurve(object):
         return crossing_number
 
     def _writhe_and_crossing_numbers(self, samples=10, recalculate=False,
+                                     include_closure=False,
                                      **kwargs):
         '''
         Calculates and stores the writhe and average crossing number.
@@ -547,6 +587,7 @@ class SpaceCurve(object):
         from .complexity import writhe_and_crossing_number
         numbers = writhe_and_crossing_number(self.points, samples,
                                              verbose=self.verbose,
+                                             include_closure=include_closure,
                                              **kwargs)
         self._cached_writhe_and_crossing_numbers = (samples, numbers)
 
@@ -899,7 +940,27 @@ class SpaceCurve(object):
             points = points[(window_len + 1):-(window_len + 1)]
         self.points = points
 
-    def curvatures(self):
+    def simplify_straight_segments(self, closed=False):
+        '''Replaces successive curve segments with identical tangents with a
+        single longer segment.'''
+
+        points = self.points
+        ts = np.roll(points, -1, axis=0) - points
+
+        keep_points = np.ones(len(points), dtype=np.bool)
+
+        ts_range = ts[:-2] if not closed else ts
+
+        for i1, t1 in enumerate(ts_range):
+            t1 /= np.sqrt(np.sum(t1**2))
+            t2 = ts[(i1 + 1) % len(ts)]
+            t2 /= np.sqrt(np.sum(t2**2))
+            if np.dot(t1, t2) > (1 - 10e-10):
+                keep_points[i1 + 1] = 0
+
+        self.points = self.points[keep_points]
+
+    def curvatures(self, closed=True):
         '''Returns curvatures at each vertex (or really line segment)
         according to Mark's formula.'''
         points = self.points
@@ -915,12 +976,13 @@ class SpaceCurve(object):
         kappas = np.sqrt(np.sum(kappas * kappas, axis=1))
         kappas = (1./vns**2) * kappas
 
-        kappas[:3] = kappas[3]
-        kappas[-3:] = kappas[-4]
+        if not closed:
+            kappas[:3] = kappas[3]
+            kappas[-3:] = kappas[-4]
 
         return kappas
 
-    def torsions(self, signed=False):
+    def torsions(self, signed=False, closed=True):
         '''Returns torsions at each vertex according to Mark's formula.'''
 
         d = self.points
@@ -945,7 +1007,17 @@ class SpaceCurve(object):
         torsions = numerator / denominator
         if not signed:
             torsions = np.abs(torsions)
-        torsions[:3] = torsions[3]
-        torsions[-3:] = torsions[-4]
+
+        if not closed:
+            torsions[:3] = torsions[3]
+            torsions[-3:] = torsions[-4]
 
         return torsions
+
+    def close(self):
+        '''Adds the starting point to the end of the curve, so that it ends
+        exactly where it began.
+
+        '''
+        self.points = np.vstack([self.points, self.points[:1]])
+

@@ -268,8 +268,8 @@ class Knot(SpaceCurve):
         results = []
 
         print_dist = int(max(1, 3000. / len(self.points)))
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots()
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots()
         for i, angs in enumerate(angles):
             if i % print_dist == 0:
                 self._vprint('\ri = {} / {}'.format(i, len(angles)), False)
@@ -280,13 +280,13 @@ class Knot(SpaceCurve):
             results.append((angs, k, k.planar_second_order_writhe(),
                             k.arnold_2St_2Jplus()))
 
-            ax.clear()
-            k.plot_projection(fig_ax=(fig, ax))
-            fig.set_size_inches((3, 3))
-            ax.set_title('Wr2 = {}, unknot Wr2 = {}'.format(results[-1][2],
-                                                            results[-1][3]))
-            fig.tight_layout()
-            fig.savefig('planar_writhe_quantities-{:05d}.png'.format(i))
+            # ax.clear()
+            # k.plot_projection(fig_ax=(fig, ax))
+            # fig.set_size_inches((3, 3))
+            # ax.set_title('Wr2 = {}, unknot Wr2 = {}'.format(results[-1][2],
+            #                                                 results[-1][3]))
+            # fig.tight_layout()
+            # fig.savefig('planar_writhe_quantities-{:05d}.png'.format(i))
 
         return results
 
@@ -504,11 +504,13 @@ class Knot(SpaceCurve):
         # Do *not* simplify, as this is only a plane curve invariant
         return arnold_2St_2Jminus(gc)
 
-    def plot_secant_manifold(self):
+    def plot_secant_manifold(self, plot_extrema=True):
         import matplotlib.pyplot as plt
         # from colorsys import hls_to_rgb
         from hsluv import hsluv_to_rgb, hpluv_to_rgb
         from scipy.special import erfinv
+
+        # import pyknot2.hsluvcolormap  # causes hsluv to be registered
 
         points = self.points
 
@@ -528,16 +530,19 @@ class Knot(SpaceCurve):
                 # colours[i2, i1] = hls_to_rgb((phi + np.pi) / (2*np.pi), erfinv((theta / np.pi) * 2 - 1.) / 4.4 + 0.5, 1)
                 colours[i2, i1] = hsluv_to_rgb((360 * (phi + np.pi) / (2*np.pi), 100, 65))# * (erfinv((theta / np.pi) * 2 - 1.) / 4.4 + 0.5)))
 
+                colours[i1, i2] =  hsluv_to_rgb((360 * ((phi + 2*np.pi) % (2*np.pi)) / (2*np.pi), 100, 65))
+
                 phis.append(phi)
                 thetas.append(theta)
 
                 heights[i2, i1] = theta
+                heights[i1, i2] = np.pi - theta
 
         print(np.min(phis), np.max(phis), np.min(thetas), np.max(thetas))
 
         fig, ax = plt.subplots()
 
-        ax.imshow(colours, origin='lower', zorder=-1)
+        im = ax.imshow(colours, origin='lower', zorder=-1)
         # ax.contour(heights, cmap='Greys', levels=np.linspace(-1, 1, 13))
         ax.contour(heights, cmap='Greys_r', levels=np.linspace(0, np.pi, 11),
                    zorder=0)
@@ -568,12 +573,27 @@ class Knot(SpaceCurve):
         for crossing in crossings:
             if crossing[1] > crossing[0]:
                 colour = 'crimson' if crossing[3] > 0 else 'lime'
-                edge_colour = 'black' if crossing[2] > 0 else 'white'
+                edge_colour = 'white' if crossing[2] > 0 else 'black'
                 ax.scatter([crossing[0]], [crossing[1]], color=colour, edgecolors=edge_colour,
                            s=30, zorder=2)
 
+        # Plot extrema of the planar projection
+        zs = points[:, 1]
+        maxima_indices = np.argwhere((zs > np.roll(zs, 1)) & (zs > np.roll(zs, -1))).T[0]
+        minima_indices = np.argwhere((zs < np.roll(zs, 1)) & (zs < np.roll(zs, -1))).T[0]
+        print('maxima indices', maxima_indices)
+        print('minima indices', minima_indices)
+        for maximum in maxima_indices:
+            ax.scatter([maximum], [maximum],  color='purple', edgecolors='pink', zorder=5)
+        for minimum in minima_indices:
+            ax.scatter([minimum], [minimum],  color='cyan', edgecolors='pink', zorder=5)
+
+        xs = np.arange(len(points))
+        ax.plot(xs, xs, linewidth=8, color='black', zorder=4)
+
         ax.set_xticks([])
         ax.set_yticks([])
+
 
         fig.tight_layout()
         
@@ -582,10 +602,13 @@ class Knot(SpaceCurve):
         inset_ax = inset_axes(ax, width="45%", height="45%", loc=4)
         # inset_ax = fig.add_axes([0.6, 0.1, 0.4, 0.4])
         self.plot_projection(fig_ax=(fig, inset_ax))
-        inset_ax.set_axis_off()
+        # inset_ax.set_axis_off()
+        inset_ax.set_xticks([])
+        inset_ax.set_yticks([])
+        inset_ax.patch.set_alpha(0.5)
 
-        ax.set_xlim(0.5, len(points) + 0.5)
-        ax.set_ylim(0.5, len(points) + 0.5)
+        ax.set_xlim(0.5, len(points) - 0.5)
+        ax.set_ylim(0.5, len(points) - 0.5)
 
         ax.set_ylabel('i2')
         ax.set_xlabel('i1')
