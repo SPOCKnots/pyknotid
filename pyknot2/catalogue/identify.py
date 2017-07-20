@@ -8,7 +8,7 @@ from . import database as db
 from pyknot2.catalogue.database import Knot
 from pyknot2.catalogue import converters
 
-db.db.connect()
+db.db.get_conn()
 
 _root_to_attr = {2: Knot.determinant,
                  3: Knot.alexander_imag_3,
@@ -171,4 +171,29 @@ def from_invariants(return_query=False, **kwargs):
     selection = selection.order_by(Knot.min_crossings)
     if return_query:
         return selection
-    return list(selection)
+
+    selection = list(selection)
+
+    return sorted(selection, key=_sort_func)
+
+
+def _sort_func(k):
+    ident = k.identifier
+
+    if ident.startswith('K'):
+        ident = ident[1:]
+        if 'a' in ident:
+            parts = ident.split('a')
+            jump = 0
+        elif 'n' in ident:
+            parts = ident.split('n')
+            jump = 1e-7
+        crossings = int(parts[0])
+        number = int(parts[1])
+    else:
+        parts = ident.split('_')
+        crossings = int(parts[0])
+        number = int(parts[1])
+        jump = 0
+
+    return crossings + number * 1e-15 + jump
