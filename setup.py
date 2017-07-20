@@ -28,6 +28,8 @@ recursively_include(package_data, 'pyknot2',
 ext_modules = [
         Extension("pyknot2.spacecurves.chelpers", ["pyknot2/spacecurves/chelpers.pyx"],
                   libraries=["m"]),
+        Extension("pyknot2.spacecurves.ccomplexity", ["pyknot2/spacecurves/ccomplexity.pyx"],
+                  libraries=["m"]),
         Extension("pyknot2.simplify.coctree", ["pyknot2/simplify/coctree.pyx"],
                   libraries=["m"]),
         Extension("pyknot2.cinvariants", ["pyknot2/cinvariants.pyx"],
