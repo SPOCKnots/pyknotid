@@ -973,6 +973,114 @@ def _crossing_arrows_and_signs_numpy(gc, crossing_numbers):
 
     return arrows
 
+def second_order_writhe(representation):
+    '''Returns the second order writhe (i1,i3,i2,i4) of the
+    representation, as defined in Lin and Wang.
+    '''
+
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate second order writhe'
+                        'for something with more than 1 component')
+
+    gc = gc[0].copy()
+
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+    
+    crossing_numbers = list(representation.crossing_numbers)
+    result = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers[index+1:]:
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            if ((a2s > a1e and a1s > a2s and a2e > a1s) or
+                (a2e > a1e and a1s > a2e and a2s > a1s) or
+                (a2e > a1s and a1e > a2e and a2s > a1e) or
+                (a2s > a1s and a1e > a2s and a2e > a1e)):
+            # if ((a2e > a1e and a1s > a2e and a2s > a1s) or
+            #     (a2s > a1s and a1e > a2s and a2e > a1e)):
+                result += signs[i1] * signs[i2]
+
+    return result
+
+def arnold_2St_2Jplus(representation):
+    '''Returns J+ + 2 * St where J+ and St are Arnold's invariants of
+    plane curves.
+
+    The calculation is performed by transforming the representation
+    into a representation of an unknot by flipping crossings, then
+    calculating the second order writhe.
+
+    See 'Invariants of curves and fronts via Gauss diagrams', M
+    Polyak, Topology 37, 1998.
+
+    '''
+
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    gc = representation._gauss_code
+    if len(gc) == 0:
+        return 0
+    elif len(gc) > 1:
+        raise Exception('tried to calculate arnold_2St_2Jplus'
+                        'for something with more than 1 component')
+
+    gc = gc[0].copy()
+    seen_crossings = set()
+    changed_crossings = set()
+    for row in gc:
+        if row[0] not in seen_crossings:
+            seen_crossings.add(row[0])
+            if row[1] < 0:
+                changed_crossings.add(row[0])
+                row[1] *= -1
+                row[2] *= -1
+        elif row[0] in changed_crossings:
+            row[1] *= -1
+            row[2] *= -1
+    arrows, signs = _crossing_arrows_and_signs(
+        gc, representation.crossing_numbers)
+    
+    crossing_numbers = list(representation.crossing_numbers)
+    result = 0
+    for index, i1 in enumerate(crossing_numbers):
+        arrow1 = arrows[i1]
+        a1s, a1e = arrow1
+        for i2 in crossing_numbers[index+1:]:
+            arrow2 = arrows[i2]
+            a2s, a2e = arrow2
+
+            if ((a2s > a1e and a1s > a2s and a2e > a1s) or
+                (a2e > a1e and a1s > a2e and a2s > a1s) or
+                (a2e > a1s and a1e > a2e and a2s > a1e) or
+                (a2s > a1s and a1e > a2s and a2e > a1e)):
+            # if ((a2e > a1e and a1s > a2e and a2s > a1s) or
+            #     (a2s > a1s and a1e > a2s and a2e > a1e)):
+                result += signs[i1] * signs[i2]
+
+    return result
+
+def arnold_2St_2Jminus(representation):
+    '''Returns J- + 2 * St where J+ and St are Arnold's invariants of
+    plane curves.
+
+    See 'Invariants of curves and fronts via Gauss diagrams', M
+    Polyak, Topology 37, 1998.
+
+    '''
+    return arnold_2St_2Jplus(representation) - len(representation)
 
 def vassiliev_degree_2(representation):
     '''Calculates the Vassiliev invariant of degree 2 of the given
@@ -996,7 +1104,7 @@ def vassiliev_degree_2(representation):
     if len(gc) == 0:
         return 0
     elif len(gc) > 1:
-        raise Exception('tried to calculate alexander polynomial'
+        raise Exception('tried to calculate v2'
                         'for something with more than 1 component')
 
     gc = gc[0]
@@ -1032,7 +1140,8 @@ def vassiliev_degree_3(representation, try_cython=True):
         can automatically be converted into a GaussCode (i.e. by writing
         :code:`GaussCode(your_object)`).
     try_cython : bool
-        Whether to try and use an optimised cython version of the
+cr-
+       Whether to try and use an optimised cython version of the
         routine (takes about 1/3 of the time for complex representations).
         Defaults to True, but the python fallback will be *slower*
         than setting it to False if the cython function is not

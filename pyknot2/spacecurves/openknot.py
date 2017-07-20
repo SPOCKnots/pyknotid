@@ -42,6 +42,9 @@ class OpenKnot(SpaceCurve):
         super(OpenKnot, self.__class__).points.fset(self, points)
         self._cached_alexanders = None
 
+    def tangents(self):
+        return super(Knot, self).tangents(closed=True)
+
     def closing_distance(self):
         '''
         Returns the distance between the first and last points.
