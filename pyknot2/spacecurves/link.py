@@ -446,13 +446,14 @@ class Link(object):
         self._gauss_code[include_self_linking] = gc
         return gc
 
-    def linking_number(self):
+    def linking_number(self, **kwargs):
         '''
         Returns the linking number of the lines in the Link, the
         sum of signed crossings between them, ignoring crossings of
         a line with itself.
         '''
-        crossings = self.raw_crossings(only_with_other_lines=True)
+        crossings = self.raw_crossings(only_with_other_lines=True,
+                                       **kwargs)
         number = 0
         for line in crossings:
             if len(line):
