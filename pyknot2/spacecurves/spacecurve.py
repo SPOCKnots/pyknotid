@@ -107,6 +107,17 @@ class SpaceCurve(object):
         self._cached_writhe_and_crossing_numbers = None
         self._gauss_code = None
 
+    def roll(self, distance, fix_endpoints=True):
+        # if fix_endpoints, adds a point at the end that matches the
+        # point at the start
+        points = self.points
+        if mag(points[-1] - points[0]) < 0.000001 and fix_endpoints:
+            points = self.points[:-1]
+        points = np.roll(points, distance, axis=0)
+        if fix_endpoints:
+            points = np.vstack([points, points[:1]])
+        self.points = points
+
     def _vprint(self, s, newline=True):
         '''Prints s, with optional newline. Intended for internal use
         in displaying progress.'''
@@ -534,9 +545,9 @@ class SpaceCurve(object):
         return higher_order_writhe_integral(self.points, order=order,
                                             try_cython=try_cython)
 
-    def second_order_writhes(self, try_cython=True):
+    def second_order_writhes(self, try_cython=True, **kwargs):
         from pyknot2.spacecurves.complexity import second_order_writhes
-        return second_order_writhes(self.points, try_cython=try_cython)
+        return second_order_writhes(self.points, try_cython=try_cython, **kwargs)
 
     def planar_second_order_writhe(self, **kwargs):
         '''The second order writhe (type 2, i1,i3,i2,i4) of the projection of
@@ -1020,4 +1031,33 @@ class SpaceCurve(object):
 
         '''
         self.points = np.vstack([self.points, self.points[:1]])
+
+    def interpolate(self, num_points, s=0, **kwargs):
+        '''Replaces self.points with points from a B-spline interpolation.
+
+        This method uses scipy.interpolate.splprep. kwargs are passed
+        to this function.
+        '''
+        from scipy.interpolate import splprep, splev
+
+        lengths = self.segment_arclengths()
+        cum_length_fracs = np.cumsum(lengths) / np.sum(lengths)
+
+        tck, u = splprep([self.points[:, 0],
+                          self.points[:, 1],
+                          self.points[:, 2]],
+                         u=cum_length_fracs,
+                         s=0,
+                         **kwargs)
+        points = splev(np.linspace(0, 1, num_points),
+                            tck)
+
+        new_points = np.zeros((num_points, 3))
+        new_points[:, 0] = points[0]
+        new_points[:, 1] = points[1]
+        new_points[:, 2] = points[2]
+
+        self.points = new_points
+
+
 
