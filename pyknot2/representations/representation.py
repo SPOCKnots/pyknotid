@@ -478,7 +478,15 @@ class Representation(GaussCode):
         fig.show()
         
     def space_curve(self, **kwargs):
+        from pyknot2.spacecurves import Knot
         self.simplify()
+
+        if len(self) == 0:
+            thetas = n.linspace(0, 2*n.pi, 10)
+            xs = n.sin(thetas) * 3
+            ys = n.cos(thetas) * 3
+            zs = n.zeros(10)
+            return Knot(n.vstack((xs, ys, zs)).T)
         
         # self.draw_planar_graph()
         g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_x_shifts = self._construct_planar_graph()
@@ -497,7 +505,6 @@ class Representation(GaussCode):
         cg.align_nodes()
         first_node = 0
         next_node = 1
-        from pyknot2.spacecurves import Knot
 
         points = cg.retrieve_space_curve(
             first_edge[0], first_edge[1], first_edge[2], heights)
