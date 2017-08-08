@@ -515,6 +515,12 @@ class Representation(GaussCode):
                 if cur_x > shift:
                     points[i, 0] += 1.
 
+        ys = sorted(set(points[:, 1].tolist()))
+        for i, y in enumerate(ys):
+            points[:, 1][points[:, 1] > y + i + 0.0000001] += 1.
+
+        points[:, 2] *= 1.5
+
         k = Knot(points*5, verbose=self.verbose)
         k.zero_centroid()
         k.rotate((0.05, 0.03, 0.02))
