@@ -15,7 +15,8 @@ from scipy.interpolate import interp1d
 try:
     from pyknot2.spacecurves import chelpers
 except ImportError:
-    print('Could not import chelpers, using slower Python routine. This will'
+    print('Could not import cythonised chelpers, using Python '
+          'alternative. This will '
           'give the same result, but is slower.')
     from pyknot2.spacecurves import helpers as chelpers
 from pyknot2.spacecurves import helpers as helpers
@@ -1047,7 +1048,6 @@ class SpaceCurve(object):
                           self.points[:, 1],
                           self.points[:, 2]],
                          u=cum_length_fracs,
-                         s=0,
                          **kwargs)
         points = splev(np.linspace(0, 1, num_points),
                             tck)

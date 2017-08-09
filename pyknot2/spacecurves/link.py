@@ -287,17 +287,16 @@ class Link(object):
         Plots all the lines. See :func:`pyknot2.visualise.plot_line` for
         full documentation.
         '''
-        from pyknot2.visualise import plot_cell
         lines = self.lines
 
         if 'closed' not in kwargs:
             kwargs['closed'] = True
 
         if mode =='vispy':
+            from pyknot2.visualise import plot_cell_vispy
             points = [k.points for k in lines]
-            print('plotting cell')
-            plot_cell([[p] for p in points], boundary=None,
-                      **kwargs)
+            plot_cell_vispy([[p] for p in points], boundary=None,
+                            **kwargs)
             return
 
         if colours is not None:
