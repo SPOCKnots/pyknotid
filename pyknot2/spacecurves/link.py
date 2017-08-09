@@ -2,8 +2,10 @@
 Link
 ====
 
-Class for dealing with links; multiple space-curves, which may not
-necessarily actually be linked with one another.
+Class for dealing with multiple curves as a link. :class:`Link`
+provides methods for topological manipulation and calculations on
+multiple curves.
+
 '''
 
 import numpy as n

@@ -1142,8 +1142,12 @@ def point_inside_triangle(point, triangle):
     return True
 
 
+
 def PointInsideTriangle2(pt,tri):
-    '''checks if point pt(2) is inside triangle tri(3x2). @Developer'''
+    '''checks if point pt(2) is inside triangle tri(3x2). @Developer
+
+    source: https://stackoverflow.com/a/20949123/2469283
+    '''
     a = 1/(-tri[1,1]*tri[2,0]+tri[0,1]*(-tri[1,0]+tri[2,0])+ \
         tri[0,0]*(tri[1,1]-tri[2,1])+tri[1,0]*tri[2,1])
     s = a*(tri[2,0]*tri[0,1]-tri[0,0]*tri[2,1]+(tri[2,1]-tri[0,1])*pt[0]+ \

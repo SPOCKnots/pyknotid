@@ -380,7 +380,7 @@ class GaussCode(object):
         '''Replaces the indices of the crossings in the Gauss code with the
         integers from 1 to its length.
 
-        Note that this modifier the Gauss code in place, the previous indices
+        Note that this modifies the Gauss code in place, the previous indices
         are not recorded.
         '''
         num_crossings = len(self)

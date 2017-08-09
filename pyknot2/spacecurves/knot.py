@@ -2,8 +2,9 @@
 Knot
 ====
 
-Class for dealing with knots; a single space-curve, which may be
-topologically trivial.
+Class for dealing with curves as knots. :class:`Knot` provides many
+methods for topological manipulation and calculations.
+
 '''
 
 from __future__ import division

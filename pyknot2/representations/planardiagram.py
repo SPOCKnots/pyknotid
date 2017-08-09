@@ -80,6 +80,9 @@ class PlanarDiagram(list):
         return Link(scs)
 
     def as_networkx_extended(self):
+        '''(internal use only) Returns a networkx Graph along with extra
+        information about the crossings.
+        '''
         # print('pd is', self)
         import networkx as nx
         edges = []
