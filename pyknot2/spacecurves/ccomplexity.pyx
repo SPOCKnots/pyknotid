@@ -68,6 +68,47 @@ cpdef cython_second_order_writhes(double [:, :] points,
             writhe_2 / (2*np.pi)**2,
             writhe_3 / (2*np.pi)**2)
 
+cpdef cython_second_order_writhes_no_basepoint(double [:, :] points,
+                                               double [:, :] contributions):
+
+    cdef long i1, i2, i3, i4
+    cdef long [:] indices = np.zeros(4, dtype=np.int)
+
+    cdef double writhe_1 = 0.0
+    cdef double writhe_2 = 0.0
+    cdef double writhe_3 = 0.0
+
+    for i1 in range(len(points) - 1):
+        if i1 % 5 == 0:
+            print('\rnbp cython i1', i1, len(points) - 4, end='')
+        sys.stdout.flush()
+        indices[0] = i1
+        possible_i2s = list(range(i1 + 1, len(points) - 1)) + list(range(i1 ))
+        for i2 in possible_i2s:
+            indices[1] = i2
+            if i2 > i1:
+                possible_i3s = list(range(i2 + 1, len(points) - 1)) + list(range(i1 ))
+            else:
+                possible_i3s = list(range(i2 + 1, i1 ))
+            for i3 in possible_i3s:
+                indices[2] = i3
+                if i3 > i1:
+                    possible_i4s = list(range(i3 + 1, len(points) - 1)) + list(range(i1 ))
+                else:
+                    possible_i4s = list(range(i3 + 1, i1 ))
+                for i4 in possible_i4s:
+                    # print('i1, i2, i3, i4 = {}, {}, {}, {}'.format(i1, i2, i3, i4))
+                    indices[3] = i4
+
+                    writhe_1 += contributions[i1, i2] * contributions[i3, i4]
+                    writhe_2 += contributions[i1, i3] * contributions[i2, i4]
+                    writhe_3 += contributions[i1, i4] * contributions[i2, i3]
+    print()
+
+    return (writhe_1 / (2*np.pi)**2,
+            writhe_2 / (2*np.pi)**2,
+            writhe_3 / (2*np.pi)**2)
+
 
 # cpdef writhing_matrix(double [:, :] points):
 #     for i1 in range(len(points) - 3):

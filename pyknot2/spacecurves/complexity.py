@@ -357,7 +357,7 @@ def writhing_matrix(points, order=(1, 3, 2, 4)):
     return contributions
 
 
-def second_order_writhes(points, try_cython=True):
+def second_order_writhes(points, try_cython=True, basepoint=True):
 
     contributions = np.zeros((len(points[:-1]), len(points[:-1])))
     contributions = np.zeros((len(points), len(points)))
@@ -433,7 +433,10 @@ def second_order_writhes(points, try_cython=True):
     print('Calculating higher order writhe')
 
 
-    from pyknot2.spacecurves.ccomplexity import cython_second_order_writhes
+    if basepoint:
+        from pyknot2.spacecurves.ccomplexity import cython_second_order_writhes
+    else:
+        from pyknot2.spacecurves.ccomplexity import cython_second_order_writhes_no_basepoint as cython_second_order_writhes
 
     return cython_second_order_writhes(points, contributions)
 
