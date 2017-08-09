@@ -157,9 +157,13 @@ class Knot(BaseModel):
                              'space curve.')
 
         from pyknot2.representations import DTNotation
+        import numpy as np
         d = DTNotation(self.dt_code)
-        return d.representation(verbose=verbose, **kwargs).space_curve(
+        k = d.representation(verbose=verbose, **kwargs).space_curve(
             verbose=verbose)
+        k.points += 0.0001 * np.random.random(k.points.shape)
+        k.close()
+        return k
 
     def url(self):
         '''The guessed url of this knot in the Knot Atlas. The url may not actually exist.
