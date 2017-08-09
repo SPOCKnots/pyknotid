@@ -166,7 +166,9 @@ class Knot(BaseModel):
         return k
 
     def url(self):
-        '''The guessed url of this knot in the Knot Atlas. The url may not actually exist.
+        '''The guessed url of this knot in the Knot Atlas. This page may not
+        actually exist or be populated.
+
         '''
         return 'http://katlas.org/wiki/{}'.format(self.identifier)
 
