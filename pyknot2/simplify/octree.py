@@ -155,9 +155,12 @@ class OctreeCell(object):
             shape = (0, shape[0], 0, shape[1], 0, shape[2])
         short_shape = shape[1::2]
         
-        line_segs = [
-            split_cell_line(line, [s - 10. for s in short_shape])
-            for line in lines]
+        if isinstance(lines[0], list):
+            line_segs = lines
+        else:
+            line_segs = [
+                split_cell_line(line, [s - 10. for s in short_shape])
+                for line in lines]
         all_joined_segments = []
         handles = []
         for identifier, segments in enumerate(line_segs):
