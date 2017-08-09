@@ -1,4 +1,7 @@
 '''
+PeriodicCell
+============
+
 Tools for working with a periodic cell of spacecurves.
 '''
 from pyknot2.utils import ensure_shape_tuple

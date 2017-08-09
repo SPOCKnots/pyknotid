@@ -1,6 +1,9 @@
-'''
-Knot representations
-====================
+'''Topological representations
+===========================
+
+Knots and links can be encoded in many different ways, generally by
+enumerating their self-intersections in projection along some
+axis. We provide here
 
 This module contains classes and functions for representing
 knots in knot diagrams, mainly the
@@ -9,6 +12,7 @@ knots in knot diagrams, mainly the
 
 These provide convenient methods to convert between different
 representations, and to simplify via Reidemeister moves.
+
 '''
 
 from pyknot2.representations.gausscode import GaussCode

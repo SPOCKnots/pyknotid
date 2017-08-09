@@ -1,10 +1,23 @@
-'''
-SpaceCurve
+'''SpaceCurve
 ==========
 
-A class for dealing with space curves (both open and closed),
-with methods for measuring arclength, writhe etc. and plotting
-the curve.
+The :class:`SpaceCurve` class is the base for all space-curve analysis
+in pyknot2. It provides methods for geometrical manipulation
+(translation, rotation etc.), calculating geometrical characteristics
+such as the writhe, and obtaining topological representations of the
+curve by analysing its crossings in projection.
+
+The :class:`~pyknot2.spacecurves.knot.Knot` class provides functions
+for topological analysis, calculating invariants etc. The
+:class:`~pyknot2.spacecurves.link.Link` class handles multiple
+SpaceCurves and can calculate linking invariants. The
+:class:`~pyknot2.spacecurves.periodiccell.PeriodicCell` provides some
+convenience functions for handling multiple space-curves in a box with
+periodic boundaries.
+
+API documentation
+-----------------
+
 '''
 
 import numpy as n
@@ -973,8 +986,7 @@ class SpaceCurve(object):
         self.points = self.points[keep_points]
 
     def curvatures(self, closed=True):
-        '''Returns curvatures at each vertex (or really line segment)
-        according to Mark's formula.'''
+        '''Returns curvatures at each vertex (or really line segment).'''
         points = self.points
 
         ts = np.roll(points, -1, axis=0) - points
@@ -995,7 +1007,7 @@ class SpaceCurve(object):
         return kappas
 
     def torsions(self, signed=False, closed=True):
-        '''Returns torsions at each vertex according to Mark's formula.'''
+        '''Returns torsions at each vertex.'''
 
         d = self.points
 
