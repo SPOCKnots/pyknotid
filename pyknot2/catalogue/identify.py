@@ -16,6 +16,10 @@ _root_to_attr = {2: Knot.determinant,
 
 
 def get_knot(name):
+    '''Returns from the database the Knot with the given identifier.
+
+    For instance, :code:`trefoil = get_knot('3_1')`.
+    '''
     k = first_from_invariants(id=name)
     if k is None:
         raise ValueError('No knot with this name was found')
@@ -97,7 +101,7 @@ def from_invariants(return_query=False, **kwargs):
         'positive amphicheiral', 'negative amphicheiral', 'chiral'.
     writhe or planar_writhe : int
         The writhe of the knot's minimal diagram as recorded by its dt
-        code. This is probably not necessarily unique, only the value
+        code. This is not necessarily unique, only the value
         of the dt code stored is given.
     other : iterable
         A list of other peewee terms that can be chained in ``where()``

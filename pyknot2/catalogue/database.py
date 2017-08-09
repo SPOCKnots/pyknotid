@@ -1,4 +1,7 @@
 '''
+Database
+========
+
 Model classes and associated functions for storing and accessing
 knots in an sqlite database.
 

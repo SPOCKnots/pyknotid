@@ -7,13 +7,11 @@ in pyknot2. It provides methods for geometrical manipulation
 such as the writhe, and obtaining topological representations of the
 curve by analysing its crossings in projection.
 
-The :class:`~pyknot2.spacecurves.knot.Knot` class provides functions
-for topological analysis, calculating invariants etc. The
-:class:`~pyknot2.spacecurves.link.Link` class handles multiple
-SpaceCurves and can calculate linking invariants. The
-:class:`~pyknot2.spacecurves.periodiccell.PeriodicCell` provides some
-convenience functions for handling multiple space-curves in a box with
-periodic boundaries.
+pyknot2 provides other classes for topological analysis of the curves:
+
+- :class:`~pyknot2.spacecurves.knot.Knot` for calculating knot invariants of the space-curve.
+- :class:`~pyknot2.spacecurves.link.Link` to handle multiple SpaceCurves and calculate linking invariants.
+- :class:`~pyknot2.spacecurves.periodiccell.Cell` for handling multiple space-curves in a box with periodic boundaries.
 
 API documentation
 -----------------

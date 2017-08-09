@@ -42,9 +42,20 @@ class Cell(object):
 
     @classmethod
     def from_qwer(cls, qwer, shape, **kwargs):
-        '''
-        Returns an instance of Cell having parsed the output line format
-        of Sandy's simulations.
+        '''Returns an instance of Cell from a quartet of differently
+        classified lines in periodic boundaries.
+
+        Parameters
+        ----------
+        qwer : tuple
+            Should be a 4-tuple of lists q, w, e, r. q is closed
+            loops, w is lines with non-trivial homology, e is lines that
+            terminate on the boundaries of the cell, r is any remaining
+            (unclassified) lines.
+        shape : int or tuple
+            The size of the cell along each axis. If a single number
+            is passed, all axes are assumed to be the same length.
+
         '''
         q, w, e, r = qwer
         if len(w) > 0 and isinstance(w[0], tuple):
@@ -97,6 +108,10 @@ class Cell(object):
                   tube_radius=tube_radius, **kwargs)
 
     def smooth(self, repeats=1, window_len=10):
+        '''Smooth each line in the curve, equivalent to
+        :meth:`~pyknot2.spacecurves.spacecurve.SpaceCurve.smooth`.
+
+        '''
         from pyknot2.spacecurves import Knot
         new_lines = []
         for i, line in enumerate(self.lines):

@@ -1,15 +1,23 @@
-'''Contains functions for improving an existing database by filling in
+'''
+Building the database
+=====================
+
+.. warning:: This module is only used for building the database. It is
+             generally recommended to download the prebuilt database.
+
+Contains functions for improving an existing database by filling in
 invariants. Original motivation was/is to get Jones polynomials from
 the HOMFLY polynomials provided in the high-crossing data, but now
-includes routines to get fiberedness etc from KnotInfo's database, and
-to calculate new invariants based on the DT notation.
+includes routines to get fiberedness etc from KnotInfo, and to
+calculate new invariants based on the DT notation.
+
 '''
 
 from __future__ import print_function
 
-from database import Knot, db
-from converters import homfly_to_jones, db2py_homfly, py2db_jones
-from build import get_rdf_object
+from pyknot2.catalogue.database import Knot, db
+from pyknot2.catalogue.converters import homfly_to_jones, db2py_homfly, py2db_jones
+from pyknot2.catalogue.build import get_rdf_object
 
 import csv
 import json

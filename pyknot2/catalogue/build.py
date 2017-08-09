@@ -1,6 +1,10 @@
-'''Functions for building a knot database from raw data
-files. Intended for use with the RDF format data from the knot
-atlas.'''
+'''
+Building a knot database
+========================
+
+Functions for building a knot database from raw data
+files. Intended for use with the RDF format data from the Knot
+Atlas.'''
 
 import sympy as sym
 import rdflib

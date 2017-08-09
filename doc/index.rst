@@ -11,6 +11,7 @@ Contents:
     sources/overview
     sources/spacecurves/index
     sources/representations/index
+    sources/catalogue/index
    
 
 Indices and tables
