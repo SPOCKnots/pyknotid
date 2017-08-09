@@ -23,6 +23,7 @@ def recursively_include(results, directory, patterns):
 
 recursively_include(package_data, 'pyknot2',
                     ['*.tmpl', '*.pov', '*.pyx', '*.pxd',
+                     '*.py',
                      ])
 
 ext_modules = [
