@@ -29,8 +29,9 @@ Example::
 Topological representations
 ---------------------------
 
-pyknot2 can accept input using several standard topological notations,
-using these to calculate topological invariants, or even to
+pyknot2 can accept input using several standard topological notations
+including the Gauss code, planar diagram or Dowker-Thistlethwaite
+notation. You can then calculate topological invariants, or even
 reconstruct a 3D space curve. See the :doc:`representation
 documentation <representations/index>` for more information.
 
@@ -54,7 +55,7 @@ Knot catalogue
 
 pyknot2 can look up knot types in a prebuilt database, according to
 the knot name (e.g. ``3_1`` for the trefoil knot, ``4_1`` for the
-figure-eight knot etc.), or the values of its knot invariants. See the :doc:`knot catalogue documentation` for more information.
+figure-eight knot etc.), or the values of its knot invariants. See the :doc:`knot catalogue documentation <catalogue/index>` for more information.
 
 Example::
 
@@ -67,10 +68,12 @@ Example::
   k = get_knot('7_3').space_curve()  # <Knot with 83 points>, a space curve
                                      # that forms a 7_3 knot.
 
-  from_invariants(determinant=7, max_crossings=11) # [<Knot 5_2>,
-                                                   #  <Knot 7_1>,
-                                                   #  <Knot 9_42>,
-                                                   #  <Knot K11n57>,
-                                                   #  <Knot K11n96>,
-                                                   #  <Knot K11n111>]
+  knots = from_invariants(determinant=7, max_crossings=11) # [<Knot 5_2>,
+                                                           #  <Knot 7_1>,
+                                                           #  <Knot 9_42>,
+                                                           #  <Knot K11n57>,
+                                                           #  <Knot K11n96>,
+                                                           #  <Knot K11n111>]
+  
+
   

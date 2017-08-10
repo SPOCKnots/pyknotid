@@ -1,8 +1,15 @@
-'''
-Knot catalogue
+'''Knot catalogue
 ==============
 
-pyknot2 provides knot lookup by name or invariant values, using a prebuilt database.
+pyknot2 provides knot lookup by name or invariant values, using a
+prebuilt database.
+
+The knot database includes information about all knots with up to 15
+crossings, with topological invariants following those indexed by the
+`Knot Atlas <http://katlas.org/wiki/Main_Page>`__ and the `KnotInfo
+Table of Knot Invariants <http://www.indiana.edu/~knotinfo/>`__, or
+calculated by pyknot2 using the Dowker-Thistlethwaite codes of the
+knots.
 
 Lookup by name
 --------------
@@ -28,6 +35,38 @@ Use :func:`pyknot2.catalogue.identify.from_invariants`::
     # returns [<Knot 3_1>]
 
 For a full list of lookup parameters, see :func:`~pyknot2.catalogue.identify.from_invariants`.
+
+Exploring properties of knots
+-----------------------------
+
+You can view more properties of any knot returned by the database::
+
+  from pyknot2.catalogue import get_knot, from_invariants
+
+  k = get_knot('5_2')
+  k.pretty_print()  # prints some information from the database:
+                    #  Identifier: 5_2
+                    #  Min crossings: 5
+                    #  Fibered: False
+                    #  Gauss code: -1, 5, -2, 1, -3, 4, -5, 2, -4, 3
+                    #  Planar diagram: X_1425 X_3849 X_5,10,6,1 X_9,6,10,7 X_7283
+                    #  DT code: 4 8 10 2 6
+                    #  Determinant: 7
+                    #  Signature: -2
+                    #  Alexander: 2*t**2 - 3*t + 2
+                    #  Jones: 1/q - 1/q**2 + 2/q**3 - 1/q**4 + q**(-5) - 1/q**6
+                    #  HOMFLY: -a**6 + a**4*z**2 + a**4 + a**2*z**2 + a**2
+                    #  Hyperbolic volume: 2.82812
+                    #  Vassiliev order 2: 2
+                    #  Vassiliev order 3: -3
+                    #  Symmetry: reversible
+
+Properties of the knot can also be accessed directly::
+
+  k.determinant  # 7
+
+For a full list of attributes available, see
+:class:`pyknot2.catalogue.database.Knot`.
 
 '''
 
