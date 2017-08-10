@@ -1,8 +1,16 @@
-'''
-Invariants
+'''Invariants
 ==========
 
 Functions for retrieving invariants of knots and links.
+
+Many of these functions can be called in a more convenient way via
+methods of the :doc:`space curve classes <spacecurves/index>`
+(e.g. :class:`~pyknot2.spacecurves.knot.Knot`) or the
+:class:`~pyknot2.representations.representation.Representation` class.
+
+
+Mathematica
+-----------
 
 Functions whose name ends with ``_mathematica`` try to create an
 external Mathematica process to calculate the answer. They may hang
@@ -11,6 +19,10 @@ or have other problems if Mathematica isn't available in your
 
 .. warning:: This module may be broken into multiple components at
              some point.
+
+API documentation
+-----------------
+
 '''
 from __future__ import print_function
 import subprocess

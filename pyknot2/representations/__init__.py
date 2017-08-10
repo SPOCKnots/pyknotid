@@ -70,7 +70,7 @@ arbitrarily.
 
 
 Calculating invariants
-----------------------
+######################
 
 You can calculate many invariants using the functions of
 :doc:`../invariants`.
@@ -86,7 +86,7 @@ You can then calculate many quantities via methods of this object::
 
   rep.vassiliev_degree_2()  # 1
   rep.vassiliev_degree_3()  # -1
-  rep.identify()  # [<Knot 3_1>]
+  rep.identify()  # [<Knot 4_1>]
 
 For a full list of available functions, see
 :class:`~pyknot2.representations.representation.Representation`.

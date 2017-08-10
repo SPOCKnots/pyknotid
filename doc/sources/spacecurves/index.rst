@@ -1,8 +1,6 @@
 
 .. automodule:: pyknot2.spacecurves
 
-Index
------
    
 
 .. toctree::
