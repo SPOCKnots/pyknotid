@@ -2,8 +2,7 @@
 Knot catalogue
 ==============
 
-pyknot2 provides lookup access for different knot types from a
-pre-build database of knot invariants.
+pyknot2 provides knot lookup by name or invariant values, using a prebuilt database.
 
 Lookup by name
 --------------

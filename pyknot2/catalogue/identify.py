@@ -1,8 +1,8 @@
 '''
 Identify knots
-==============
+--------------
 
-Functions for identifying knots based on their polynomials.'''
+Functions for identifying knots based on their name or invariants.'''
 
 from . import database as db
 from pyknot2.catalogue.database import Knot
@@ -43,10 +43,11 @@ def from_invariants(return_query=False, **kwargs):
     '''Takes invariants as kwargs, and does the appropriate conversion to
     return a list of database objects matching all the given criteria.
 
-    Note that this only searches within the indexed database available.
-    Some invariant options return only results where the invariant both
-    matches *and* is known, others return those that match *or* are not
-    known. Check the source if depending on accurate results.
+    .. note:: This only searches within the indexed database
+              available.  Some invariant options return only results where the
+              invariant both matches *and* is known, others return those that
+              match *or* are not known. Check the source if depending on
+              accurate results.
 
     Does *not* support all available invariants. Currently, searching
     is supported by:
