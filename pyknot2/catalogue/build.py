@@ -37,7 +37,7 @@ rdfsymmetry = URIRef('invariant:Symmetry_Type')
 
 # RDFLib arrangement is subject/predicate/object
 
-db.db.connect()
+db.db.get_conn()
 
 # Try to create a Knot table in the database, just in case one doesn't
 # exist. This might be a silly way to deal with things, but it'll do
