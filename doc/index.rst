@@ -5,7 +5,7 @@ pyknot2 provides tools for analysing knots with Python.
 
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 1
 
     sources/overview
     sources/spacecurves/index
