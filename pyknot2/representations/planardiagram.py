@@ -1,6 +1,6 @@
 '''
-Planar diagrams
-===============
+PlanarDiagram
+=============
 
 Classes for working with planar diagram notation of knot diagrams.
 

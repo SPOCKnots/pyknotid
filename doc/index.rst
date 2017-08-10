@@ -1,11 +1,8 @@
 pyknot2
-'''''''
+=======
 
 pyknot2 provides tools for analysing knots with Python.
 
-
-Contents
-========
 
 .. toctree::
     :maxdepth: 3

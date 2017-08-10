@@ -1,3 +1,5 @@
+Topological representations
+===========================
 
 .. automodule:: pyknot2.representations
 

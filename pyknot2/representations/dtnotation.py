@@ -1,6 +1,6 @@
 '''
-Dowker-Thistlethwaite notation
-==============================
+DTNotation
+==========
 
 Classes for working with DT notation representing planar projections
 of curves.

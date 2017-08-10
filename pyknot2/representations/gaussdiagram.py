@@ -1,6 +1,6 @@
 '''
-Gauss diagram
-=============
+GaussDiagram
+============
 
 Class for creating and viewing Gauss diagrams.
 '''

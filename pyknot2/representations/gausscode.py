@@ -1,6 +1,6 @@
 '''
-Gauss code
-==========
+GaussCode
+=========
 
 Classes for working with Gauss codes representing planar projections
 of curves.

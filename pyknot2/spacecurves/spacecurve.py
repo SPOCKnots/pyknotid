@@ -1,5 +1,6 @@
-'''SpaceCurve
-==========
+'''
+SpaceCurve
+----------
 
 The :class:`SpaceCurve` class is the base for all space-curve analysis
 in pyknot2. It provides methods for geometrical manipulation
@@ -14,7 +15,7 @@ pyknot2 provides other classes for topological analysis of the curves:
 - :class:`~pyknot2.spacecurves.periodiccell.Cell` for handling multiple space-curves in a box with periodic boundaries.
 
 API documentation
------------------
+~~~~~~~~~~~~~~~~~
 
 '''
 

@@ -1,6 +1,6 @@
 '''
 PeriodicCell
-============
+------------
 
 Tools for working with a periodic cell of spacecurves.
 '''

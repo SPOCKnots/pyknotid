@@ -1145,7 +1145,7 @@ def vassiliev_degree_3(representation, try_cython=True):
     this doesn't work for links.
 
     Parameters
-    ==========
+    ----------
     representation : Anything convertible to a
                      :class:`~pyknot2.representations.gausscode.GaussCode`
         A pyknot2 representation class for the knot, or anything that

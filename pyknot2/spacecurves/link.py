@@ -1,6 +1,6 @@
 '''
 Link
-====
+----
 
 Class for dealing with multiple curves as a link. :class:`Link`
 provides methods for topological manipulation and calculations on

@@ -1,7 +1,4 @@
 '''
-Space curve analysis
-====================
-
 This module contains classes and functions for working with knots and
 links as three-dimensional space curves, or calling functions
 elsewhere in pyknot2 to perform topological analysis. Functionality

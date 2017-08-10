@@ -1,5 +1,4 @@
-'''Knot catalogue
-==============
+'''
 
 pyknot2 provides knot lookup by name or invariant values, using a
 prebuilt database.

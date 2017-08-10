@@ -1,6 +1,6 @@
 '''
 Knot
-====
+----
 
 Class for dealing with curves as knots. :class:`Knot` provides many
 methods for topological manipulation and calculations.

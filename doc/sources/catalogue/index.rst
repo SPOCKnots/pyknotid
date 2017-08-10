@@ -1,3 +1,5 @@
+Knot catalogue
+==============
 
 .. automodule:: pyknot2.catalogue
 

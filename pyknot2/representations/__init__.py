@@ -1,6 +1,4 @@
-'''Topological representations
-===========================
-
+'''
 Knots and links can be encoded in many different ways, generally by
 enumerating their self-intersections in projection along some
 axis. We provide here
