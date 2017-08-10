@@ -15,11 +15,14 @@ import sys
 
 
 class GaussCode(object):
-    '''
-    Class for containing and manipulating Gauss codes.
+    '''Class for containing and manipulating Gauss codes.
 
-    This implements *only* extended Gauss code that includes the sign
-    of each crossing (clockwise or anticlockwise).
+    By default you must pass an extended Gauss code that includes the
+    sign of each crossing ('c' for clockwise or 'a' for
+    anticlockwise), e.g. ``1+c,2-c,3+c,1-c,2+c,3-c`` for the trefoil
+    knot. If you do not know the crossing signs you can instead call
+    :meth:`GaussCode.calculating_orientations`, e.g.
+    :code:`gc = GaussCode.calculating_orientations('1+,2-,3+,1-,2+,3-')`.
 
     The length of a Gauss code (e.g. ``len(GaussCode())``) is the
     number of crossings in it.
@@ -38,6 +41,7 @@ class GaussCode(object):
     verbose : bool
         Whether to print information during calculations. Defaults to
         True.
+
     '''
 
     def __init__(self, crossings='', verbose=True):
@@ -80,7 +84,10 @@ class GaussCode(object):
         '''Takes a Gauss code without crossing orientations and returns an
         equivalent Gauss code (though not necessarily of the same length).
 
-        This works by generating a valid space curve and 
+        This works by generating a space curve and finding its
+        self-intersections on projection. This is overkill for the
+        problem, but works.
+
         '''
         code = code.replace(',', 'c,')
         code = code.replace(' ', 'c ')
