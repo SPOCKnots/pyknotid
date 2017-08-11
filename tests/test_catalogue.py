@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from pyknot2.catalogue.identify import from_invariants
-test_knots = from_invariants(max_crossings=8)
+test_knots = from_invariants(max_crossings=9)
 
 
 @pytest.mark.parametrize("knot", test_knots)
