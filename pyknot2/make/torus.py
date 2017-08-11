@@ -1,8 +1,5 @@
 from __future__ import division
 
-import numpy as n
-from fractions import gcd
-
 import numpy as np
 from fractions import gcd
 

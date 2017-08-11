@@ -5,6 +5,16 @@ elsewhere in pyknot2 to perform topological analysis. Functionality
 includes manipulating knots/links via translation, rotation and
 scaling, plotting diagrams, finding crossings and identifying knots.
 
+..
+   .. image:: trefoil.png
+      :scale: 50%
+      :alt: A trefoil knot as seen in a pyknot2 visualisation
+      :align: center
+
+.. image:: random_walk_length_30.png
+   :scale: 50%
+   :alt: A closed random walks with 30 steps
+   :align: center
 '''
 
 from pyknot2.spacecurves.spacecurve import SpaceCurve

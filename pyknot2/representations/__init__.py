@@ -37,6 +37,11 @@ or a Gauss diagram::
 
   k.gauss_diagram()  # plots the diagram in a new window using matplotlib
 
+.. image:: example_gauss_diagram_k10_93.png
+   :alt: An example Gauss diagram for the knot 10_93
+   :align: center
+   :scale: 50%
+
 or a generic :class:`~pyknot2.representations.representation.Representation`::
 
   k.representation()  # 1+a,2-a,3+a,1-a,2+a,3-a (but provides more methods than a GaussCode)

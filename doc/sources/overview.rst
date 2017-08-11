@@ -1,6 +1,11 @@
 Overview
 ========
 
+.. image:: k10_11_ideal.png
+   :scale: 50%
+   :alt: The knot 10_11 in an ideal conformation, visualised by pyknot2.
+   :align: center
+
 pyknot2 is a Python module for doing calculations on knots or links,
 whether specified as space-curves, or via standard topological
 notations.
@@ -13,6 +18,10 @@ pyknot2 can perform many calculations on space curves specified as a
 set of points, as well as plotting the curves in three dimensions or
 in projection. See the :doc:`space curve documentation
 <spacecurves/index>` for more information.
+
+Some topological calculations can only be performed for relatively
+short, simple curves, but in general pyknot2 can work fine even for
+space-curves with many thousands of points.
 
 Example::
 
@@ -53,9 +62,12 @@ Example::
 Knot catalogue
 --------------
 
-pyknot2 can look up knot types in a prebuilt database, according to
-the knot name (e.g. ``3_1`` for the trefoil knot, ``4_1`` for the
-figure-eight knot etc.), or the values of its knot invariants. See the :doc:`knot catalogue documentation <catalogue/index>` for more information.
+pyknot2 can look up knot types in a prebuilt database containing
+various invariants for knots with up to 15 crossings. They can be
+looked up by the knot name (e.g. ``3_1`` for the trefoil knot, ``4_1``
+for the figure-eight knot etc.), or the values of different knot
+invariants. See the :doc:`knot catalogue documentation
+<catalogue/index>` for more information.
 
 Example::
 
