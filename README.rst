@@ -1,18 +1,40 @@
-Pyknot
-======
+Pyknot2
+=======
 
-Python (and optional Cython) modules for dealing with knotting and linking.
+Python (and optional Cython) modules for detecting and measuring
+knotting and linking. pyknot2 can analyse space-curves, i.e. sets of
+points in three-dimensions, or can parse standard topological
+representations of knot diagrams.
 
-Pyknot is a work in progress, but in principle should support python2
-and python3 (if it doesn't, that's a bug), and provide classes to help
-with knots and links as space curves, detecting crossings, calculating
-and analysing knot invariants etc.
+Installation
+------------
+
+pyknot2 supports both Python 2 and Python 3, you can install it with::
+
+  $ pip install pyknot2
+
+This will automatically install any Python dependencies that are not
+already present.
+
+Requirements
+~~~~~~~~~~~~
+
+If installing pyknot2 without pip, the following dependencies are required:
+
+- cython (not essential, but strongly recommended)
+- numpy
+- peewee
+- networkx
+- planarity
+
+Most of these are not hard requirements, but some functionality will
+not be available if they are not present.
 
 
 Example usage
 -------------
 
-::
+.. code:: python
 
     In [1]: import pyknot2.spacecurves as sp
 

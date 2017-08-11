@@ -53,15 +53,16 @@ else:
 setup(
     name='pyknot2',
     version='1.0',
-    description='Tools for analysing knots',
+    description=('Tools for identifying and analysing knots, in space-curves '
+                 'or standard topological representations'),
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
     install_requires=['numpy', 'networkx', 'planarity',
                       'peewee'],
-    # extras_require={'plotting': ['vispy'],},
     ext_modules=ext_modules,
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
+    package_data=package_data,
     entry_points={
         'console_scripts': [
             'analyse-knot-file = pyknot2.cli.analyse_knot_file:main',

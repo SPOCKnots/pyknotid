@@ -2,7 +2,13 @@
 GaussDiagram
 ============
 
+.. image:: example_gauss_diagram_k10_93.png
+   :alt: A Gauss diagram for the knot 10_93
+   :align: center
+   :scale: 50%
+
 Class for creating and viewing Gauss diagrams.
+
 
 API documentation
 ~~~~~~~~~~~~~~~~~
