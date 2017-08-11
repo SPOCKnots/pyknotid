@@ -12,8 +12,8 @@ pyknot2 also includes functions for creating a database from scratch
 (using knot information from the Knot Atlas), and improving an
 existing database by calculating new invariants or pulling information
 from other sources such as the KnotInfo database. These functions can
-be found in ``pyknot2.catalogue.build` and
-`pyknot2.catalogue.improve`, which are not included in the indexed
+be found in ``pyknot2.catalogue.build`` and
+``pyknot2.catalogue.improve``, which are not included in the indexed
 documentation here.
 
 API documentation
