@@ -8,7 +8,7 @@ representations of knot diagrams.
 
 .. image:: doc/k10_92_ideal.png
    :align: center
-   :scale: 50%
+   :scale: 25%
    :alt: The knot 10_92, visualised by pyknot2.
 
 Installation
