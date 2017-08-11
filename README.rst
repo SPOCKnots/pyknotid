@@ -6,6 +6,9 @@ knotting and linking. pyknot2 can analyse space-curves, i.e. sets of
 points in three-dimensions, or can parse standard topological
 representations of knot diagrams.
 
+A graphical interface to some of these tools is available online at
+`Knot ID <http://inclem.net/knotidentifier>`__.
+
 .. image:: doc/k10_92_ideal_small.png
    :align: center
    :scale: 25%
