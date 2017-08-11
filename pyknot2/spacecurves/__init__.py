@@ -15,11 +15,13 @@ Different knot classes
 
 pyknot2 includes the following classes for topological calculation:
 
-- :doc:`spacecurve`: Provides methods for geometrical calculations,
-  plotting, and finding crossings in projection.
+- :doc:`spacecurve`: Provides functions for calculations on a single
+  curve, including plotting, some geometrical properties and finding
+  crossings in projection.
 
-- :doc:`knot`: Provides methods for topological calculations such as
-  the Alexander polynomial or Vassiliev invariants.
+- :doc:`knot`: Provides functions for topological calculations on a
+  single curve, such as the Alexander polynomial or Vassiliev
+  invariants.
 
 - :doc:`link`: Provides the same interface to collections of multiple
   curves, and can calculate linking invariants.
@@ -58,7 +60,7 @@ specified points::
    :alt: A trefoil knot specified by vertex points
    :scale: 50%
 
-The following code could produce points representing other knots::
+The following code could produce points representing other torus knots::
 
   import numpy as np
   from pyknot2.spacecurves import Knot

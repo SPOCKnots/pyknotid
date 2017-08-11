@@ -1,6 +1,11 @@
 '''
 Link
-----
+====
+
+.. image:: torus_hopf_link.png
+   :align: center
+   :scale: 50%
+   :alt: A hopf link visualised by pyknot2
 
 Class for dealing with multiple curves as a link. :class:`Link`
 provides methods for topological manipulation and calculations on
