@@ -1,8 +1,12 @@
 '''
-Identify knots
---------------
+Identify module
+---------------
 
-Functions for identifying knots based on their name or invariants.'''
+Functions for identifying knots based on their name or invariants.
+
+API documentation
+~~~~~~~~~~~~~~~~~
+'''
 
 from . import database as db
 from pyknot2.catalogue.database import Knot

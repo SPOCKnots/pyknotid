@@ -4,6 +4,9 @@ DTNotation
 
 Classes for working with DT notation representing planar projections
 of curves.
+
+API documentation
+~~~~~~~~~~~~~~~~~
 '''
 
 import numpy as n

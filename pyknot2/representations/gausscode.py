@@ -6,6 +6,9 @@ Classes for working with Gauss codes representing planar projections
 of curves.
 
 See class documentation for more details.
+
+API documentation
+~~~~~~~~~~~~~~~~~
 '''
 
 from __future__ import print_function

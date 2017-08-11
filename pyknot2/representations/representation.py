@@ -4,6 +4,9 @@ Representation
 
 An abstract representation of a Knot, providing methods for
 the calculation of topological invariants.
+
+API documentation
+~~~~~~~~~~~~~~~~~
 '''
 
 from __future__ import print_function, division

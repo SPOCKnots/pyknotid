@@ -5,6 +5,9 @@ PlanarDiagram
 Classes for working with planar diagram notation of knot diagrams.
 
 See individual class documentation for more details.
+
+API documentation
+~~~~~~~~~~~~~~~~~
 '''
 
 from __future__ import print_function

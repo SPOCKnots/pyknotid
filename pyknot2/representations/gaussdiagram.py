@@ -3,6 +3,9 @@ GaussDiagram
 ============
 
 Class for creating and viewing Gauss diagrams.
+
+API documentation
+~~~~~~~~~~~~~~~~~
 '''
 
 from __future__ import print_function

@@ -1,11 +1,24 @@
-'''
-Database
---------
+'''Database module
+---------------
 
-Model classes and associated functions for storing and accessing
-knots in an sqlite database.
+pyknot2 looks up knot information via a prebuilt sqlite database,
+accessed using the peewee ORM. Other ORMs are not currently supported.
 
-These models use the peewee ORM. Other ORMs are not currently supported!
+The model class is :class:`pyknot2.catalogue.database.Knot`,
+documented below. For generic documentation about using the database,
+see :doc:`index`.
+
+pyknot2 also includes functions for creating a database from scratch
+(using knot information from the Knot Atlas), and improving an
+existing database by calculating new invariants or pulling information
+from other sources such as the KnotInfo database. These functions can
+be found in ``pyknot2.catalogue.build` and
+`pyknot2.catalogue.improve`, which are not included in the indexed
+documentation here.
+
+API documentation
+~~~~~~~~~~~~~~~~~
+
 '''
 
 from peewee import *
