@@ -6,15 +6,17 @@ knotting and linking. pyknot2 can analyse space-curves, i.e. sets of
 points in three-dimensions, or can parse standard topological
 representations of knot diagrams.
 
+.. image:: doc/k10_92_ideal.png
+   :align: center
+   :scale: 50%
+   :alt: The knot 10_92, visualised by pyknot2.
+
 Installation
 ------------
 
 pyknot2 supports both Python 2 and Python 3, you can install it with::
 
   $ pip install pyknot2
-
-This will automatically install any Python dependencies that are not
-already present.
 
 Requirements
 ~~~~~~~~~~~~
