@@ -1152,8 +1152,7 @@ def vassiliev_degree_3(representation, try_cython=True):
         can automatically be converted into a GaussCode (i.e. by writing
         :code:`GaussCode(your_object)`).
     try_cython : bool
-cr-
-       Whether to try and use an optimised cython version of the
+        Whether to try and use an optimised cython version of the
         routine (takes about 1/3 of the time for complex representations).
         Defaults to True, but the python fallback will be *slower*
         than setting it to False if the cython function is not
