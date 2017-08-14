@@ -703,6 +703,35 @@ class SpaceCurve(object):
 
     def plot_projection(self, with_crossings=True, mark_start=False,
                         fig_ax=None, show=True):
+        '''Plots a 2D diagram of the knot projected along the current
+        z-axis. The crossings, and start point of the curve, can
+        optionally be marked.
+
+        The projection is drawn using matplotlib.
+
+        .. image:: example_knot_projection_9_5.png
+           :align: center
+           :scale: 50%
+           :alt: An example knot projection.
+
+        Parameters
+        ----------
+        with_crossings : bool
+            If True, marks the location of each self-intersection in
+            projection. Defaults to True.
+        mark_start : bool
+            If True, marks the first point of the curve. Default to False.
+        fig_ax : tuple
+            A 2-tuple of the matplotlib (fig, ax) to use, or None
+            to create a new pair.
+        show : bool
+            If True, opens a new window showing the drawing. Defaults
+            to True.
+
+        Returns
+        -------
+        A 2-tuple of the matplotlib (fig, ax) used for the drawing.
+        '''
         points = self.points
         crossings = None
         plot_crossings = []
