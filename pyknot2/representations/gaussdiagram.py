@@ -43,6 +43,11 @@ class GaussDiagram(object):
         self._fig_ax = self.plot()
 
     def plot(self, fig_ax=None):
+        '''Plots the Gauss diagram using matplotlib. This is called
+        automatically on __init__.
+
+        Returns a tuple of the matplotlib figure and axis.
+        '''
         import matplotlib.pyplot as plt
         if fig_ax is None:
             if self._fig_ax is not None:

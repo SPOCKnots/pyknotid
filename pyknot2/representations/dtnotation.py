@@ -57,6 +57,14 @@ class DTNotation(object):
         self._dt = dt
 
     def gauss_code_string(self):
+        '''Returns a string containing a Gauss code, in the format accepted
+        by :class:`~pyknot2.representations.gausscode.GaussCode`.
+
+        To get a :class:`~pyknot2.representations.gausscode.GaussCode`
+        object, you can pass this string when initialising it, or use
+        :meth:`DTNotation.representation`.
+
+        '''
         if len(self._dt) > 1:
             raise ValueError('DTNotation -> GaussCode does not yet '
                              'work with links')
@@ -82,6 +90,11 @@ class DTNotation(object):
         return ','.join(str_entries)
 
     def representation(self, **kwargs):
+        '''Returns a
+        :class:`~pyknot2.representations.representation.Representation`
+        representing the same DT code. The crossing orientations (and
+        therefore resulting chirality) are chosen arbitrarily.
+        '''
         from pyknot2.representations import Representation
         return Representation.calculating_orientations(
             self.gauss_code_string(), **kwargs)
