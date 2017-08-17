@@ -10,6 +10,7 @@ pyknot2.spacecurves.knot.Knot for topological analysis.
 '''
 
 import numpy as n
+import numpy as np
 
 def unknot(num=100):
     data = n.zeros((num, 3), dtype=n.float64)
@@ -76,3 +77,22 @@ def square(num=100):
 
 def k8_21(num=100):
     return lissajous(3, 4, 7, 0.1, 0.7, 0., num)
+
+def ideal_long_trefoil():
+    points = [[0, 0, 0.],
+              [2, 2, 1],
+              [3, 4, 0],
+              [1.8, 5, -1],
+              [1, 6, 0],
+              [2, 7, 1],
+              [3.7, 8, 0],
+              [4, 1, 0],
+              [2.1, 2.1, -1],
+              [1, 4, 0],
+              [2.1, 5.1, 1],
+              [3, 6, 0],
+              [2.1, 7.1, -1],
+              [1, 8, 0],
+              [0.2, 9, 0]]
+
+    return np.array(points)

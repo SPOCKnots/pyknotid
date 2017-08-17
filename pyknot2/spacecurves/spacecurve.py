@@ -394,8 +394,53 @@ class SpaceCurve(object):
         '''
         self.points = n.apply_along_axis(mat.dot, 1, self.points)
 
+    def cuaps(self, include_closure=True):
+        '''Returns a list of the 'cuaps', where the curve is parallel to the
+        positive x-axis. See D Bar-Natan and R van der Veen, "A
+        polynomial time knot polynomial", 2017.
+        '''
+        points = self.points
+        if mag(points[-1] - points[0]) < 0.000001:
+            points = points[:-1]  # Avoids a badly defined tangent
+        tangents = np.roll(points, -1, axis=0) - points
+        angles = np.arctan2(tangents[:, 1], tangents[:, 0])
+
+        print('angles', angles)
+
+        cuaps = []
+
+        for i in range(len(points) - 2):
+            angle = angles[i]
+            next_angle = angles[i + 1]
+
+            if (0 < angle < np.pi / 2.) and (-np.pi / 2. < next_angle < 0):
+                cuaps.append([i + 1, -1])
+            elif (-np.pi / 2. < angle < 0) and (0 < next_angle < np.pi / 2.):
+                cuaps.append([i + 1, 1])
+
+        if include_closure:
+            angle = angles[-2]
+            next_angle = angles[-1]
+            if (0 < angle < np.pi / 2.) and (-np.pi / 2. < next_angle < 0):
+                cuaps.append([len(angles) - 1, -1])
+            elif (-np.pi / 2. < angle < 0) and (0 < next_angle < np.pi / 2.):
+                cuaps.append([len(angles) - 1, 1])
+
+            angle = angles[-1]
+            next_angle = angles[0]
+            if (0 < angle < np.pi / 2.) and (-np.pi / 2. < next_angle < 0):
+                cuaps.append([0, -1])
+            elif (-np.pi / 2. < angle < 0) and (0 < next_angle < np.pi / 2.):
+                cuaps.append([0, 1])
+
+        cuaps = np.array(cuaps)
+        # cuaps[:, -1] *= -1
+
+        return cuaps
+
     def raw_crossings(self, mode='use_max_jump', include_closure=True,
                       recalculate=False, try_cython=True):
+
         '''Returns the crossings in the diagram of the projection of the
         space curve into its z=0 plane.
 
