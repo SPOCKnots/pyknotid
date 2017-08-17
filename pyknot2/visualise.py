@@ -252,7 +252,7 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
     
 
 def plot_projection(points, crossings=None, mark_start=False,
-                    fig_ax=None, show=True):
+                    fig_ax=None, show=True, mark_points=False):
     '''
     Plot the 2d projection of the given points, with optional
     markers for where the crossings are.
@@ -271,7 +271,7 @@ def plot_projection(points, crossings=None, mark_start=False,
         fig, ax = fig_ax
     else:
         fig, ax = plt.subplots()
-    ax.plot(points[:, 0], points[:, 1])
+    ax.plot(points[:, 0], points[:, 1], 'o-' if mark_points else '-')
     ax.set_xticks([])
     ax.set_yticks([])
 

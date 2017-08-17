@@ -702,7 +702,7 @@ class SpaceCurve(object):
                   closed=closed, **kwargs)
 
     def plot_projection(self, with_crossings=True, mark_start=False,
-                        fig_ax=None, show=True):
+                        fig_ax=None, show=True, mark_points=False):
         '''Plots a 2D diagram of the knot projected along the current
         z-axis. The crossings, and start point of the curve, can
         optionally be marked.
@@ -747,6 +747,7 @@ class SpaceCurve(object):
         fig, ax = plot_projection(points,
                                   crossings=n.array(plot_crossings),
                                   mark_start=mark_start,
+                                  mark_points=mark_points,
                                   fig_ax=fig_ax,
                                   show=show)
         return fig, ax
