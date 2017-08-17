@@ -1442,7 +1442,7 @@ def virtual_vassiliev_degree_3(representation):
     return int(round(representations_sum))
 
 
-def bar_natan(crossings, cuaps):
+def bar_natan_van_der_veen(crossings, cuaps):
     '''See D Bar-Natan and R van der Veen, "A polynomial time knot
     polynomial", 2017.  https://arxiv.org/pdf/1708.04853.pdf'''
 
@@ -1565,6 +1565,7 @@ def bar_natan(crossings, cuaps):
 
     print('Alexander is:', sym.simplify(c**symhalf * B.det()))
 
-    print('Z0 is:', sym.expand(sym.simplify(c * (ZG + ZH))))
+    Z0 = sym.expand(sym.simplify(c * (ZG + ZH)))
+    print('Z0 is:', Z0)
 
-    return sym.expand(ZH)
+    return Z0

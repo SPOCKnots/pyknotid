@@ -69,14 +69,14 @@ class Knot(SpaceCurve):
         k.zero_centroid()
         return k
 
-    def bar_natan_polynomial(self, variable=-1):
+    def bar_natan_van_der_veen_polynomial(self, variable=-1):
         from pyknot2.invariants import bar_natan
 
         max_y = np.argmax(self.points[:, 1])
         self.roll(-1 * max_y)
 
-        return bar_natan(self.raw_crossings(),
-                         self.cuaps(include_closure=False))
+        return bar_natan_van_der_veen(self.raw_crossings(),
+                                      self.cuaps(include_closure=False))
 
     def alexander_polynomial(self, variable=-1, quadrant='lr',
                              mode='python', **kwargs):
