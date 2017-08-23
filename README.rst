@@ -9,6 +9,12 @@ representations of knot diagrams.
 A graphical interface to some of these tools is available online at
 `Knot ID <http://inclem.net/knotidentifier>`__.
 
+pyknot2 was developed as part of the Leverhulme Trust Research
+Programme Grant RP2013-K-009: Scientific Properties of Complex Knots
+(SPOCK), a collaboration between the University of Bristol and Durham
+University in the UK. For more information, see the `SPOCK homepage
+<http://www.maths.dur.ac.uk/spock/index.html/>`__.
+
 .. image:: doc/k10_92_ideal_small.png
    :align: center
    :scale: 25%
