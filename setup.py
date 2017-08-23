@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 from distutils.extension import Extension
 
-from os.path import join, sep
+from os.path import join, sep, dirname
 from os import walk
 import glob
+import re
 
 import numpy
 
@@ -50,9 +51,27 @@ else:
             ]
     ext_modules = cythonize(ext_modules)
 
+pyknot2_init_filen = join(dirname(__file__), 'pyknot2', '__init__.py')
+version = None
+try:
+    with open(pyknot2_init_filen) as fileh:
+        lines = fileh.readlines()
+except IOError:
+    pass
+else:
+    for line in lines:
+        line = line.strip()
+        if line.startswith('__version__ = '):
+            matches = re.findall(r'["\'].+["\']', line)
+            if matches:
+                version = matches[0].strip("'").strip('"')
+                break
+if version is None:
+    raise Exception('Error: version could not be loaded from {}'.format(pyknot2_init_filen))
+
 setup(
     name='pyknot2',
-    version='1.0',
+    version=version,
     description=('Tools for identifying and analysing knots, in space-curves '
                  'or standard topological representations'),
     author='Alexander Taylor',
