@@ -10,6 +10,9 @@ pyknot2 is a Python module for doing calculations on knots or links,
 whether specified as space-curves, or via standard topological
 notations.
 
+Visit `Knot ID <http://inclem.net/knotidentifier>`__ for an online
+interface to some of these tools.
+
 
 Space curve analysis
 --------------------
