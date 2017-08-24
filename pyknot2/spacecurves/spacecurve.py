@@ -1001,9 +1001,12 @@ class SpaceCurve(object):
 
     def smooth(self, repeats=1, periodic=True, window_len=10,
                window='hanning'):
-        '''
-        Smooths each of the x, y and z components of self.points by
+        '''Smooths each of the x, y and z components of self.points by
         convolving with a window of the given type and size.
+
+        .. warning:: This is *not* topologically safe, it can change
+                     the knot type of the curve. For topologically
+                     safe reduction, see :meth:`octree_simplify`.
 
         Parameters
         ----------
