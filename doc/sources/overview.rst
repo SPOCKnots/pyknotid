@@ -90,5 +90,23 @@ Example::
                                                            #  <Knot K11n96>,
                                                            #  <Knot K11n111>]
   
+Example knots
+-------------
+
+pyknot2 includes several functions for creating example knotted space
+curves. See the :doc:`example knots documentation <make/index>` for
+more details.
+
+Example::
+
+  from pyknot2.make import torus_knot
+
+  k = torus_knot(p=5, q=2)
+  k.identify()  # [<Knot 5_1>]
+
+  from pyknot2.make import figure_eight
+
+  k = figure_eight()
+  k.determinant()  # 5
 
   
