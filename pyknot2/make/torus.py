@@ -1,32 +1,58 @@
+'''
+Torus knots
+===========
+
+Functions for creating torus knots and links.
+
+API documentation
+-----------------
+'''
+
 from __future__ import division
 
 import numpy as np
 from fractions import gcd
 
+from pyknot2.spacecurves.knot import Knot
+from pyknot2.spacecurves.link import Link
 
 
-def components(p, q):
-    '''
-    Returns the number of components of the p-q torus knot.
+def torus_knot_num_components(p, q):
+    '''Returns the number of components of the p-q torus knot. If p and q
+    are coprime, there will always be a single component, otherwise
+    multiple linked components.
     '''
     return gcd(p, q)
 
 
-def knot(p=3, q=4, num=100):
+def torus_knot(p=3, q=4, num=100):
     '''
     Returns points in the p, q torus knot. If p and q are not coprime,
     returns only the first component.
+
+    Parameters
+    ----------
+    p : int
+        The number of times the knot winds around the outside of the
+        torus. Defaults to 3.
+    q : int
+        The number of times the knot passes through the hole in the
+        centre of the torus. Defaults to 4.
+    num_points : int
+        The number of points in the returned piecewise linear
+        curve. If there are multiple curves (i.e. a torus link), this
+        is the number of points in *each* curve.  Defaults to 100.
     '''
-    return TorusKnot(p, q, num, minor_radius=1.5,
-                     major_radius=3).first_component
+    return Knot(TorusKnot(p, q, num, minor_radius=1.5,
+                          major_radius=3).first_component)
 
 
-def link(p=3, q=4, num=100):
+def torus_link(p=3, q=6, num=100):
     '''
     Returns points in the p, q torus link. The result is a list of arrays,
     with one array of points per link component.
     '''
-    return TorusKnot(p, q, num).components
+    return Link(TorusKnot(p, q, num).components)
 
 
 class TorusKnot(object):

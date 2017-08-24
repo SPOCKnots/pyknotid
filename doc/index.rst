@@ -30,6 +30,8 @@ Contents
     sources/invariants
     sources/representations/index
     sources/catalogue/index
+    sources/make/index
+    sources/about
    
 
 Indices and tables
