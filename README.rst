@@ -51,7 +51,7 @@ Example usage
 
     In [2]: import pyknot2.make as mk
 
-    In [3]: k = sp.Knot(mk.knot.three_twist(100)*10)
+    In [3]: k = sp.Knot(mk.three_twist(num_points=100))
 
     In [4]: k.plot()
 
