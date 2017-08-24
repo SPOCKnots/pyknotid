@@ -206,7 +206,10 @@ class Knot(SpaceCurve):
         This method requires that Spherogram, and possibly SnapPy,
         are installed.
         '''
-        return self.planar_diagram().as_spherogram().exterior()
+        link = self.planar_diagram().as_spherogram()
+        link.simplify()  # necessary with snappy 2.5, which can't deal
+                         # with extra Reidemeister moves sometimes
+        return link.exterior()
 
     def __str__(self):
         if self._crossings is not None:
