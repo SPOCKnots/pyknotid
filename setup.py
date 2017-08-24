@@ -77,7 +77,7 @@ setup(
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
     install_requires=['numpy', 'networkx', 'planarity',
-                      'peewee'],
+                      'peewee', 'vispy'],
     ext_modules=ext_modules,
     include_dirs=[numpy.get_include()],
     packages=find_packages(),
