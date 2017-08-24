@@ -1,9 +1,21 @@
-'''
-Visualise
+'''Visualise
 =========
 
-Functions for plotting knots, supporting
-different toolkits and types of plot.
+Functions for plotting knots, supporting different toolkits and types
+of plot.
+
+pyknot2 primarily supports `Vispy <http://vispy.org/>`__ as the
+plotting mechanism. `Mayavi
+<http://docs.enthought.com/mayavi/mayavi/>`__ is semi-supported but
+may not always work.
+
+Many of these functions can be called in a more convenient way via
+methods of the :doc:`space curve classes <spacecurves/index>`
+(e.g. :class:`~pyknot2.spacecurves.knot.Knot`).
+
+API documentation
+-----------------
+
 '''
 
 from __future__ import division

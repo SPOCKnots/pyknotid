@@ -31,6 +31,7 @@ Contents
     sources/representations/index
     sources/catalogue/index
     sources/make/index
+    sources/visualise
     sources/about
    
 
