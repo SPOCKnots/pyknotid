@@ -109,6 +109,9 @@ class SpaceCurve(object):
 
     @property
     def points(self):
+        '''
+        The points of the spacecurve, as an Nx3 numpy array.
+        '''
         return self._points
 
     @points.setter
@@ -354,7 +357,16 @@ class SpaceCurve(object):
         k.zero_centroid()
         return k
 
+    def scale(self, factor):
+        '''Scales all the points of self by the given factor.
+
+        You can accomplish the same thing, or other more subtle
+        transformations, by modifying self.:py:attr:`points`.
+        '''
+        self.points *= factor
+
     def translate(self, vector):
+
         '''Translates all the points of self by the given vector.
 
         Parameters
