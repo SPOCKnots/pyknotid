@@ -16,6 +16,8 @@ API documentation
 import numpy as n
 import numpy as np
 
+from pyknot2.spacecurves.knot import Knot
+
 def unknot(num_points=100):
     '''Returns a simple circle.'''
     data = n.zeros((num_points, 3), dtype=n.float64)
@@ -23,7 +25,7 @@ def unknot(num_points=100):
     data[:, 0] = 3*n.sin(ts)
     data[:, 1] = 3*n.cos(ts)
     data[:, 2] = n.sin(3*ts)
-    return data
+    return Knot(data)
 
 def k3_1(num_points=100):
     '''Returns a particular trefoil knot conformation.'''
@@ -32,7 +34,7 @@ def k3_1(num_points=100):
     data[:, 0] = (2+n.cos(3*ts))*n.cos(2*ts)
     data[:, 1] = (2+n.cos(3*ts))*n.sin(2*ts)
     data[:, 2] = n.sin(3*ts)
-    return data
+    return Knot(data)
 trefoil = k3_1
 
 
@@ -43,7 +45,7 @@ def k4_1(num_points=100):
     data[:, 0] = (2+n.cos(2*ts))*n.cos(3*ts)
     data[:, 1] = (2+n.cos(2*ts))*n.sin(3*ts)
     data[:, 2] = n.sin(4*ts)
-    return data
+    return Knot(data)
 figure_eight = k4_1
 
 def lissajous(nx=3, ny=2, nz=7, px=0.7, py=0.2, pz=0., num_points=100):
@@ -55,7 +57,7 @@ def lissajous(nx=3, ny=2, nz=7, px=0.7, py=0.2, pz=0., num_points=100):
     data[:, 0] = n.cos(nx*ts+px)
     data[:, 1] = n.cos(ny*ts+py)
     data[:, 2] = n.cos(nz*ts+pz)
-    return data
+    return Knot(data)
 
 
 def k5_2(num_points=100):
