@@ -104,6 +104,11 @@ Example::
   k = torus_knot(p=5, q=2)
   k.identify()  # [<Knot 5_1>]
 
+  from pyknot2.make import torus_link
+
+  l = torus_link(p=2, q=8)  # a 2-component link
+  l.linking_number()  # 8
+
   from pyknot2.make import figure_eight
 
   k = figure_eight()
