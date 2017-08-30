@@ -2,7 +2,13 @@
 OpenKnot
 ========
 
-A class for working with the topology of open curves.
+Class for working with open (linear) curves, that do not form closed
+loops. :class:`OpenKnot` provides methods for visualising these curves
+and analysing their topology via different kinds of closures.
+
+API documentation
+~~~~~~~~~~~~~~~~~
+
 '''
 
 from __future__ import print_function
@@ -391,16 +397,20 @@ class OpenKnot(SpaceCurve):
 
 
     def virtual_check(self):
-        '''
-        Takes an open curve and checks (for the default projection) if its
-        Gauss code corresponds to a virtual knot or not. Returns a Boolean of
-        this information.
+        '''Takes an open curve and checks (for the default projection) if its
+        Gauss code corresponds to a virtual knot or not. Returns a
+        Boolean of this information.
+
+        .. warning:: This only checks the distance by which entries in
+                     the Gauss code are separated, it is *not*
+                     guaranteed to detect virtual knots.
 
         Returns
         -------
         virtual : bool
             True if the Gauss code corresponds to a virtual knot. False
             otherwise.
+
         '''
         gauss_code = self.gauss_code()._gauss_code[0][:, 0]
         l = len(gauss_code)

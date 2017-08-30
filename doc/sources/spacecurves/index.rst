@@ -10,5 +10,6 @@ Space curve analysis
                
     spacecurve
     knot
+    openknot
     link
     periodiccell
