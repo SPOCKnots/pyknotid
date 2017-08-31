@@ -1,5 +1,4 @@
-'''
-.. image:: random_walk_length_30.png
+'''.. image:: random_walk_length_30.png
    :scale: 50%
    :alt: A closed random walks with 30 steps
    :align: center
@@ -22,6 +21,11 @@ pyknot2 includes the following classes for topological calculation:
 - :doc:`knot`: Provides functions for topological calculations on a
   single curve, such as the Alexander polynomial or Vassiliev
   invariants.
+
+- :doc:`openknot`: Provides functions for topological calculations on
+  an open curve that does not form a closed loop. Open curves are
+  topologically trivial from a mathematical perspective, but can be
+  analysed in terms of the topology of different closures.
 
 - :doc:`link`: Provides the same interface to collections of multiple
   curves, and can calculate linking invariants.
