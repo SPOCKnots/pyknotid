@@ -64,23 +64,14 @@ specified points::
    :alt: A trefoil knot specified by vertex points
    :scale: 50%
 
-The following code could produce points representing other torus knots::
+The :doc:`pyknot2.make module<../make/index>` provides functions for
+creating many types of example knots, such as torus knots or some
+specific knot types::
 
   import numpy as np
-  from pyknot2.spacecurves import Knot
+  from pyknot2.make import torus_knot
 
-  def torus_knot(p=2, q=3, num_points=100):
-      # NOTE: p and q must be coprime!
-      points = np.zeros((num_points, 3))
-      ts = np.linspace(0, 2*np.pi, num_points)
-      rs = np.cos(q * ts) + 2.
-      points[:, 0] = rs * np.cos(p * ts)
-      points[:, 1] = rs * np.sin(p * ts)
-      points[:, 2] = -1 * np.sin(q * ts)
-
-      return points * 5
-   
-   k = Knot(torus_knot(4, 7))
+   k = torus_knot(7, 4)
    k.plot()
 
 
