@@ -37,7 +37,7 @@ except ImportError:
     print('To build the cython components, install cython and numpy and rebuild '
           'pyknotid.')
     ext_modules = []
-    include_dirs = [numpy.get_include()]
+    include_dirs = []
 else:
     ext_modules = [
             Extension("pyknotid.spacecurves.chelpers", ["pyknotid/spacecurves/chelpers.pyx"],
@@ -50,7 +50,7 @@ else:
                     libraries=["m"]),
             ]
     ext_modules = cythonize(ext_modules)
-    include_dirs = []
+    include_dirs = [numpy.get_include()]
 
 pyknotid_init_filen = join(dirname(__file__), 'pyknotid', '__init__.py')
 version = None
