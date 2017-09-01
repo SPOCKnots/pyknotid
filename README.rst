@@ -15,6 +15,9 @@ Programme Grant RP2013-K-009: Scientific Properties of Complex Knots
 University in the UK. For more information, see the `SPOCK homepage
 <http://www.maths.dur.ac.uk/spock/index.html/>`__.
 
+If you use pyknotid in your research, please `cite us
+<http://pyknotid.readthedocs.io/en/latest/sources/about.html#cite-us>`__.
+
 .. image:: doc/k10_92_ideal_small.png
    :align: center
    :scale: 25%
