@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from distutils.extension import Extension
 
 from os.path import join, sep, dirname
-from os import walk
+from os import walk, environ
 import glob
 import re
 
@@ -70,6 +70,14 @@ else:
 if version is None:
     raise Exception('Error: version could not be loaded from {}'.format(pyknotid_init_filen))
 
+if 'READTHEDOCS' in environ and environ['READTHEDOCS'] == 'True':
+    print('Installing for doc only')
+    install_requires=['numpy', 'peewee', 'vispy']
+else:
+    install_requires=['numpy', 'networkx', 'planarity',
+                      'peewee', 'vispy'],
+
+
 setup(
     name='pyknotid',
     version=version,
@@ -77,8 +85,7 @@ setup(
                  'or standard topological representations'),
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
-    install_requires=['numpy', 'networkx', 'planarity',
-                      'peewee', 'vispy'],
+    install_requires=install_requires,
     ext_modules=ext_modules,
     include_dirs=include_dirs,
     packages=find_packages(),
