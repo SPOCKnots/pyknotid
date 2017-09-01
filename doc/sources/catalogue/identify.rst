@@ -1,4 +1,4 @@
 
 
-.. automodule:: pyknot2.catalogue.identify
+.. automodule:: pyknotid.catalogue.identify
    :members:

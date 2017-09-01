@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.representations.planardiagram
+.. automodule:: pyknotid.representations.planardiagram
    :members:

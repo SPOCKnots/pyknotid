@@ -1,7 +1,7 @@
 
 
-import pyknot2.spacecurves.spacecurve as sp
-import pyknot2.make.knot as mk
+import pyknotid.spacecurves.spacecurve as sp
+import pyknotid.make.knot as mk
 
 from functools import wraps
 import os
@@ -104,7 +104,7 @@ def test_smooth(k):
 @pass_trefoil
 def test_compiled_vs_python_find_crossings(k):
     try:
-        import pyknot2.spacecurves.chelpers
+        import pyknotid.spacecurves.chelpers
     except ImportError:
         return  # chelpers not installed
 

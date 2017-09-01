@@ -1,15 +1,15 @@
-Pyknot2
-=======
+Pyknotid
+========
 
 Python (and optional Cython) modules for detecting and measuring
-knotting and linking. pyknot2 can analyse space-curves, i.e. sets of
+knotting and linking. pyknotid can analyse space-curves, i.e. sets of
 points in three-dimensions, or can parse standard topological
 representations of knot diagrams.
 
 A graphical interface to some of these tools is available online at
 `Knot ID <http://inclem.net/knotidentifier>`__.
 
-pyknot2 was developed as part of the Leverhulme Trust Research
+pyknotid was developed as part of the Leverhulme Trust Research
 Programme Grant RP2013-K-009: Scientific Properties of Complex Knots
 (SPOCK), a collaboration between the University of Bristol and Durham
 University in the UK. For more information, see the `SPOCK homepage
@@ -18,19 +18,19 @@ University in the UK. For more information, see the `SPOCK homepage
 .. image:: doc/k10_92_ideal_small.png
    :align: center
    :scale: 25%
-   :alt: The knot 10_92, visualised by pyknot2.
+   :alt: The knot 10_92, visualised by pyknotid.
 
 Installation
 ------------
 
-pyknot2 supports both Python 2 and Python 3, you can install it with::
+pyknotid supports both Python 2 and Python 3, you can install it with::
 
-  $ pip install pyknot2
+  $ pip install pyknotid
 
 Requirements
 ~~~~~~~~~~~~
 
-If installing pyknot2 without pip, the following dependencies are required:
+If installing pyknotid without pip, the following dependencies are required:
 
 - cython (not essential, but strongly recommended)
 - numpy
@@ -47,9 +47,9 @@ Example usage
 
 .. code:: python
 
-    In [1]: import pyknot2.spacecurves as sp
+    In [1]: import pyknotid.spacecurves as sp
 
-    In [2]: import pyknot2.make as mk
+    In [2]: import pyknotid.make as mk
 
     In [3]: k = sp.Knot(mk.three_twist(num_points=100))
 

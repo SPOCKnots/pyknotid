@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pyknot2 documentation build configuration file, created by
+# pyknotid documentation build configuration file, created by
 # sphinx-quickstart2 on Mon Sep 22 22:16:23 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -59,7 +59,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyknot2'
+project = u'pyknotid'
 copyright = u'2014-2017'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -67,8 +67,7 @@ copyright = u'2014-2017'
 # built documents.
 #
 # The short X.Y version.
-import pyknot2
-version = pyknot2.__version__
+version = '1.0'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -193,7 +192,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyknot2doc'
+htmlhelp_basename = 'pyknotiddoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -213,7 +212,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'pyknot2.tex', u'pyknot2 Documentation',
+  ('index', 'pyknotid.tex', u'pyknotid Documentation',
    u'Alexander Taylor', 'manual'),
 ]
 
@@ -243,7 +242,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'pyknot2', u'pyknot2 Documentation',
+    ('index', 'pyknotid', u'pyknotid Documentation',
      [u'Alexander Taylor'], 1)
 ]
 
@@ -257,8 +256,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'pyknot2', u'pyknot2 Documentation',
-   u'Alexander Taylor', 'pyknot2', 'One line description of project.',
+  ('index', 'pyknotid', u'pyknotid Documentation',
+   u'Alexander Taylor', 'pyknotid', 'One line description of project.',
    'Miscellaneous'),
 ]
 

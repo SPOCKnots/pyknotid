@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.catalogue.database
+.. automodule:: pyknotid.catalogue.database
    :members:

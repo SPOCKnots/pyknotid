@@ -1,5 +1,5 @@
 
 
-.. automodule:: pyknot2.visualise
+.. automodule:: pyknotid.visualise
    :members:
    :exclude-members: PointInsideTriangle2

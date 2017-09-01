@@ -3,10 +3,10 @@ Overview
 
 .. image:: k10_11_ideal.png
    :scale: 50%
-   :alt: The knot 10_11 in an ideal conformation, visualised by pyknot2.
+   :alt: The knot 10_11 in an ideal conformation, visualised by pyknotid.
    :align: center
 
-pyknot2 is a Python module for doing calculations on knots or links,
+pyknotid is a Python module for doing calculations on knots or links,
 whether specified as space-curves, or via standard topological
 notations.
 
@@ -17,19 +17,19 @@ interface to some of these tools.
 Space curve analysis
 --------------------
 
-pyknot2 can perform many calculations on space curves specified as a
+pyknotid can perform many calculations on space curves specified as a
 set of points, as well as plotting the curves in three dimensions or
 in projection. See the :doc:`space curve documentation
 <spacecurves/index>` for more information.
 
 Some topological calculations can only be performed for relatively
-short, simple curves, but in general pyknot2 can work fine even for
+short, simple curves, but in general pyknotid can work fine even for
 space-curves with many thousands of points.
 
 Example::
 
-  from pyknot2.make import trefoil
-  from pyknot2.spacecurves import Knot
+  from pyknotid.make import trefoil
+  from pyknotid.spacecurves import Knot
 
   k = Knot(trefoil())
 
@@ -41,7 +41,7 @@ Example::
 Topological representations
 ---------------------------
 
-pyknot2 can accept input using several standard topological notations
+pyknotid can accept input using several standard topological notations
 including the Gauss code, planar diagram or Dowker-Thistlethwaite
 notation. You can then calculate topological invariants, or even
 reconstruct a 3D space curve. See the :doc:`representation
@@ -49,7 +49,7 @@ documentation <representations/index>` for more information.
 
 Example::
 
-  from pyknot2.representations import GaussCode, Representation
+  from pyknotid.representations import GaussCode, Representation
 
   gc = GaussCode('1+a,2-a,3+a,1-a,2+a,3-a')
   gc.simplify() # does nothing here, as no Reidemeister moves can be
@@ -65,7 +65,7 @@ Example::
 Knot catalogue
 --------------
 
-pyknot2 can look up knot types in a prebuilt database containing
+pyknotid can look up knot types in a prebuilt database containing
 various invariants for knots with up to 15 crossings. They can be
 looked up by the knot name (e.g. ``3_1`` for the trefoil knot, ``4_1``
 for the figure-eight knot etc.), or the values of different knot
@@ -74,7 +74,7 @@ invariants. See the :doc:`knot catalogue documentation
 
 Example::
 
-  from pyknot2.catalogue import get_knot, from_invariants
+  from pyknotid.catalogue import get_knot, from_invariants
 
   k = get_knot('5_2')
   k.vassiliev_2  # 2
@@ -93,23 +93,23 @@ Example::
 Example knots
 -------------
 
-pyknot2 includes several functions for creating example knotted space
+pyknotid includes several functions for creating example knotted space
 curves. See the :doc:`example knots documentation <make/index>` for
 more details.
 
 Example::
 
-  from pyknot2.make import torus_knot
+  from pyknotid.make import torus_knot
 
   k = torus_knot(p=5, q=2)
   k.identify()  # [<Knot 5_1>]
 
-  from pyknot2.make import torus_link
+  from pyknotid.make import torus_link
 
   l = torus_link(p=2, q=8)  # a 2-component link
   l.linking_number()  # 8
 
-  from pyknot2.make import figure_eight
+  from pyknotid.make import figure_eight
 
   k = figure_eight()
   k.determinant()  # 5

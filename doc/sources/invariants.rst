@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.invariants
+.. automodule:: pyknotid.invariants
    :members:

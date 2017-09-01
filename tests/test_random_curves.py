@@ -1,8 +1,8 @@
 
 
-import pyknot2.spacecurves.knot as spknot
-import pyknot2.make.knot as mk
-import pyknot2.make.randomwalks.quaternionic as rw
+import pyknotid.spacecurves.knot as spknot
+import pyknotid.make.knot as mk
+import pyknotid.make.randomwalks.quaternionic as rw
 
 from functools import wraps
 import os

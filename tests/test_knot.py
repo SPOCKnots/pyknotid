@@ -1,6 +1,6 @@
 
-import pyknot2.spacecurves.knot as spknot
-import pyknot2.make.knot as mk
+import pyknotid.spacecurves.knot as spknot
+import pyknotid.make.knot as mk
 
 from functools import wraps
 import os
@@ -26,6 +26,6 @@ def test_invariants(k):
 @pass_trefoil
 def test_identify(k):
     try:
-        import pyknot2.spacecurves.chelpers
+        import pyknotid.spacecurves.chelpers
     except ImportError:
         return  # chelpers not installed

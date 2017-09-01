@@ -1,7 +1,7 @@
 Topological representations
 ===========================
 
-.. automodule:: pyknot2.representations
+.. automodule:: pyknotid.representations
 
 
 .. toctree::

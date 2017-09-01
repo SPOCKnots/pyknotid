@@ -1,7 +1,7 @@
 
 
-import pyknot2.spacecurves.spacecurve as sp
-import pyknot2.make.knot as mk
+import pyknotid.spacecurves.spacecurve as sp
+import pyknotid.make.knot as mk
 
 from functools import wraps
 import os
@@ -13,7 +13,7 @@ import numpy as np
 
 import pytest
 
-from pyknot2.catalogue.identify import from_invariants
+from pyknotid.catalogue.identify import from_invariants
 test_knots = from_invariants(max_crossings=9)
 
 

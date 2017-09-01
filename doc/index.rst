@@ -1,22 +1,22 @@
-pyknot2
+pyknotid
 =======
 
 .. image:: k10_51_ideal.png
    :scale: 50%
-   :alt: The knot 10_51 in an ideal conformation, visualised by pyknot2.
+   :alt: The knot 10_51 in an ideal conformation, visualised by pyknotid.
    :align: center
 
 ..
    .. image:: k10_92_ideal.png
       :scale: 50%
-      :alt: The knot 10_92 in an ideal conformation, visualised by pyknot2.
+      :alt: The knot 10_92 in an ideal conformation, visualised by pyknotid.
 
-pyknot2 is a Python module for identifying knot types and other
+pyknotid is a Python module for identifying knot types and other
 topological quantities. It can take as input space-curves (such as
 visualised above) or standard topological notations.
 
 See the :doc:`overview <sources/overview>` for an introduction to
-pyknot2's functionality, or find specific topics in the index below.
+pyknotid's functionality, or find specific topics in the index below.
 
 
 Contents

@@ -1,7 +1,7 @@
 Space curve analysis
 ====================
 
-.. automodule:: pyknot2.spacecurves
+.. automodule:: pyknotid.spacecurves
 
    
 

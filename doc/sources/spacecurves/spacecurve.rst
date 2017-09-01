@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.spacecurves.spacecurve
+.. automodule:: pyknotid.spacecurves.spacecurve
    :members:

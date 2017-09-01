@@ -1,7 +1,7 @@
 Knot catalogue
 ==============
 
-.. automodule:: pyknot2.catalogue
+.. automodule:: pyknotid.catalogue
 
 .. toctree::
    :maxdepth: 2

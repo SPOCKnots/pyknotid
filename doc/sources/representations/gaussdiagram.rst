@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.representations.gaussdiagram
+.. automodule:: pyknotid.representations.gaussdiagram
    :members:

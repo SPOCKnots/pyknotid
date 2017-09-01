@@ -1,0 +1,4 @@
+
+# If updating the version, also update the value in doc/conf.py
+__version__ = '1.0'
+

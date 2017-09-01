@@ -1,3 +1,3 @@
 
-.. automodule:: pyknot2.representations.dtnotation
+.. automodule:: pyknotid.representations.dtnotation
    :members:

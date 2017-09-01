@@ -1,2 +1,2 @@
-.. automodule:: pyknot2.spacecurves.periodiccell
+.. automodule:: pyknotid.spacecurves.periodiccell
    :members:
