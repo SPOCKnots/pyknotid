@@ -20,12 +20,22 @@ University in the UK. For more information, see the `SPOCK homepage
    :scale: 25%
    :alt: The knot 10_92, visualised by pyknotid.
 
+Documentation
+-------------
+
+pyknotid is documented online at `readthedocs
+<http://pyknotid.readthedocs.io/en/latest/sources/overview.html>`__.
+
 Installation
 ------------
 
 pyknotid supports both Python 2 and Python 3, you can install it with::
 
   $ pip install pyknotid
+
+To try the latest development version, clone this repository and run::
+
+  $ python setup.py install
 
 Requirements
 ~~~~~~~~~~~~
@@ -34,6 +44,7 @@ If installing pyknotid without pip, the following dependencies are required:
 
 - cython (not essential, but strongly recommended)
 - numpy
+- sympy
 - peewee
 - networkx
 - planarity
