@@ -1,7 +1,6 @@
 
 
 import pyknotid.spacecurves.knot as spknot
-import pyknotid.make.knot as mk
 import pyknotid.make.randomwalks.quaternionic as rw
 
 from functools import wraps

@@ -1,7 +1,7 @@
 
 
 import pyknotid.spacecurves.spacecurve as sp
-import pyknotid.make.knot as mk
+import pyknotid.make as mk
 
 from functools import wraps
 import os
