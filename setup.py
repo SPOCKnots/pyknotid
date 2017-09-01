@@ -72,10 +72,10 @@ if version is None:
 
 if 'READTHEDOCS' in environ and environ['READTHEDOCS'] == 'True':
     print('Installing for doc only')
-    install_requires=['numpy', 'peewee', 'vispy']
+    install_requires=['numpy', 'peewee', 'vispy', 'sympy']
 else:
     install_requires=['numpy', 'networkx', 'planarity',
-                      'peewee', 'vispy'],
+                      'peewee', 'vispy', 'sympy'],
 
 
 setup(

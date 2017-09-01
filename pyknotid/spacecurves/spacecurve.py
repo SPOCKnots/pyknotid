@@ -22,7 +22,6 @@ API documentation
 import numpy as n
 import numpy as np
 import sys
-from scipy.interpolate import interp1d
 
 try:
     from pyknotid.spacecurves import chelpers
@@ -956,6 +955,7 @@ class SpaceCurve(object):
             ``kind`` option of ``scipy.interpolate.interp1d``. Defaults
             to 'linear', and other options have not been tested.
         '''
+        from scipy.interpolate import interp1d
         indices = self._new_indices_by_arclength(num_points)
 
         interp_xs = interp1d(range(len(self.points)+1),
