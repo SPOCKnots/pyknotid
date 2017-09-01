@@ -16,7 +16,7 @@ Cite us
 
 If you use pyknotid in your research, please cite us as follows:
 
-    A Taylor. pyknotid knot identification toolkit. https://github.com/SPOCKnots/pyknotid, accessed YYYY-MM-DD.
+    A Taylor. pyknotid knot identification toolkit. https://github.com/SPOCKnots/pyknotid, 2017. Accessed YYYY-MM-DD.
 
 In bibtex format::
 
