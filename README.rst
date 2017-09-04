@@ -18,6 +18,8 @@ University in the UK. For more information, see the `SPOCK homepage
 If you use pyknotid in your research, please `cite us
 <http://pyknotid.readthedocs.io/en/latest/sources/about.html#cite-us>`__.
 
+Questions or comments are welcome, please email alexander.taylor@bristol.ac.uk.
+
 .. image:: doc/k10_92_ideal_small.png
    :align: center
    :scale: 25%

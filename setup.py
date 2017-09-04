@@ -77,12 +77,42 @@ else:
     install_requires=['numpy', 'networkx', 'planarity',
                       'peewee', 'vispy', 'sympy', 'appdirs'],
 
+long_description = '''
+Pyknotid
+========
+
+Python (and optional Cython) modules for detecting and measuring
+knotting and linking. pyknotid can analyse space-curves, i.e. sets of
+points in three-dimensions, or can parse standard topological
+representations of knot diagrams.
+
+A graphical interface to some of these tools is available online at
+`Knot ID <http://inclem.net/knotidentifier>`__.
+
+pyknotid was developed as part of the Leverhulme Trust Research
+Programme Grant RP2013-K-009: Scientific Properties of Complex Knots
+(SPOCK), a collaboration between the University of Bristol and Durham
+University in the UK. For more information, see the `SPOCK homepage
+<http://www.maths.dur.ac.uk/spock/index.html/>`__.
+
+If you use pyknotid in your research, please `cite us
+<http://pyknotid.readthedocs.io/en/latest/sources/about.html#cite-us>`__.
+
+Questions or comments are welcome, please email alexander.taylor@bristol.ac.uk.
+
+Documentation
+-------------
+
+pyknotid is documented online at `readthedocs
+<http://pyknotid.readthedocs.io/en/latest/sources/overview.html>`__.
+'''
 
 setup(
     name='pyknotid',
     version=version,
     description=('Tools for identifying and analysing knots, in space-curves '
                  'or standard topological representations'),
+    long_description=long_description,
     author='Alexander Taylor',
     author_email='alexander.taylor@bristol.ac.uk',
     install_requires=install_requires,

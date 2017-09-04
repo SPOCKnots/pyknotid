@@ -11,6 +11,11 @@ in the UK. For more information, see the `SPOCK homepage
 A graphical interface to some of these tools is available online at
 `Knot ID <http://inclem.net/knotidentifier>`__.
 
+Contacts
+--------
+
+Questions or comments are welcome, please email alexander.taylor@bristol.ac.uk.
+
 Cite us
 -------
 
