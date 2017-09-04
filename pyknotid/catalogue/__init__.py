@@ -87,6 +87,7 @@ For a full list of attributes available, see
 
 '''
 
-from .identify import from_invariants, get_knot, first_from_invariants
+from pyknotid.catalogue.identify import from_invariants, get_knot, first_from_invariants
+from pyknotid.catalogue.getdb import download_database
 
 db_version = 1
