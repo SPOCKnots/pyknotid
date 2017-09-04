@@ -29,7 +29,10 @@ from pyknotid.catalogue import converters
 
 from pyknotid.catalogue.getdb import find_database
 
-DB_LOCATION = find_database()
+if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS'] == 'True':
+    DB_LOCATION = join(__file__, 'empty_db.db')
+else:
+    DB_LOCATION = find_database()
 # The location of the database to work with.
 
 db = SqliteDatabase(DB_LOCATION)
