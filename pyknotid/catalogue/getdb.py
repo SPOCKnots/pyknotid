@@ -2,6 +2,15 @@
 Downloading the pyknotid database
 =================================
 
+To download the database, call :func:`download_database`.
+
+The other functions in this module provide basic functionality for
+checking where the database is stored, and deleting old versions if
+necessary.
+
+API documentation
+-----------------
+
 '''
 
 from functools import wraps

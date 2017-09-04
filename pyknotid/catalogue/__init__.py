@@ -1,6 +1,4 @@
-'''
-
-pyknotid provides knot lookup by name or invariant values, using a
+'''pyknotid provides knot lookup by name or invariant values, using a
 prebuilt database.
 
 The knot database includes information about all knots with up to 15
@@ -9,6 +7,26 @@ crossings, with topological invariants following those indexed by the
 Table of Knot Invariants <http://www.indiana.edu/~knotinfo/>`__, or
 calculated by pyknotid using the Dowker-Thistlethwaite codes of the
 knots.
+
+Downloading the database
+------------------------
+
+The database must normally be downloaded separately, and is currently
+approximately 230MB in size.
+
+If you do not download the database, most of pyknotid will work
+fine. Only the explicit knot identification by database lookup, or
+direct database queries, are not available.
+
+To download the knot database::
+
+    from pyknotid.catalogue.getdb import download_database
+    download_database()
+
+After this has completed (it may take a few seconds), the database
+functions should all work immediately.
+
+For other database management functions, see :doc:`getdb`.
 
 Lookup by name
 --------------
