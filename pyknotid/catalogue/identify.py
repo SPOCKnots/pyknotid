@@ -8,17 +8,13 @@ API documentation
 ~~~~~~~~~~~~~~~~~
 '''
 
-from . import database as db
-from pyknotid.catalogue.database import Knot
-from pyknotid.catalogue import converters
+# Most imports are placed in from_invariants, so that the module can work
+# even if no database is available.
 
-db.db.get_conn()
-
-_root_to_attr = {2: Knot.determinant,
-                 3: Knot.alexander_imag_3,
-                 4: Knot.alexander_imag_4}
+from pyknotid.catalogue.getdb import require_database
 
 
+@require_database
 def get_knot(name):
     '''Returns from the database the Knot with the given identifier.
 
@@ -30,6 +26,7 @@ def get_knot(name):
     return k
 
 
+@require_database
 def first_from_invariants(**kwargs):
     '''Returns the first Knot by crossing number (and arbitrary
     ordering within that) with the given invariant conditions.
@@ -43,6 +40,7 @@ def first_from_invariants(**kwargs):
     return from_invariants(return_query=True, **kwargs).first()
 
 
+@require_database
 def from_invariants(return_query=False, **kwargs):
     '''Takes invariants as kwargs, and does the appropriate conversion to
     return a list of database objects matching all the given criteria.
@@ -119,6 +117,16 @@ def from_invariants(return_query=False, **kwargs):
         for most searches.
 
     '''
+
+    from . import database as db
+    from pyknotid.catalogue.database import Knot
+    from pyknotid.catalogue import converters
+
+    db.db.get_conn()
+
+    _root_to_attr = {2: Knot.determinant,
+                     3: Knot.alexander_imag_3,
+                     4: Knot.alexander_imag_4}
 
     conditions = []
     for invariant, value in kwargs.items():

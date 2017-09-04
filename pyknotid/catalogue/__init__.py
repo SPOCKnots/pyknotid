@@ -70,3 +70,5 @@ For a full list of attributes available, see
 '''
 
 from .identify import from_invariants, get_knot, first_from_invariants
+
+db_version = 1

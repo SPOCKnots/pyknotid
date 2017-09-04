@@ -75,7 +75,7 @@ if 'READTHEDOCS' in environ and environ['READTHEDOCS'] == 'True':
     install_requires=['numpy', 'peewee', 'vispy', 'sympy']
 else:
     install_requires=['numpy', 'networkx', 'planarity',
-                      'peewee', 'vispy', 'sympy'],
+                      'peewee', 'vispy', 'sympy', 'appdirs'],
 
 
 setup(

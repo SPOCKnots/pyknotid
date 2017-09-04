@@ -27,20 +27,21 @@ import os
 from os.path import realpath, dirname, exists, join
 from pyknotid.catalogue import converters
 
-directory = os.path.dirname(os.path.realpath(__file__)) + '/knots.db'
-DB_LOCATION = directory
+from pyknotid.catalogue.getdb import find_database
+
+DB_LOCATION = find_database()
 # The location of the database to work with.
 
 db = SqliteDatabase(DB_LOCATION)
 db.connect()
-
-__db_version__ = 1
 
 class BaseModel(Model):
     class Meta(object):
         database = db
 
 
+# If updating the db structure, don't forget to update
+# pyknotid.catalogue.db_version!
 class Knot(BaseModel):
     '''Peewee model for storing a knot in a database.'''
 
