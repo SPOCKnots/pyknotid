@@ -1,6 +1,6 @@
 '''
-Downloading the pyknotid database
-=================================
+Database download module
+========================
 
 To download the database, call :func:`download_database`.
 
