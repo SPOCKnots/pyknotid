@@ -15,7 +15,7 @@ API documentation
 
 from functools import wraps
 from os.path import realpath, dirname, exists, join, abspath
-from os import mkdir
+from os import mkdir, remove
 
 def find_database(db_version=None):
     '''Returns the path to the knots.db file.
@@ -107,7 +107,7 @@ def clean_old_databases():
     print('Found databases: {}'.format(', '.join(versions)))
     for version in versions[:-1]:
         print('Deleting {}'.format(version))
-        print('(but not really)')
+        remove(version)
 
 def clean_all_databases():
     '''Deletes all database files.'''
@@ -118,9 +118,9 @@ def clean_all_databases():
     versions = sorted(filens, key=lambda j: int(j.split('_')[1][:-3]))
 
     print('Found databases: {}'.format(', '.join(versions)))
-    for version in versions[:-1]:
+    for version in versions:
         print('Deleting {}'.format(version))
-        print('(but not really)')
+        remove(version)
 
 
 def require_database(func):
