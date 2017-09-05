@@ -13,6 +13,25 @@ notations.
 Visit `Knot ID <http://inclem.net/knotidentifier>`__ for an online
 interface to some of these tools.
 
+Installation
+------------
+
+You can install pyknotid via pip::
+
+  $ pip install pyknotid
+
+By default pyknotid will try to compile some cython modules, but if
+this fails (normally because cython is not installed) it will only
+print a message and continue without errors. This won't impact your
+use of pyknotid except that the cython calculations would be,
+especially during space-curve analysis. If you want to use the
+improved speed of the cython implementations but did not initially
+install them, you should uninstall pyknotid, install cython, and
+reinstall pyknotid.
+
+You can also install the pyknotid development version from github at
+https://github.com/SPOCKnots/pyknotid.
+
 
 Space curve analysis
 --------------------
