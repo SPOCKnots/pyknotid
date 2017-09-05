@@ -75,7 +75,8 @@ if 'READTHEDOCS' in environ and environ['READTHEDOCS'] == 'True':
     install_requires=['numpy', 'peewee', 'vispy', 'sympy']
 else:
     install_requires=['numpy', 'networkx', 'planarity',
-                      'peewee', 'vispy', 'sympy', 'appdirs'],
+                      'peewee', 'vispy', 'sympy', 'appdirs',
+                      'requests', 'tqdm'],
 
 long_description = '''
 Pyknotid

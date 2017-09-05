@@ -78,11 +78,23 @@ def download_database():
     if exists(filen):
         raise IOError('A file named {} already exists.'.format(filen))
 
-    from urllib.request import urlretrieve
-    urlretrieve('https://github.com/SPOCKnots/pyknotid/releases/download/init/{}'.format(db_name), filen)
+    import requests
+    from tqdm import tqdm
+    # import shutil
+    r = requests.get('https://github.com/SPOCKnots/pyknotid/releases/download/init/{}'.format(db_name),
+                     stream=True)
+
+    total_size = int(r.headers.get('content-length', 0))
+
+    with open(filen, 'wb') as f:
+        with tqdm(total=total_size, unit='B', unit_scale=True) as pbar:
+            for data in r.iter_content(32*1024):
+                pbar.update(32*1024)
+                f.write(data)
 
     print('Successfully downloaded the new database file. Run '
-          'pyknotid.clean_databases to delete old database versions.')
+          'pyknotid.catalogue.getdb.clean_old_databases to delete '
+          'old database versions.')
 
 def clean_old_databases():
     '''Deletes old database files (all but the most recent version).'''
