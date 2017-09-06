@@ -30,6 +30,11 @@ from pyknotid.utils import ensure_shape_tuple, vprint
 import random
 from colorsys import hsv_to_rgb
 
+try:
+    from vispy.visuals.transforms import MatrixTransform
+except (AttributeError, ImportError):
+    from vispy.visuals.transforms import AffineTransform as MatrixTransform
+
 vispy_canvas = None
 
 def plot_vispy_cube():
@@ -210,7 +215,7 @@ def plot_line_vispy(points, clf=True, tube_radius=1.,
         n.abs(points)))
     #canvas.view.camera = scene.TurntableCamera(fov=30)
     if zero_centroid:
-        l.transform = scene.transforms.MatrixTransform()
+        l.transform = MatrixTransform()
         # l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
 
@@ -255,7 +260,7 @@ def plot_lines_vispy(lines, clf=True, tube_radius=1.,
     #         points, axis=0)))
 
     if zero_centroid:
-        l.transform = scene.transforms.MatrixTransform()
+        l.transform = MatrixTransform()
         # l.transform = scene.transforms.AffineTransform()
         l.transform.translate(-1*n.average(points, axis=0))
 
