@@ -26,7 +26,7 @@ If you use pyknotid in your research, please cite us as follows:
 In bibtex format::
 
   @Misc{pyknotid,
-    author =    {Alexander J Taylor},
+    author =    {Alexander J Taylor and other SPOCK contributors},
     title =     {pyknotid knot identification toolkit},
     howpublished = {\url{https://github.com/SPOCKnots/pyknotid}},
     note =      {Accessed YYYY-MM-DD},
