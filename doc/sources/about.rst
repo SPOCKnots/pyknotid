@@ -21,12 +21,12 @@ Cite us
 
 If you use pyknotid in your research, please cite us as follows:
 
-    A Taylor. pyknotid knot identification toolkit. https://github.com/SPOCKnots/pyknotid, 2017. Accessed YYYY-MM-DD.
+    A J Taylor and other SPOCK contributors. pyknotid knot identification toolkit. https://github.com/SPOCKnots/pyknotid, 2017. Accessed YYYY-MM-DD.
 
 In bibtex format::
 
   @Misc{pyknotid,
-    author =    {Alexander Taylor},
+    author =    {Alexander J Taylor},
     title =     {pyknotid knot identification toolkit},
     howpublished = {\url{https://github.com/SPOCKnots/pyknotid}},
     note =      {Accessed YYYY-MM-DD},
