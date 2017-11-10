@@ -15,6 +15,7 @@ from __future__ import print_function
 import numpy as n
 import re
 import sys
+import logging
 
 
 class GaussCode(object):
@@ -101,7 +102,7 @@ class GaussCode(object):
         from pyknotid.representations import representation
         rep = representation.Representation(gc)
         # rep.draw_planar_graph()
-        # print('ready to do space curve')
+        # logging.info('ready to do space curve')
         sp = rep.space_curve()
         # sp.rotate()
         return sp.gauss_code()
@@ -271,7 +272,6 @@ class GaussCode(object):
         # Next do RM1_extended separately (could be more efficient?)
         if one_extended:
             # Do extended RM1 as a separate step
-            print
             code = [(line[keep] if len(line) > 0 else line) for (line, keep) in zip(code, keeps)]
             keeps = [n.ones(l.shape[0], dtype=bool) for l in code]
 
@@ -365,7 +365,7 @@ class GaussCode(object):
         '''
 
         if self.verbose:
-            print('Simplifying: initially {} crossings'.format(
+            logging.info('Simplifying: initially {} crossings'.format(
                 n.sum([len(line) for line in self._gauss_code])))
 
         number_of_runs = 0
@@ -377,14 +377,10 @@ class GaussCode(object):
             new_len = n.sum([len(line) for line in new_gc])
             number_of_runs += 1
             if self.verbose:
-                sys.stdout.write('\r-> {} crossings after {} runs'.format(
+                logging.info('\r-> {} crossings after {} runs'.format(
                     n.sum([len(line) for line in new_gc]), number_of_runs))
-                sys.stdout.flush()
             if new_len == original_len:
                 break
-
-        if self.verbose:
-            print()
 
     def reindex_crossings(self):
         '''Replaces the indices of the crossings in the Gauss code with the
@@ -429,4 +425,3 @@ def _get_crossing_numbers(gc):
         for entry in line:
             crossing_vals.add(entry[0])
     return crossing_vals
-

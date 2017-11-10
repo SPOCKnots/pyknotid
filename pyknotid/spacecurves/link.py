@@ -25,9 +25,10 @@ except:
 from pyknotid.spacecurves import helpers
 from pyknotid.spacecurves.knot import Knot
 from pyknotid.visualise import plot_projection
-from pyknotid.utils import (vprint, get_rotation_matrix,
+from pyknotid.utils import (get_rotation_matrix,
                            ensure_shape_tuple)
 
+import logging
 
 class Link(object):
     '''
@@ -169,7 +170,7 @@ class Link(object):
         if only_with_other_lines:
             crossings = [[] for _ in lines]
         else:
-            self._vprint('Calculating self-crossings for all {} '
+            logging.info('Calculating self-crossings for all {} '
                          'component lines'.format(len(lines)))
             crossings = [k.raw_crossings(
                 mode=mode, include_closure=include_closures,
@@ -197,7 +198,7 @@ class Link(object):
 
         for line_index, line in enumerate(lines):
             for other_index, other_line in enumerate(lines[line_index+1:]):
-                self._vprint(
+                logging.info(
                     '\rComparing line {} with {}'.format(line_index,
                                                          other_index))
 
@@ -219,7 +220,7 @@ class Link(object):
 
                 for i in first_line_range:
                     if i % 1000 == 0:
-                        self._vprint(
+                        logging.info(
                             '\ri = {} / {}'.format(
                                 i, len(first_line_range)), False)
                     v0 = points[i]
@@ -246,7 +247,7 @@ class Link(object):
                     crossings[line_index].extend(first_crossings.tolist())
                     crossings[other_index].extend(sec_crossings.tolist())
 
-        self._vprint('\n{} crossings found\n'.format(
+        logging.info('\n{} crossings found\n'.format(
             [len(cs) / 2 for cs in crossings]))
         [cs.sort(key=lambda s: s[0]) for cs in crossings]
         crossings = [n.array(cs) for cs in crossings]
@@ -386,7 +387,7 @@ class Link(object):
             line.points = remove_nearby_points(line.points)
         for i in range(runs):
             if n.sum([len(knot.points) for knot in self.lines]) > 30:
-                vprint('\rRun {} of {}, {} points remain'.format(
+                logging.info('\rRun {} of {}, {} points remain'.format(
                     i, runs, len(self)), False, self.verbose)
 
             if rotate:
@@ -409,7 +410,7 @@ class Link(object):
             if plot:
                 self.plot()
 
-        vprint('\nReduced to {} points'.format(len(self)))
+        logging.info('\nReduced to {} points'.format(len(self)))
 
     def __len__(self):
         return n.sum(map(len, self.lines))
@@ -426,12 +427,6 @@ class Link(object):
         '''
         return n.sum(k.arclength(include_closures) for k in self.lines)
 
-    def _vprint(self, s, newline=True):
-        '''Prints s, with optional newline. Intended for internal use
-        in displaying progress.'''
-        if self.verbose:
-            vprint(s, newline)
-        
     def gauss_code(self, **kwargs):
         '''
         Returns a :class:`~pyknotid.representations.gausscode.GaussCode`
@@ -487,5 +482,3 @@ class Link(object):
         gc = self.gauss_code(**kwargs)
         gc.simplify(verbose=self.verbose)
         return multivariate_alexander(gc, variables)
-
-        

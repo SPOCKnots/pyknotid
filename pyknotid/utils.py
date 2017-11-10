@@ -5,6 +5,7 @@ Utility functions
 
 import sys
 import numpy as n
+import logging
 
 def vprint(string='', newline=True, condition=True):
     '''
@@ -24,10 +25,9 @@ def vprint(string='', newline=True, condition=True):
     '''
     if not condition:
         return
-    sys.stdout.write(string)
     if newline:
-        sys.stdout.write('\n')
-    sys.stdout.flush()
+        string += '\n'
+    logging.info(string)
 
 def mag(v):
     '''
@@ -51,7 +51,7 @@ def get_rotation_matrix(angles):
     angles : iterable
         The psi, theta and phi angles
     '''
-    
+
     phi, theta, psi = angles
     sin = n.sin
     cos = n.cos
