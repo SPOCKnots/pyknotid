@@ -122,7 +122,11 @@ def from_invariants(return_query=False, **kwargs):
     from pyknotid.catalogue.database import Knot
     from pyknotid.catalogue import converters
 
-    db.db.get_conn()
+    if hasattr(db.db, 'get_conn'):
+        connection_method = db.db.get_conn
+    else:
+        connection_method = db.db.connection
+    connection_method()
 
     _root_to_attr = {2: Knot.determinant,
                      3: Knot.alexander_imag_3,
