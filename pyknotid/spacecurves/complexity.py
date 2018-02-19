@@ -82,13 +82,18 @@ def writhe_and_crossing_number(points, number_of_samples=10,
 #     return 2 * writhe / (4*np.pi)
 
 
-def writhe_integral(points, closed=False):
+def writhe_and_acn_integral(points, closed=False):
+    '''Returns the writhe and average crossing number (ACN) obtained from
+    an integral along the curve.
+
+    '''
 
     ps = points
 
     dps = np.roll(points, -1, axis=0) - points
 
     writhe = 0.0
+    acn = 0.0
 
     points2 = points[:-1] if not closed else points
 
@@ -138,6 +143,7 @@ def writhe_integral(points, closed=False):
                                    np.arcsin(t3) +
                                    np.arcsin(t4))
 
+            acn += writhe_contribution
             writhe_contribution *= np.sign(np.cross(r34, r12).dot(r13))
 
             if np.isnan(writhe_contribution):
@@ -148,7 +154,7 @@ def writhe_integral(points, closed=False):
             writhe += writhe_contribution
 
 
-    return 2 * writhe / (4*np.pi)
+    return 2 * writhe / (4*np.pi), 2 * acn / (4*np.pi)
 
 def higher_order_writhe_integral(points, order=(1, 3, 2, 4), try_cython=True):
 
@@ -520,3 +526,114 @@ def second_order_twist(points, z):
         contributions[i1] = writhe_contribution
 
     return contributions
+
+def distance_quantity(points, closed=False):
+    '''Returns the writhe and average crossing number (ACN) obtained from
+    an integral along the curve.
+
+    '''
+
+    ps = points
+
+    dps = np.roll(points, -1, axis=0) - points
+
+    distance_quantity = 0.
+    values = []
+
+    points2 = points[:-1] if not closed else points
+
+    lengths = np.sqrt(np.sum(dps**2, axis=1))
+    total_length = np.sum(lengths)
+    cumulative_lengths = np.cumsum(lengths)
+    cumulative_fractions = cumulative_lengths / total_length
+    assert np.max(cumulative_fractions) <= 1.000001
+
+    weights = (lengths + np.roll(lengths, 1)) / 2.
+
+    for i1, p1 in enumerate(points[:-1]):
+        w1 = weights[i1]
+        for i2, p2 in enumerate(points[i1+1:]):
+            i2 += i1 + 1
+            w2= weights[i2]
+            # difference = cumulative_fractions[i2] - cumulative_fractions[i1]
+            # if difference > 0.5:
+            #     difference = np.abs(difference - 1.)
+
+            difference = cumulative_lengths[i2] - cumulative_lengths[i1]
+            if difference > 0.5 * total_length:
+                difference = np.abs(difference - total_length)
+
+            distance = np.sqrt(np.sum((p2 - p1)**2))
+            # distance /= total_length
+
+            distance_contribution = difference / distance
+
+            distance_quantity += distance_contribution * w1 * w2 / total_length**2
+            values.append(distance_contribution * w1 * w2)
+
+            # print(difference, distance)
+
+    # import ipdb
+    # ipdb.set_trace()
+
+    # xs = np.linspace(-2, 2, 15)
+    # return np.sum(np.convolve(values, np.exp(-1 * xs**2)))
+
+    # distance_quantity *= np.sum(lengths)
+
+    return distance_quantity / total_length, total_length #/ total_length 
+
+
+def distance_quantity_2(points, closed=False):
+    '''Returns the writhe and average crossing number (ACN) obtained from
+    an integral along the curve.
+
+    '''
+
+    ps = points
+
+    dps = np.roll(points, -1, axis=0) - points
+
+    distance_quantity = 0.
+
+    points2 = points[:-1] if not closed else points
+
+    lengths = np.sqrt(np.sum(dps**2, axis=1))
+    total_length = np.sum(lengths)
+    cumulative_lengths = np.cumsum(lengths)
+    cumulative_fractions = cumulative_lengths / total_length
+    assert np.max(cumulative_fractions) <= 1.000001
+
+    weights = (lengths + np.roll(lengths, 1)) / 2.
+
+    for i1, p1 in enumerate(points[:-1]):
+        w1 = weights[i1]
+        dp1 = dps[i1]
+        for i2, p2 in enumerate(points[i1+1:]):
+            i2 += i1 + 1
+            dp2 = dps[i2]
+            w2= weights[i2]
+
+            difference = p2 - p1
+            difference /= np.sqrt(np.sum(difference**2))
+
+            dp2 /= np.sqrt(np.sum(dp2**2))
+
+            cos_angle = np.abs(difference.dot(dp2))
+
+            difference = cumulative_lengths[i2] - cumulative_lengths[i1]
+            if difference > 0.5 * total_length:
+                difference = np.abs(difference - total_length)
+
+            distance = np.sqrt(np.sum((p2 - p1)**2))**2
+
+            distance_contribution = difference / distance
+
+            distance_quantity += w1 * w2 * cos_angle * distance_contribution
+
+            # print(difference, distance)
+
+    # import ipdb
+    # ipdb.set_trace()
+
+    return distance_quantity #/ total_length

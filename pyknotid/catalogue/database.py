@@ -108,6 +108,9 @@ class Knot(BaseModel):
     fibered = BooleanField(null=True)
     '''Whether the knot is fibered or not.'''
 
+    composite = BooleanField(null=True)
+    '''Whether the knot is composite or not.'''
+
     vassiliev_2 = IntegerField(null=True)
     '''The Vassiliev invariant of order 2.'''
 
@@ -210,6 +213,23 @@ class Knot(BaseModel):
             return None
 
         return filen
+
+    @property
+    def components(self):
+        '''A list tuples ``(identifier, index)``, where the knot with the
+        given identifier occurs ``index`` times.'''
+        name = self.identifier
+        components = []
+        for component in name.split('#'):
+            if '^' in component:
+                component, index = component.split('^')
+                index = int(index)
+            else:
+                index = 1
+            components.append((component, index))
+
+        return components
+
 
 
 def _name_to_filen(name):

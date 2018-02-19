@@ -169,7 +169,7 @@ def add_knots_from(filen):
     sys.stdout.write('\n')
     sys.stdout.flush()
 
-    print 'Attempting to save in transaction...'
+    print('Attempting to save in transaction...')
     with db.db.transaction():
         for knot in knots:
             knot.save()
@@ -190,5 +190,5 @@ if __name__ == '__main__':
 
     filens = sys.argv[1:]
     for filen in filens:
-        print 'Reading in from', filen
+        print('Reading in from', filen)
         add_knots_from(filen)

@@ -172,6 +172,99 @@ def vispy_rotate(elevation=0, max_angle=360):
     vispy_canvas.view.camera = cam
 
 
+def vispy_follow_line(tube_points=8, fps=30, p1=True, p2=True, p3=True, distance=200):
+    global vispy_canvas
+
+    from numpy.linalg import norm
+
+    ensure_vispy_canvas()
+
+    cam = vispy_canvas.view.camera
+    from vispy.scene import TurntableCamera
+
+    from time import sleep
+    vispy_canvas.view.camera = TurntableCamera(
+        fov=cam.fov, scale_factor=cam.scale_factor,
+        azimuth=0, elevation=0, distance=distance)
+
+    objects = vispy_canvas.view.scene.children
+    from vispy.visuals import TubeVisual
+    for obj in objects:
+        if isinstance(obj, TubeVisual):
+            tube = obj
+            break
+    else:
+        raise ValueError('Could not find a Tube')
+
+    md = tube.mesh_data
+    vertices = md.get_vertices()
+    normals = md.get_vertex_normals()
+    assert len(vertices) % tube_points == 0
+            
+    previous_translate = np.zeros(3)
+    previous_rotate = (0., [1, 0, 0])
+    previous_rotate_2 = (0., [1, 0, 0])
+    try:
+        for i in range(len(vertices) // tube_points):
+            # revert previous transforms
+            tube.transform.rotate(-1 * previous_rotate_2[0], previous_rotate_2[1])
+            tube.transform.rotate(-1 * previous_rotate[0], previous_rotate[1])
+            tube.transform.translate(-1 * previous_translate)
+
+            vertex = vertices[i*tube_points]
+            next_vertex = vertices[((i + 1)*tube_points) % len(vertices)]
+            T = next_vertex - vertex
+            N = normals[i]
+
+            if p1:
+                # Translate the current vertex to the origin
+                new_translate = -1 * vertices[i*tube_points]
+                tube.transform.translate(new_translate)
+                previous_translate = new_translate
+
+            if p2:
+                # Rotate the curve to point along the y direction
+                axis = np.cross(T, [0, 1, 0])
+                angle = np.dot(T, [0, 1, 0]) / (norm(T) * 1.)
+                angle *= 180 / np.pi
+                print('angle, axis', angle, axis)
+                new_rotate = (angle, axis)
+                tube.transform.rotate(*new_rotate)
+                previous_rotate = new_rotate
+
+            if p3:
+                # Rotate the curve normal to point along the x direction.
+                axis = np.cross(N, [0, 0, 1])
+                angle = np.dot(N, [0, 0, 1]) / (norm(N) * 1.)
+                angle *= 180 / np.pi
+                print('angle, axis', angle, axis)
+                new_rotate_2 = (angle, axis)
+                tube.transform.rotate(*new_rotate_2)
+                previous_rotate_2 = new_rotate_2
+
+
+
+            vispy_canvas.update()
+            vispy_canvas.events.draw()
+            vispy_canvas.swap_buffers()
+            sleep(1./fps)
+    except KeyboardInterrupt:
+        pass
+
+    vispy_canvas.view.camera = cam
+
+    # try:
+    #     for i in range(max_angle):
+    #         vispy_canvas.view.camera.azimuth = i
+    #         vispy_canvas.update()
+    #         vispy_canvas.events.draw()
+    #         vispy_canvas.swap_buffers()
+    #         sleep(1 / 60.)
+    # except KeyboardInterrupt:
+    #     pass
+    vispy_canvas.view.camera = cam
+
+
 def plot_line_vispy(points, clf=True, tube_radius=1.,
                     colour=None, zero_centroid=True,
                     closed=False, mus=None,
