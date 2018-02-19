@@ -106,6 +106,14 @@ def from_invariants(return_query=False, **kwargs):
         The writhe of the knot's minimal diagram as recorded by its dt
         code. This is not necessarily unique, only the value
         of the dt code stored is given.
+    composite : bool
+        If True, will return only composite knots. If False, will return
+        only prime knots. Defaults to None, meaning it will return any knot
+        type.
+    prime : bool
+        If True, will return only prime knots. If False, will return
+        only composite knots. Defaults to None, meaning it will return any knot
+        type.
     other : iterable
         A list of other peewee terms that can be chained in ``where()``
         calls, e.g. ``database.Knot.min_crossings < 5``. This provides
@@ -131,6 +139,9 @@ def from_invariants(return_query=False, **kwargs):
     _root_to_attr = {2: Knot.determinant,
                      3: Knot.alexander_imag_3,
                      4: Knot.alexander_imag_4}
+
+    if 'composite' not in kwargs and 'prime' not in kwargs:
+        kwargs['composite'] = False
 
     conditions = []
     for invariant, value in kwargs.items():
@@ -182,9 +193,18 @@ def from_invariants(return_query=False, **kwargs):
             conditions.append(Knot.symmetry == value.lower())
         elif invariant in ('writhe', 'planar_writhe'):
             conditions.append(Knot.planar_writhe == value)
+        elif invariant == 'prime':
+            if 'composite' in kwargs:
+                assert kwargs['composite'] == (not value)
+            conditions.append(Knot.composite == (not value))
+        elif invariant == 'composite':
+            conditions.append(Knot.composite == value)
         elif invariant == 'other':
             for condition in value:
                 conditions.append(condition)
+        else:
+            raise ValueError('Unrecognised parameter {} with value {}'.format(
+                invariant, value))
 
     selection = Knot.select()
     for condition in conditions:
@@ -201,20 +221,28 @@ def from_invariants(return_query=False, **kwargs):
 def _sort_func(k):
     ident = k.identifier
 
-    if ident.startswith('K'):
-        ident = ident[1:]
-        if 'a' in ident:
-            parts = ident.split('a')
-            jump = 0
-        elif 'n' in ident:
-            parts = ident.split('n')
-            jump = 1e-7
-        crossings = int(parts[0])
-        number = int(parts[1])
-    else:
-        parts = ident.split('_')
-        crossings = int(parts[0])
-        number = int(parts[1])
-        jump = 0
+    crossings = 0
+    number = 1
+    jump = 0
 
-    return crossings + number * 1e-15 + jump
+    for component, index in k.components:
+        if component.startswith('K'):
+            component = component[1:]
+            if 'a' in component:
+                parts = component.split('a')
+                jump += 0 * index
+            elif 'n' in component:
+                parts = component.split('n')
+                jump += 1e-7 * index
+            crossings += int(parts[0]) * index
+            number *= int(parts[1]) * index
+        else:
+            parts = component.split('_')
+            crossings += int(parts[0]) * index
+            number *= int(parts[1]) * index
+            jump += 0 * index
+
+    num_components = sum([c[1] for c in k.components])
+
+    return (crossings, num_components, number, jump)
+    return crossings + len(k.components) * 1e-3 + number * 1e-15 + jump
