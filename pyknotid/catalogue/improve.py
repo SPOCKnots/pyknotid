@@ -17,7 +17,6 @@ from __future__ import print_function
 
 from pyknotid.catalogue.database import Knot, db
 from pyknotid.catalogue.converters import homfly_to_jones, db2py_homfly, py2db_jones
-from pyknotid.catalogue.build import get_rdf_object
 
 import csv
 import json
@@ -202,6 +201,7 @@ def add_vassilievs_and_symmetry_from_rdf(filen):
     '''
 
     from rdflib import URIRef, Graph
+    from pyknotid.catalogue.build import get_rdf_object
     rdfv2 = URIRef('invariant:V_2')
     rdfv3 = URIRef('invariant:V_3')
     rdfsymmetry = URIRef('invariant:Symmetry_Type')
@@ -401,4 +401,95 @@ def alexander_at_roots_from_dt_code():
         for knot in output_knots:
             knot.save()
 
-        
+def add_composite_knots():
+
+    from pyknotid.catalogue.identify import get_knot, from_invariants
+
+    k3_1 = get_knot('3_1')
+    k4_1 = get_knot('4_1')
+    k5_1 = get_knot('5_1')
+    k5_2 = get_knot('5_2')
+
+    prime_knots = Knot.select().where(
+        Knot.composite == False).where(
+            Knot.min_crossings < 8).where(
+                Knot.min_crossings >= 3)
+
+    new_knots = []
+
+    for k1 in (k3_1, k4_1, k5_1, k5_2):
+        for k2 in Knot.select().where(Knot.composite == False).where(Knot.min_crossings <= (11 - k1.min_crossings)).where(Knot.min_crossings > k1.min_crossings):
+            if k1.identifier != k2.identifier:
+                identifier = '{}#{}'.format(k1.identifier, k2.identifier)
+            else:
+                identifier = '{}^2'.format(k1.identifier)
+
+            if Knot.select().where(Knot.identifier == identifier).count() != 0:
+                print('{} already in db!'.format(identifier))
+                continue
+
+            composite = Knot(
+                identifier=identifier,
+                min_crossings=k1.min_crossings + k2.min_crossings,
+                determinant=k1.determinant * k2.determinant,
+                alexander_imag_3=k1.alexander_imag_3 * k2.alexander_imag_3,
+                alexander_imag_4=k1.alexander_imag_4 * k2.alexander_imag_4,
+                hyperbolic_volume='Not hyperbolic',
+                vassiliev_2=k1.vassiliev_2 + k2.vassiliev_2,
+                composite=True,
+            )
+
+            print(composite)
+            composite.pretty_print()
+            new_knots.append(composite)
+
+    with db.transaction():
+        for knot in new_knots:
+            knot.save()
+
+    new_knots = []
+
+    k3_1_2 = get_knot('3_1^2')
+
+    for k1 in (k3_1_2, ):
+        for k2 in prime_knots:
+            if k2.identifier == '3_1':
+                identifier = '3_1^3'
+            else:
+                identifier = '3_1^2#{}'.format(k2.identifier)
+
+            if Knot.select().where(Knot.identifier == identifier).count() != 0:
+                print('{} already in db!'.format(identifier))
+                continue
+
+            composite = Knot(
+                identifier=identifier,
+                min_crossings=k1.min_crossings + k2.min_crossings,
+                determinant=k1.determinant * k2.determinant,
+                alexander_imag_3=k1.alexander_imag_3 * k2.alexander_imag_3,
+                alexander_imag_4=k1.alexander_imag_4 * k2.alexander_imag_4,
+                hyperbolic_volume='Not hyperbolic',
+                vassiliev_2=k1.vassiliev_2 + k2.vassiliev_2,
+                composite=True,
+            )
+
+            print(composite)
+            composite.pretty_print()
+            new_knots.append(composite)
+
+    with db.transaction():
+        for knot in new_knots:
+            knot.save()
+
+    if Knot.select().where(Knot.identifier == '4_1^2').count() == 0:
+        k4_1_2 = Knot(identifier='4_1^2',
+                      min_crossings=8,
+                      determinant=25,
+                      alexander_imag_3=16,
+                      alexander_imag_4=9,
+                      hyperbolic_volume='Not hyperbolic',
+                      vassiliev_2=-2,
+                      composite=True,
+                      )
+        with db.transaction():
+            k4_1_2.save()
