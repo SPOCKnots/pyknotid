@@ -6,6 +6,8 @@ knotting and linking. pyknotid can analyse space-curves, i.e. sets of
 points in three-dimensions, or can parse standard topological
 representations of knot diagrams.
 
+pyknotid is released under the `MIT license <LICENSE.txt>`__.
+
 A graphical interface to some of these tools is available online at
 `Knot ID <http://inclem.net/knotidentifier>`__.
 
