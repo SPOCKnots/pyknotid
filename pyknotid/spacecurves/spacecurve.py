@@ -581,7 +581,12 @@ class SpaceCurve(object):
         crossings = self.raw_crossings(**kwargs)
         return n.sum(crossings[:, 3]) / 2.
 
-    def writhe(self, samples=10, recalculate=False, method='integral', **kwargs):
+    def distance_quantity(self):
+        from pyknotid.spacecurves.complexity import distance_quantity
+        return distance_quantity(self.points)
+
+    def writhe(self, samples=10, recalculate=False, method='integral',
+               include_acn=False, **kwargs):
         '''
         The (approximate) writhe of the space curve, obtained by averaging
         the planar writhe over the given number of directions.
@@ -600,13 +605,15 @@ class SpaceCurve(object):
             These are passed directly to :meth:`raw_crossings`.
         '''
         if method == 'projections':
-            crossing_number, writhe = self._writhe_and_crossing_numbers(
+            acn, writhe = self._writhe_and_crossing_numbers(
                 samples, recalculate=recalculate, **kwargs)
 
         elif method == 'integral':
-            from pyknotid.spacecurves.complexity import writhe_integral
-            writhe = writhe_integral(self.points, **kwargs)
+            from pyknotid.spacecurves.complexity import writhe_and_acn_integral
+            writhe, acn = writhe_and_acn_integral(self.points, **kwargs)
 
+        if include_acn:
+            return writhe, acn
         return writhe
 
     def higher_order_writhe(self, order=(1, 3, 2, 4), try_cython=True):
@@ -929,6 +936,18 @@ class SpaceCurve(object):
         '''
         return radius_of_gyration(self.points)
 
+    def radius_of_gyration_2(self):
+        rog_squared = 0.
+        for i, point in enumerate(self.points):
+            for next_point in self.points[i+1:]:
+                # next_point = self.points[i+1]
+                rog_squared += np.sum((next_point - point)**2)
+
+        rog_squared /= len(self.points)**2
+
+        return np.sqrt(rog_squared)
+            
+
     def __len__(self):
         return len(self.points)
 
@@ -1094,6 +1113,18 @@ class SpaceCurve(object):
             kappas[-3:] = kappas[-4]
 
         return kappas
+
+    def sum_of_angles(self):
+        points = self.points
+        segments = np.roll(points, -1, axis=0) - points
+        segments_2 = np.roll(segments, -1, axis=0)
+
+        mags = np.sqrt(np.sum(segments * segments, axis=1))
+        mags_2 = np.roll(mags, -1)
+
+        angles = np.arccos(np.sum(segments * segments_2, axis=1) / (mags * mags_2))
+        return np.sum(angles)
+
 
     def torsions(self, signed=False, closed=True):
         '''Returns torsions at each vertex.'''

@@ -11,7 +11,7 @@ pyknotid.spacecurves.periodic for topological analysis.
 import numpy as n
 import numpy as np
 from pyknotid.spacecurves.periodic import CellKnot, PeriodicKnot
-from pyknotid.make.knot import trefoil as aperiodic_trefoil
+from pyknotid.make import trefoil as aperiodic_trefoil
 
 def trefoil(num_points=40):
     points = aperiodic_trefoil(num_points) + 4
