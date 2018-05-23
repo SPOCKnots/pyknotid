@@ -1,7 +1,8 @@
 Pyknotid
 ========
 
-[![Build Status](https://travis-ci.org/SPOCKnots/pyknotid.svg?branch=master)](https://travis-ci.org/SPOCKnots/pyknotid)
+.. image:: https://travis-ci.org/SPOCKnots/pyknotid.svg?branch=master
+    :target: https://travis-ci.org/SPOCKnots/pyknotid
 
 Python (and optional Cython) modules for detecting and measuring
 knotting and linking. pyknotid can analyse space-curves, i.e. sets of
