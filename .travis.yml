@@ -12,6 +12,7 @@ install:
     - pip install -r requirements.txt
     - pip install planarity
     - python setup.py install
+    - python -c "from pyknotid.catalogue import download_database; download_database()"
 
 script:
   - pytest
