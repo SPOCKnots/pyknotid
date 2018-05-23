@@ -14,4 +14,4 @@ install:
     - python -c "from pyknotid.catalogue import download_database; download_database()"
 
 script:
-  - pytest
+    - pytest
