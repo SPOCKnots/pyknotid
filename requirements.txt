@@ -8,5 +8,4 @@ planarity
 appdirs
 requests
 tqdm
-
-
+pytest
