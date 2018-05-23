@@ -67,7 +67,6 @@ class PlanarDiagram(list):
 
         This method requires that spherogram and SnapPy are installed.
         '''
-        from snappy import Link
         from spherogram import Crossing, Link
         scs = [Crossing() for crossing in self]
 
