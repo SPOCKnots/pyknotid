@@ -1,0 +1,12 @@
+cython
+numpy
+peewee
+sympy
+vispy
+networkx
+planarity
+appdirs
+requests
+tqdm
+
+
