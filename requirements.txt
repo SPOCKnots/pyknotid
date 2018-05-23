@@ -1,0 +1,10 @@
+cython
+numpy
+peewee
+sympy
+vispy
+networkx
+appdirs
+requests
+tqdm
+pytest
