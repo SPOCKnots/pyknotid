@@ -169,7 +169,7 @@ class GaussCode(object):
         '''
         Converts the string into internal Gauss code representation.
         '''
-        regex = re.compile('[ \n]*')
+        regex = re.compile('[ \n]+')
         lines = regex.split(crossings)
 
         gauss_code = []

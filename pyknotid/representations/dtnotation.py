@@ -45,7 +45,7 @@ class DTNotation(object):
         Converts the string into internal DT notation representation.
         '''
 
-        regex = re.compile('[\n]*')
+        regex = re.compile('[\n]+')
         lines = regex.split(code)
 
         dt = []
