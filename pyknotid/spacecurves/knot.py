@@ -105,7 +105,7 @@ class Knot(SpaceCurve):
             These are passed directly to :meth:`alexander_polynomial`.
         '''
         if hasattr(root, '__contains__'):
-            return [self.alexander_at_root(r) for r in root]
+            return [self.alexander_at_root(r, round=round, **kwargs) for r in root]
         variable = n.exp(2 * n.pi * 1.j / root)
         value = self.alexander_polynomial(variable, **kwargs)
         value = n.abs(value)
