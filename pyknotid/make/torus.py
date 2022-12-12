@@ -11,7 +11,12 @@ API documentation
 from __future__ import division
 
 import numpy as np
-from fractions import gcd
+
+try:
+    from fractions import gcd
+except:
+    from fractions import math
+    gcd = math.gcd
 
 from pyknotid.spacecurves.knot import Knot
 from pyknotid.spacecurves.link import Link
