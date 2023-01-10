@@ -19,6 +19,7 @@ API documentation
 
 '''
 
+import logging
 import numpy as n
 import numpy as np
 import sys
@@ -26,7 +27,7 @@ import sys
 try:
     from pyknotid.spacecurves import chelpers
 except ImportError:
-    print('Could not import cythonised chelpers, using Python '
+    logging.warning('Could not import cythonised chelpers, using Python '
           'alternative. This will '
           'give the same result, but is slower.')
     from pyknotid.spacecurves import helpers as chelpers
@@ -132,15 +133,6 @@ class SpaceCurve(object):
         if fix_endpoints:
             points = np.vstack([points, points[:1]])
         self.points = points
-
-    def _vprint(self, s, newline=True):
-        '''Prints s, with optional newline. Intended for internal use
-        in displaying progress.'''
-        if self.verbose:
-            sys.stdout.write(s)
-            if newline:
-                sys.stdout.write('\n')
-            sys.stdout.flush()
 
     def _add_closure(self):
         closing_distance = mag(self.points[-1] - self.points[0])
@@ -348,8 +340,8 @@ class SpaceCurve(object):
         for i in range(num_strands):
             cur_strand = strands_by_initial_index[index]
             line.extend(cur_strand)
-            print('index is', index)
-            print('cur strand is', cur_strand)
+            logging.info('index is' + str(index))
+            logging.info('cur strand is' + str(cur_strand))
             index = int(np.round(cur_strand[-1][0])) - 1
 
         k = cls(n.array(line)*5.)
@@ -416,7 +408,7 @@ class SpaceCurve(object):
         tangents = np.roll(points, -1, axis=0) - points
         angles = np.arctan2(tangents[:, 1], tangents[:, 0])
 
-        print('angles', angles)
+        logging.info('angles' + str(angles))
 
         cuaps = []
 
@@ -505,7 +497,7 @@ class SpaceCurve(object):
         else:
             helpers_module = helpers
 
-        self._vprint('Finding crossings')
+        logging.info('Finding crossings')
 
         points = self.points
         segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
@@ -526,8 +518,7 @@ class SpaceCurve(object):
         for i in range(len(points)-2):
             if self.verbose:
                 if i % 100 == 0:
-                    self._vprint('\ri = {} / {}'.format(i, numtries),
-                                 False)
+                    logging.info('\ri = {} / {}'.format(i, numtries))
             v0 = points[i]
             dv = points[(i+1) % len(points)] - v0
 
@@ -557,7 +548,7 @@ class SpaceCurve(object):
                 max_segment_length,
                 jump_mode))
 
-        self._vprint('\n{} crossings found\n'.format(len(crossings) / 2))
+        logging.info('\n{} crossings found\n'.format(len(crossings) / 2))
         crossings.sort(key=lambda s: s[0])
         crossings = n.array(crossings)
         self._crossings = crossings
@@ -721,7 +712,7 @@ class SpaceCurve(object):
         gc = Representation(crossings, verbose=self.verbose)
         self._representation = gc
         return gc
-        
+
 
     def planar_diagram(self, **kwargs):
         '''
@@ -847,7 +838,7 @@ class SpaceCurve(object):
         '''
         Loads knot points from the given csv file, and returns a
         :class:`SpaceCurve` with those points.
-        
+
         Arguments are passed straight to :func:`pyknot.io.from_csv`.
         '''
         return cls(from_csv(filen, **kwargs))
@@ -895,7 +886,7 @@ class SpaceCurve(object):
         from pyknotid.simplify.octree import OctreeCell
         for i in range(runs):
             if len(self.points) > 30:
-                self._vprint('\rRun {} of {}, {} points remain'.format(
+                logging.info('\rRun {} of {}, {} points remain'.format(
                     i, runs, len(self.points)))
 
             if rotate:
@@ -913,7 +904,7 @@ class SpaceCurve(object):
             if plot:
                 self.plot()
 
-        self._vprint('\nReduced to {} points'.format(len(self.points)))
+        logging.info('\nReduced to {} points'.format(len(self.points)))
 
     def arclength(self, include_closure=True):
         '''
@@ -1190,6 +1181,3 @@ class SpaceCurve(object):
         new_points[:, 2] = points[2]
 
         self.points = new_points
-
-
-
