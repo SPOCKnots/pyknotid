@@ -19,7 +19,6 @@ API documentation
 
 '''
 
-import numpy as n
 import numpy as np
 import sys
 
@@ -77,10 +76,10 @@ class SpaceCurve(object):
                  zero_centroid=False):
         if isinstance(points, SpaceCurve):
             points = points.points.copy()
-        self._points = n.zeros((0, 3))
+        self._points = np.zeros((0, 3))
         self._crossings = None  # Will store a list of crossings if
                                 # self.crossings() has been called
-        self.points = n.array(points).astype(n.float)
+        self.points = np.array(points).astype(float)
         self.verbose = verbose
 
         self._cached_writhe_and_crossing_numbers = None
@@ -145,7 +144,7 @@ class SpaceCurve(object):
     def _add_closure(self):
         closing_distance = mag(self.points[-1] - self.points[0])
         if closing_distance > 0.02:
-            self.points = n.vstack((self.points, self.points[:1] -
+            self.points = np.vstack((self.points, self.points[:1] -
                                     0.001*(self.points[0] - self.points[-1])))
 
     def _unwrap_periodicity(self, shape):
@@ -212,7 +211,7 @@ class SpaceCurve(object):
         '''
         com = ensure_shape_tuple(com)
 
-        points = line - n.array(com)
+        points = line - np.array(com)
 
         start = points[0]
         end = points[-1]
@@ -220,22 +219,22 @@ class SpaceCurve(object):
         start_r = mag(start)
         end_r = mag(end)
 
-        start_theta = n.arccos(start[2] / start_r)
-        end_theta = n.arccos(end[2] / end_r)
+        start_theta = np.arccos(start[2] / start_r)
+        end_theta = np.arccos(end[2] / end_r)
 
-        start_phi = n.arctan2(start[1], start[0])
-        end_phi = n.arctan2(end[1], end[0])
+        start_phi = np.arctan2(start[1], start[0])
+        end_phi = np.arctan2(end[1], end[0])
 
-        rs = n.linspace(end_r, start_r, 100)
-        thetas = n.linspace(end_theta, start_theta, 100)
-        phis = n.linspace(end_phi, start_phi, 100)
+        rs = np.linspace(end_r, start_r, 100)
+        thetas = np.linspace(end_theta, start_theta, 100)
+        phis = np.linspace(end_phi, start_phi, 100)
 
-        join_points = n.zeros((100, 3))
-        join_points[:, 2] = rs * n.cos(thetas)
-        join_points[:, 0] = rs * n.sin(thetas) * n.cos(phis)
-        join_points[:, 1] = rs * n.sin(thetas) * n.sin(phis)
+        join_points = np.zeros((100, 3))
+        join_points[:, 2] = rs * np.cos(thetas)
+        join_points[:, 0] = rs * np.sin(thetas) * np.cos(phis)
+        join_points[:, 1] = rs * np.sin(thetas) * np.sin(phis)
 
-        return cls(n.vstack((points, join_points[1:-1])) + n.array(com))
+        return cls(np.vstack((points, join_points[1:-1])) + np.array(com))
 
     @classmethod
     def from_periodic_line(cls, line, shape, perturb=True, **kwargs):
@@ -257,7 +256,7 @@ class SpaceCurve(object):
         knot = cls(line, **kwargs)
         knot._unwrap_periodicity(shape)
         if perturb:
-            knot.translate(n.array([0.00123, 0.00231, 0.00321]))
+            knot.translate(np.array([0.00123, 0.00231, 0.00321]))
             knot.rotate((0.0002, 0.0001, 0.0001))
         return knot
 
@@ -279,8 +278,8 @@ class SpaceCurve(object):
         :class:`SpaceCurve`
         '''
         knot = cls(line)
-        knot.translate(n.array([0.00123, 0.00231, 0.00321]))
-        knot.rotate(n.random.random(3) * 0.012)
+        knot.translate(np.array([0.00123, 0.00231, 0.00321]))
+        knot.rotate(np.random.random(3) * 0.012)
         return knot
 
     @classmethod
@@ -300,7 +299,7 @@ class SpaceCurve(object):
 
         num_strands = len(set(word.lower())) + 1
 
-        xs = n.arange(num_strands) + 1
+        xs = np.arange(num_strands) + 1
 
         y = 0.
 
@@ -352,7 +351,7 @@ class SpaceCurve(object):
             print('cur strand is', cur_strand)
             index = int(np.round(cur_strand[-1][0])) - 1
 
-        k = cls(n.array(line)*5.)
+        k = cls(np.array(line)*5.)
         k.zero_centroid()
         return k
 
@@ -373,14 +372,14 @@ class SpaceCurve(object):
         vector : array-like
             The x, y, z translation distances
         '''
-        self.points = self.points + n.array(vector)
+        self.points = self.points + np.array(vector)
 
     def zero_centroid(self):
         '''
         Translate such that the centroid (average position of vertices)
         is at (0, 0, 0).
         '''
-        centroid = n.average(self.points, axis=0)
+        centroid = np.average(self.points, axis=0)
         self.translate(-1*centroid)
 
     def rotate(self, angles=None):
@@ -394,7 +393,7 @@ class SpaceCurve(object):
             angles are used. Defaults to None.
         '''
         if angles is None:
-            angles = n.random.random(3)
+            angles = np.random.random(3)
         phi, theta, psi = angles
         rot_mat = get_rotation_matrix(angles)
         self._apply_matrix(rot_mat)
@@ -403,7 +402,7 @@ class SpaceCurve(object):
         '''
         Applies the given matrix to all of self.points.
         '''
-        self.points = n.apply_along_axis(mat.dot, 1, self.points)
+        self.points = np.apply_along_axis(mat.dot, 1, self.points)
 
     def cuaps(self, include_closure=True):
         '''Returns a list of the 'cuaps', where the curve is parallel to the
@@ -508,13 +507,13 @@ class SpaceCurve(object):
         self._vprint('Finding crossings')
 
         points = self.points
-        segment_lengths = n.roll(points[:, :2], -1, axis=0) - points[:, :2]
-        segment_lengths = n.sqrt(n.sum(segment_lengths * segment_lengths,
+        segment_lengths = np.roll(points[:, :2], -1, axis=0) - points[:, :2]
+        segment_lengths = np.sqrt(np.sum(segment_lengths * segment_lengths,
                                        axis=1))
         # if include_closure:
-        #     max_segment_length = n.max(segment_lengths)
+        #     max_segment_length = np.max(segment_lengths)
         # else:
-        max_segment_length = n.max(segment_lengths[:-1])
+        max_segment_length = np.max(segment_lengths[:-1])
 
         numtries = len(points) - 3
 
@@ -544,7 +543,7 @@ class SpaceCurve(object):
 
         if include_closure:
             closure_segment_length = segment_lengths[-1]
-            max_segment_length = n.max([closure_segment_length,
+            max_segment_length = np.max([closure_segment_length,
                                         max_segment_length])
             v0 = points[-1]
             dv = points[0] - v0
@@ -559,7 +558,7 @@ class SpaceCurve(object):
 
         self._vprint('\n{} crossings found\n'.format(len(crossings) / 2))
         crossings.sort(key=lambda s: s[0])
-        crossings = n.array(crossings)
+        crossings = np.array(crossings)
         self._crossings = crossings
 
         return crossings
@@ -579,7 +578,7 @@ class SpaceCurve(object):
             These are passed directly to :meth:`raw_crossings`.
         '''
         crossings = self.raw_crossings(**kwargs)
-        return n.sum(crossings[:, 3]) / 2.
+        return np.sum(crossings[:, 3]) / 2.
 
     def distance_quantity(self):
         from pyknotid.spacecurves.complexity import distance_quantity
@@ -635,7 +634,7 @@ class SpaceCurve(object):
 
     def second_order_twist(self, z):
         from pyknotid.spacecurves import complexity as com
-        z = np.array(z).astype(np.float)
+        z = np.array(z).astype(float)
         assert len(z) == 3
         return com.second_order_twist(self.points, z)
 
@@ -808,7 +807,7 @@ class SpaceCurve(object):
                 dr = points[(xint+1) % len(points)] - r
                 plot_crossings.append(r + (x-xint) * dr)
         fig, ax = plot_projection(points,
-                                  crossings=n.array(plot_crossings),
+                                  crossings=np.array(plot_crossings),
                                   mark_start=mark_start,
                                   mark_points=mark_points,
                                   fig_ax=fig_ax,
@@ -899,7 +898,7 @@ class SpaceCurve(object):
                     i, runs, len(self.points)))
 
             if rotate:
-                rot_mat = get_rotation_matrix(n.random.random(3))
+                rot_mat = get_rotation_matrix(np.random.random(3))
                 self._apply_matrix(rot_mat)
 
             oc = OctreeCell.from_single_line(self.points, **kwargs)
@@ -978,16 +977,16 @@ class SpaceCurve(object):
         indices = self._new_indices_by_arclength(num_points)
 
         interp_xs = interp1d(range(len(self.points)+1),
-                             n.hstack((self.points[:, 0],
+                             np.hstack((self.points[:, 0],
                                       self.points[:, 0][:1])))
         interp_ys = interp1d(range(len(self.points)+1),
-                             n.hstack((self.points[:, 1],
+                             np.hstack((self.points[:, 1],
                                       self.points[:, 1][:1])))
         interp_zs = interp1d(range(len(self.points)+1),
-                             n.hstack((self.points[:, 2],
+                             np.hstack((self.points[:, 2],
                                       self.points[:, 2][:1])))
 
-        new_points = n.zeros((len(indices), 3), dtype=n.float)
+        new_points = np.zeros((len(indices), 3), dtype=np.float)
         new_points[:, 0] = interp_xs(indices)
         new_points[:, 1] = interp_ys(indices)
         new_points[:, 2] = interp_zs(indices)
@@ -999,21 +998,21 @@ class SpaceCurve(object):
             number = len(self.points)
         total_arclength = self.arclength()
         if step is None:
-            arclengths = n.linspace(0, total_arclength - gap, number+1)[:-1]
+            arclengths = np.linspace(0, total_arclength - gap, number+1)[:-1]
         else:
-            arclengths = n.arange(0, total_arclength - gap, step)
+            arclengths = np.arange(0, total_arclength - gap, step)
 
         arclengths[0] += 0.000001
 
         points = self.points
         segment_arclengths = self.segment_arclengths()
-        cumulative_arclength = n.hstack([[0.], n.cumsum(segment_arclengths)])
+        cumulative_arclength = np.hstack([[0.], np.cumsum(segment_arclengths)])
         total_arclength = self.arclength()
 
         indices = []
 
         for arclength in arclengths:
-            first_greater_index = n.argmax(cumulative_arclength > arclength)
+            first_greater_index = np.argmax(cumulative_arclength > arclength)
             last_lower_index = (first_greater_index - 1) % len(points)
             arclength_below = cumulative_arclength[last_lower_index]
             step_arclength = segment_arclengths[last_lower_index]
@@ -1027,8 +1026,8 @@ class SpaceCurve(object):
         Returns an array of arclengths of every step in the line
         defined by self.points.
         '''
-        return n.apply_along_axis(
-            mag, 1, n.roll(self.points, -1, axis=0) - self.points)
+        return np.apply_along_axis(
+            mag, 1, np.roll(self.points, -1, axis=0) - self.points)
 
     def smooth(self, repeats=1, periodic=True, window_len=10,
                window='hanning'):
@@ -1055,7 +1054,7 @@ class SpaceCurve(object):
         '''
         points = self.points
         if periodic:
-            points = n.vstack((points[-(window_len + 1):],
+            points = np.vstack((points[-(window_len + 1):],
                                points,
                                points[:(window_len + 1)]))
         else:

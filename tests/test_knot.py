@@ -1,4 +1,3 @@
-
 import pyknotid.spacecurves.knot as spknot
 import pyknotid.make as mk
 

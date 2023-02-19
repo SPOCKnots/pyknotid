@@ -13,7 +13,7 @@ cpdef cython_higher_order_writhe(double [:, :] points,
                         long [:] order):
 
     cdef long i1, i2, i3, i4
-    cdef long [:] indices = np.zeros(4, dtype=np.int)
+    cdef long [:] indices = np.zeros(4, dtype=int)
 
     cdef double writhe = 0.0
 
@@ -41,7 +41,7 @@ cpdef cython_second_order_writhes(double [:, :] points,
                                   double [:, :] contributions):
 
     cdef long i1, i2, i3, i4
-    cdef long [:] indices = np.zeros(4, dtype=np.int)
+    cdef long [:] indices = np.zeros(4, dtype=int)
 
     cdef double writhe_1 = 0.0
     cdef double writhe_2 = 0.0

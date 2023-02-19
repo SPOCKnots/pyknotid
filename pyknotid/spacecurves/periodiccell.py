@@ -9,7 +9,6 @@ API documentation
 '''
 from pyknotid.utils import ensure_shape_tuple
 from pyknotid.spacecurves import Knot, OpenKnot
-import numpy as n
 import numpy as np
 
 class Cell(object):
@@ -137,7 +136,7 @@ class Cell(object):
         from pyknotid.spacecurves.openknot import OpenKnot
         lengths = []
         for line in self.lines:
-            points = n.vstack(line)
+            points = np.vstack(line)
             k = OpenKnot.from_periodic_line(points, self.shape,
                                             perturb=False)
             lengths.append(k.arclength())
@@ -284,20 +283,20 @@ class Cell(object):
 def _interpret_line(line):
     if isinstance(line, Knot):
         return line.points
-    elif isinstance(line, n.ndarray):
+    elif isinstance(line, np.ndarray):
         return line
 
     return ValueError('Lines must be Knots or ndarrays.')
 
 def _test_periodicity(line, shape):
-    closing_vector = (line[-1][-1] - line[0][0]) / n.array(shape)
-    if n.any(closing_vector > 0.2):
+    closing_vector = (line[-1][-1] - line[0][0]) / np.array(shape)
+    if np.any(closing_vector > 0.2):
         return 'nth'
     return 'loop'
 
 def _cut_line_at_jumps(line, shape):
     x, y, z = shape
-    shape = n.array(shape)
+    shape = np.array(shape)
     if x < 0 or y < 0 or z < 0:
         return line
     line = line.copy()
@@ -306,7 +305,7 @@ def _cut_line_at_jumps(line, shape):
     while i < (len(line)-1):
         cur = line[i]
         nex = line[i+1]
-        if n.any(n.abs(nex-cur) > 0.9*shape):
+        if np.any(np.abs(nex-cur) > 0.9*shape):
             first_half = line[:(i+1)]
             second_half = line[(i+1):]
             out.append(first_half)
@@ -319,10 +318,10 @@ def _cut_line_at_jumps(line, shape):
 
 def _cram_into_cell(line, shape):
     '''Imposes the shape as periodic boundary conditions.'''
-    shape = n.array(shape)
+    shape = np.array(shape)
     dx, dy, dz = shape
 
-    points = n.array(line).copy()
+    points = np.array(line).copy()
     for i in range(1, len(points)):
         prev = points[i-1]
         cur = points[i]
@@ -391,8 +390,8 @@ class BoundingBox(object):
             shape = float(shape[0])
 
         # should these have +1 and -1?
-        steps_mins = np.floor((b2.mins - b1.maxs) / shape).astype(np.int) + 1
-        steps_maxs = np.floor((b2.maxs - b1.mins) / shape).astype(np.int)
+        steps_mins = np.floor((b2.mins - b1.maxs) / shape).astype(int) + 1
+        steps_maxs = np.floor((b2.maxs - b1.mins) / shape).astype(int)
 
         return steps_mins, steps_maxs
 

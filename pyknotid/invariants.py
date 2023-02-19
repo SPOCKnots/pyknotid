@@ -28,7 +28,7 @@ from __future__ import print_function
 import subprocess
 import re
 import sympy as sym
-import numpy as n
+import numpy as np
 
 from pyknotid.utils import vprint
 
@@ -134,8 +134,8 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
     '''
     import numpy as n
     num_crossings = int(len(crossings)/2)
-    dtype = n.complex if isinstance(variable, n.complex) else n.float
-    matrix = n.zeros((num_crossings, num_crossings), dtype=dtype)
+    dtype = complex if isinstance(variable, complex) else float
+    matrix = np.zeros((num_crossings, num_crossings), dtype=dtype)
     line_num = 0
     crossing_num_counter = 0
     crossing_dict = {}
@@ -167,15 +167,15 @@ def _alexander_numpy(crossings, variable=-1.0, quadrant='lr'):
             line_num += 1
             matrix[crossing_num, line_num % num_crossings] = new_mat_elt
     if quadrant == 'lr':
-        poly_val = n.linalg.det(matrix[1:, 1:])
+        poly_val = np.linalg.det(matrix[1:, 1:])
     elif quadrant == 'ur':
-        poly_val = n.linalg.det(matrix[:-1, 1:])
+        poly_val = np.linalg.det(matrix[:-1, 1:])
     elif quadrant == 'ul':
-        poly_val = n.linalg.det(matrix[:-1:, :-1])
+        poly_val = np.linalg.det(matrix[:-1:, :-1])
     elif quadrant == 'll':
-        poly_val = n.linalg.det(matrix[1:, :-1])
-    if not isinstance(poly_val, n.complex):
-        poly_val = n.abs(poly_val)
+        poly_val = np.linalg.det(matrix[1:, :-1])
+    if not isinstance(poly_val, complex):
+        poly_val = np.abs(poly_val)
     return poly_val
 
 
@@ -975,7 +975,7 @@ def _crossing_arrows_and_signs_numpy(gc, crossing_numbers):
             under_crossing_indices[row[0]] = i
         signs[row[0]] = row[2]
 
-    arrows = n.zeros((len(crossing_numbers), 3), dtype=n.long)
+    arrows = np.zeros((len(crossing_numbers), 3), dtype=np.longlong)
 
     for index, number in enumerate(crossing_numbers):
         row = arrows[index]
@@ -1311,7 +1311,7 @@ def self_linking(representation):
     slink_counter = 0        
 
     for crossing_number in representation.crossing_numbers:
-        occurences = n.where(gauss_code[0][:, 0] == crossing_number)[0]
+        occurences = np.where(gauss_code[0][:, 0] == crossing_number)[0]
         first_occurence = occurences[0]
         second_occurence = occurences[1]
         crossing_difference = second_occurence - first_occurence        

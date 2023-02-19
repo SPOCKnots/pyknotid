@@ -9,7 +9,7 @@ API documentation
 ~~~~~~~~~~~~~~~~~
 '''
 
-import numpy as n
+import numpy as np
 import re
 import sys
 
@@ -32,7 +32,7 @@ class DTNotation(object):
     def __init__(self, code):
         if isinstance(code, string_types):
             self._init_from_string(code)
-        elif isinstance(code, n.ndarray):
+        elif isinstance(code, np.ndarray):
             code = [code]
             self._dt = code
         elif isinstance(code, list):
@@ -52,7 +52,7 @@ class DTNotation(object):
 
         for line in lines:
             numbers = line.split(' ')
-            dt.append(n.array([int(number) for number in numbers], dtype=n.int))
+            dt.append(np.array([int(number) for number in numbers], dtype=int))
 
         self._dt = dt
 
@@ -70,13 +70,13 @@ class DTNotation(object):
                              'work with links')
 
         dt = self._dt[0]
-        arr = n.zeros((len(dt) * 2, 2), dtype=n.int)
+        arr = np.zeros((len(dt) * 2, 2), dtype=int)
 
 
         for index, even in enumerate(dt, 0):
             odd = 2*index
-            sign = n.sign(even)
-            even = n.abs(even) - 1
+            sign = np.sign(even)
+            even = np.abs(even) - 1
 
             arr[odd, 0] = index + 1
             arr[odd, 1] = sign
