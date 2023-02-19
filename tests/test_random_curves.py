@@ -1,5 +1,3 @@
-
-
 import pyknotid.spacecurves.knot as spknot
 import pyknotid.make.randomwalks.quaternionic as rw
 

@@ -1,5 +1,3 @@
-
-
 import pyknotid.spacecurves.spacecurve as sp
 import pyknotid.make as mk
 

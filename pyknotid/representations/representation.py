@@ -12,7 +12,7 @@ API documentation
 from __future__ import print_function, division
 from pyknotid.representations.gausscode import GaussCode
 from collections import defaultdict
-import numpy as n
+import numpy as np
 
 
 class Representation(GaussCode):
@@ -78,11 +78,11 @@ class Representation(GaussCode):
         '''
         if hasattr(root, '__contains__'):
             return [self.alexander_at_root(r) for r in root]
-        variable = n.exp(2 * n.pi * 1.j / root)
+        variable = np.exp(2 * np.pi * 1.j / root)
         value = self.alexander_polynomial(variable, **kwargs)
-        value = n.abs(value)
+        value = np.abs(value)
         if round and root in (1, 2, 3, 4):
-            value = int(n.round(value))
+            value = int(np.round(value))
         return value
 
     def vassiliev_degree_2(self, simplify=True):
@@ -247,7 +247,7 @@ class Representation(GaussCode):
         virtual = False
         
         for crossing_number in self.crossing_numbers:
-            occurences = n.where(gauss_code == crossing_number)[0]
+            occurences = np.where(gauss_code == crossing_number)[0]
             first_occurence = occurences[0]
             second_occurence = occurences[1]
             crossing_difference = second_occurence - first_occurence        
@@ -271,14 +271,14 @@ class Representation(GaussCode):
     def writhe(self):
         writhe = 0
 
-        return int(n.round(n.sum([n.sum(l[:, -1]) for l in self._gauss_code])/2.))
+        return int(np.round(np.sum([np.sum(l[:, -1]) for l in self._gauss_code])/2.))
 
     def slip_triangle(self, func):
 
         code = self._gauss_code[0]
 
         length = len(self)
-        array = n.ones((len(self) + 1, len(self) + 1)) * -0
+        array = np.ones((len(self) + 1, len(self) + 1)) * -0
         
         for i in range(length + 1):
             for j in range(length + 1):
@@ -351,8 +351,8 @@ class Representation(GaussCode):
 
         lines = []
 
-        rightmost_x = n.max(xs)
-        leftmost_x = n.min(xs)
+        rightmost_x = np.max(xs)
+        leftmost_x = np.min(xs)
         x_span = rightmost_x - leftmost_x
         safe_yshift = 0.5 / x_span
 
@@ -371,13 +371,13 @@ class Representation(GaussCode):
             start_left, start_right = node_lefts_rights[start_node]
             end_left, end_right = node_lefts_rights[end_node]
 
-            start_frac = n.abs((x - start_left) / (start_right - start_left) - 0.5)
+            start_frac = np.abs((x - start_left) / (start_right - start_left) - 0.5)
             start_frac = 0.5 - start_frac
             if True:  # ye < ys:  # This always evaluated to True - a bug?
                 start_frac *= -1
             start_shift = start_frac
 
-            end_frac = n.abs((x - end_left) / (end_right - end_left) - 0.5)
+            end_frac = np.abs((x - end_left) / (end_right - end_left) - 0.5)
             end_frac = 0.5 - end_frac
             if False:  # ye > ys:  # This always evaluated to False - a bug?
                 end_frac *= -1
@@ -389,7 +389,7 @@ class Representation(GaussCode):
             end_node_x = node_xs_by_y[ye]
             end_node_y = ye
 
-            line = n.array([[start_node_x, start_node_y],
+            line = np.array([[start_node_x, start_node_y],
                             [x, start_node_y - start_shift],
                             [x, end_node_y - end_shift],
                             [end_node_x, end_node_y]])
@@ -409,13 +409,13 @@ class Representation(GaussCode):
                 lx, hx = sorted([n1x, n2x])
                 ly, hy = sorted([n1y, n2y])
                 if len(line) == 4:
-                    join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
-                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
-                    normal_1 /= n.linalg.norm(normal_1)
+                    join_1 = np.array([line[2, 0], line[2, 1], 0]) - np.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = np.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= np.linalg.norm(normal_1)
 
-                    join_2 = n.array([line[3, 0], line[3, 1], 0]) - n.array([line[1, 0], line[1, 1], 0])
-                    normal_2 = n.cross(join_2, [0, 0, 1])[:2]
-                    normal_2 /= n.linalg.norm(normal_2)
+                    join_2 = np.array([line[3, 0], line[3, 1], 0]) - np.array([line[1, 0], line[1, 1], 0])
+                    normal_2 = np.cross(join_2, [0, 0, 1])[:2]
+                    normal_2 /= np.linalg.norm(normal_2)
 
                     extra_x_shifts.append(line[1][0] + 0.005 * normal_1[0])
 
@@ -423,19 +423,19 @@ class Representation(GaussCode):
                     line[2] += 0.01*normal_2
 
                 elif len(line) == 3:
-                    join_1 = n.array([line[2, 0], line[2, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
-                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
-                    normal_1 /= n.linalg.norm(normal_1)
+                    join_1 = np.array([line[2, 0], line[2, 1], 0]) - np.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = np.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= np.linalg.norm(normal_1)
 
                     extra_x_shifts.append(line[1][0] + 0.005 * normal_1[0])
 
                     line[1] += 0.01*normal_1
                 elif len(line) == 2:
-                    join_1 = n.array([line[1, 0], line[1, 1], 0]) - n.array([line[0, 0], line[0, 1], 0])
-                    normal_1 = n.cross(join_1, [0, 0, 1])[:2]
-                    normal_1 /= n.linalg.norm(normal_1)
+                    join_1 = np.array([line[1, 0], line[1, 1], 0]) - np.array([line[0, 0], line[0, 1], 0])
+                    normal_1 = np.cross(join_1, [0, 0, 1])[:2]
+                    normal_1 /= np.linalg.norm(normal_1)
 
-                    line = n.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.01*normal_1, line[1]])
+                    line = np.vstack([line[0], line[0] + 0.5*(line[1] - line[0]) + 0.01*normal_1, line[1]])
 
                     extra_x_shifts.append(line[1][0] - 0.005 * normal_1[0])
                 
@@ -485,11 +485,11 @@ class Representation(GaussCode):
         self.simplify()
 
         if len(self) == 0:
-            thetas = n.linspace(0, 2*n.pi, 10)
-            xs = n.sin(thetas) * 3
-            ys = n.cos(thetas) * 3
-            zs = n.zeros(10)
-            return Knot(n.vstack((xs, ys, zs)).T)
+            thetas = np.linspace(0, 2*np.pi, 10)
+            xs = np.sin(thetas) * 3
+            ys = np.cos(thetas) * 3
+            zs = np.zeros(10)
+            return Knot(np.vstack((xs, ys, zs)).T)
         
         # self.draw_planar_graph()
         g, lines, node_labels, nodes_by_height, xlims, first_edge, heights, extra_x_shifts = self._construct_planar_graph()
@@ -497,8 +497,8 @@ class Representation(GaussCode):
 
         cg = CrossingGraph()
         for line in lines:
-            start_node = nodes_by_height[n.int(n.round(line[0, 1]))]
-            end_node = nodes_by_height[n.int(n.round(line[-1, 1]))]
+            start_node = nodes_by_height[int(np.round(line[0, 1]))]
+            end_node = nodes_by_height[int(np.round(line[-1, 1]))]
             cl = CrossingLine(start_node, end_node, line)
             cg[start_node].append(cl)
             cg[end_node].append(cl.reversed())
@@ -566,7 +566,7 @@ class CrossingGraph(defaultdict):
         '''
         for key, value in self.items():
             self[key] = sorted(
-                value, key=lambda l: n.arctan2(l.points[1, 1] - l.points[0, 1],
+                value, key=lambda l: np.arctan2(l.points[1, 1] - l.points[0, 1],
                                                l.points[1, 0] - l.points[0, 0]))
 
     def retrieve_space_curve(self, first, next, initial_arc_number, heights):
@@ -609,7 +609,7 @@ class CrossingGraph(defaultdict):
         for _ in range(4*self.number_of_crossings()):
         # for _ in range(len(self)*2):
             current_points = current_line.points.copy()
-            ps = n.zeros((len(current_points), 3))
+            ps = np.zeros((len(current_points), 3))
             ps[:, :-1] = current_points
 
             height = heights[(current_line.start, current_line.end, arc_number)]
@@ -619,18 +619,18 @@ class CrossingGraph(defaultdict):
             segments.append(ps[:-1])
 
             next_lines = self[current_line.end]
-            incoming_angle = n.arctan2(current_points[-2, 1] - current_points[-1, 1],
+            incoming_angle = np.arctan2(current_points[-2, 1] - current_points[-1, 1],
                                        current_points[-2, 0] - current_points[-1, 0])
 
             other_incoming_angles = [
-                n.arctan2(l.points[1, 1] - l.points[0, 1],
+                np.arctan2(l.points[1, 1] - l.points[0, 1],
                           l.points[1, 0] - l.points[0, 0]) for l in next_lines]
 
             angle_distances = [
                 angle_distance(angle, incoming_angle)
                 for angle in other_incoming_angles]
 
-            incoming_index = n.argmin(angle_distances)
+            incoming_index = np.argmin(angle_distances)
             if len(angle_distances) == 4:
                 outgoing_index = (incoming_index + 2) % 4 
             elif len(angle_distances) == 2:
@@ -645,11 +645,11 @@ class CrossingGraph(defaultdict):
             if len(angle_distances) == 4:
                 arc_number = (arc_number % (2*self.number_of_crossings())) + 1
 
-        return n.vstack(segments)
+        return np.vstack(segments)
 
 def angle_distance(a1, a2):
-    dist = n.abs(a2 - a1)
-    if dist > n.pi:
-        dist = 2*n.pi - dist
+    dist = np.abs(a2 - a1)
+    if dist > np.pi:
+        dist = 2*np.pi - dist
     return dist
 
